@@ -1,0 +1,378 @@
+<style>
+  .cri {
+    --ground: #F5F8FB;
+    --panel: #FFFFFF;
+    --ink: #14212E;
+    --muted: #5C7183;
+    --line: #DBE5EE;
+    --navy: #1A3C5A;
+    --blue: #4B7BA6;
+    --green: #157A46;
+    --green-bg: #E4F3EA;
+    --blue-bg: #E4EEF6;
+    --amber: #9A5B12;
+    --amber-bg: #F6ECDD;
+    --mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+    background:
+      radial-gradient(120% 100% at 100% 0%, #EAF1F7 0%, transparent 55%),
+      var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.55;
+    padding: clamp(20px, 4vw, 56px) clamp(16px, 4vw, 40px) 64px;
+  }
+  .cri * { box-sizing: border-box; }
+  .cri .wrap { max-width: 1020px; margin: 0 auto; }
+
+  /* ---- header ---- */
+  .cri .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin: 0 0 14px;
+  }
+  .cri h1 {
+    font-size: clamp(28px, 5vw, 44px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    font-weight: 800;
+    margin: 0;
+    text-wrap: balance;
+    color: var(--navy);
+  }
+  .cri .lede {
+    font-size: clamp(15px, 2vw, 18px);
+    color: var(--muted);
+    max-width: 62ch;
+    margin: 16px 0 0;
+  }
+  .cri .meta {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-top: 22px;
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: .04em;
+  }
+  .cri .meta span {
+    border: 1px solid var(--line); background: var(--panel);
+    padding: 5px 10px; border-radius: 999px; color: var(--muted);
+  }
+
+  /* ---- section scaffolding ---- */
+  .cri section { margin-top: clamp(40px, 6vw, 68px); }
+  .cri .kicker {
+    display: flex; align-items: baseline; gap: 12px;
+    border-bottom: 2px solid var(--navy);
+    padding-bottom: 10px; margin-bottom: 24px;
+  }
+  .cri .kicker .n {
+    font-family: var(--mono); font-size: 13px; font-weight: 600;
+    color: var(--blue);
+  }
+  .cri .kicker h2 {
+    font-size: clamp(19px, 2.6vw, 24px); font-weight: 750;
+    letter-spacing: -0.01em; margin: 0; color: var(--navy);
+  }
+  .cri .kicker p { margin: 0 0 0 auto; font-size: 13px; color: var(--muted); text-align: right; }
+
+  /* ---- thesis ---- */
+  .cri .thesis {
+    background: var(--navy); color: #EAF2F8;
+    border-radius: 16px; padding: clamp(22px, 3vw, 34px);
+    font-size: clamp(17px, 2.4vw, 22px); line-height: 1.4;
+    text-wrap: balance;
+  }
+  .cri .thesis b { color: #fff; }
+  .cri .thesis .small { display:block; font-size: 14px; color: #9FC0D6; margin-top: 14px; line-height:1.5; }
+
+  /* ---- pillars ---- */
+  .cri .pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .cri .pillar {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: 20px; position: relative; overflow: hidden;
+  }
+  .cri .pillar::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--blue);
+  }
+  .cri .pillar .p-n { font-family: var(--mono); font-size: 12px; color: var(--blue); }
+  .cri .pillar h3 { margin: 8px 0 6px; font-size: 18px; color: var(--navy); }
+  .cri .pillar p { margin: 0; font-size: 13.5px; color: var(--muted); }
+
+  /* ---- entity grid ---- */
+  .cri .entities { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .cri .ent {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 16px 15px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .cri .ent .head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .cri .ent .name { font-family: var(--mono); font-size: 13.5px; font-weight: 600; color: var(--navy); }
+  .cri .ent .tag { font-family: var(--mono); font-size: 10.5px; color: var(--muted); border: 1px solid var(--line); padding: 2px 6px; border-radius: 6px; white-space: nowrap; }
+  .cri .ent p { margin: 0; font-size: 13px; color: var(--muted); }
+  .cri .ent .core { border-color: color-mix(in srgb, var(--green) 40%, var(--line)); }
+
+  /* ---- flow ---- */
+  .cri .flow {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px;
+    overflow-x: auto;
+  }
+  .cri .flow ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+  .cri .flow li {
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 12.5px; color: var(--navy);
+    background: var(--blue-bg); border: 1px solid #CFE0EE; border-radius: 8px; padding: 8px 11px;
+  }
+  .cri .flow li .idx { color: var(--blue); font-weight: 700; }
+  .cri .flow li.trigger { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .cri .flow li.ai { background: var(--amber-bg); border-color: #E7D4B8; color: var(--amber); }
+  .cri .flow .arrow { align-self: center; color: var(--blue); font-family: var(--mono); }
+
+  /* ---- layers ---- */
+  .cri .layers { display: flex; flex-direction: column; gap: 8px; }
+  .cri .layer {
+    display: grid; grid-template-columns: 132px 1fr; gap: 16px; align-items: center;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px;
+  }
+  .cri .layer .lname { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--navy); }
+  .cri .layer p { margin: 0; font-size: 13px; color: var(--muted); }
+
+  /* ---- table ---- */
+  .cri .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+  .cri table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 13.5px; }
+  .cri th, .cri td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .cri thead th { background: #EEF3F8; color: var(--muted); font-family: var(--mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; font-weight: 600; }
+  .cri tbody tr:last-child td { border-bottom: none; }
+  .cri td .m { font-family: var(--mono); font-size: 12.5px; color: var(--navy); }
+  .cri .chip { display: inline-block; font-family: var(--mono); font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+  .cri .chip.ok { background: var(--green-bg); color: var(--green); }
+  .cri .chip.evo { background: var(--blue-bg); color: var(--blue); }
+  .cri .chip.new { background: var(--amber-bg); color: var(--amber); }
+
+  /* ---- roadmap ---- */
+  .cri .phases { display: flex; flex-direction: column; gap: 10px; }
+  .cri .phase {
+    display: grid; grid-template-columns: 96px 1fr; gap: 18px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px;
+  }
+  .cri .phase .ph { font-family: var(--mono); font-weight: 700; color: var(--navy); font-size: 14px; }
+  .cri .phase .ph small { display:block; font-weight: 400; color: var(--muted); font-size: 11px; margin-top: 4px; }
+  .cri .phase h4 { margin: 0 0 5px; font-size: 15.5px; color: var(--navy); }
+  .cri .phase p { margin: 0; font-size: 13px; color: var(--muted); }
+  .cri .phase.done { border-color: color-mix(in srgb, var(--green) 45%, var(--line)); background: linear-gradient(180deg, var(--green-bg), var(--panel) 60%); }
+
+  .cri .note {
+    margin-top: 36px; font-size: 12.5px; color: var(--muted);
+    border-top: 1px solid var(--line); padding-top: 18px; max-width: 70ch;
+  }
+  .cri .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; font-size: 12px; color: var(--muted); }
+  .cri .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .cri .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+  @media (max-width: 620px) {
+    .cri .pillars { grid-template-columns: 1fr; }
+    .cri .layer { grid-template-columns: 1fr; gap: 4px; }
+    .cri .phase { grid-template-columns: 1fr; gap: 6px; }
+    .cri .kicker p { display: none; }
+  }
+</style>
+
+<div class="cri">
+  <div class="wrap">
+
+    <header>
+      <p class="eyebrow">Blueprint · Consolidação das Partes 1–10</p>
+      <h1>Central de Relacionamento Inteligente</h1>
+      <p class="lede">Não é um sistema de atendimento. É um <b>sistema operacional de relacionamento</b> — organizado em torno da Pessoa, e não de canais, mensagens ou processos. Este documento consolida o PRD em um único modelo de referência e mostra onde o que já foi construído se encaixa.</p>
+      <div class="meta">
+        <span>PrevAtendimento · Aposentar</span>
+        <span>Versão 1.0</span>
+        <span>10 partes lidas</span>
+        <span>Modelo conceitual</span>
+      </div>
+    </header>
+
+    <!-- THESIS -->
+    <section>
+      <div class="thesis">
+        Todo sistema atual trata um <b>identificador</b> (número, e-mail, CPF) como se fosse a identidade. Quando o identificador muda, a pessoa se fragmenta em vários cadastros e o histórico se perde.
+        <span class="small">A CRI inverte isso: a Pessoa é única e permanente. Número de WhatsApp, e-mail, Instagram e CPF são apenas formas de localizá-la. Toda comunicação, por qualquer canal, compõe uma única linha do tempo.</span>
+      </div>
+    </section>
+
+    <!-- PILLARS -->
+    <section>
+      <div class="kicker"><span class="n">01</span><h2>Os três pilares permanentes</h2><p>Parte 5 · §76</p></div>
+      <div class="pillars">
+        <div class="pillar"><div class="p-n">pilar 01</div><h3>Pessoa</h3><p>A entidade central. Única, permanente, evolui mas nunca é duplicada. Tudo se conecta a ela.</p></div>
+        <div class="pillar"><div class="p-n">pilar 02</div><h3>Jornada</h3><p>A evolução do relacionamento ao longo do tempo — nunca reinicia, apenas continua sendo enriquecida.</p></div>
+        <div class="pillar"><div class="p-n">pilar 03</div><h3>Objetivos</h3><p>O que a pessoa quer alcançar. A empresa não vende processo; vende a transformação que o objetivo representa.</p></div>
+      </div>
+    </section>
+
+    <!-- ENTITIES -->
+    <section>
+      <div class="kicker"><span class="n">02</span><h2>O modelo de entidades</h2><p>a espinha dorsal de dados</p></div>
+      <div class="entities">
+        <div class="ent core">
+          <div class="head"><span class="name">Pessoa</span><span class="tag">P2</span></div>
+          <p>Identidade única e permanente. Papéis (cliente, parceiro, médico…) coexistem sem gerar novo cadastro.</p>
+        </div>
+        <div class="ent core">
+          <div class="head"><span class="name">Identificadores</span><span class="tag">P2 §19</span></div>
+          <p>N por pessoa: WhatsApps, telefones, e-mails, CPF, Instagram, códigos legados. Só ponteiros para a mesma identidade.</p>
+        </div>
+        <div class="ent core">
+          <div class="head"><span class="name">Evento</span><span class="tag">P3 §34</span></div>
+          <p>Unidade atômica. Mensagem, ligação, documento, contrato, pagamento — tudo vira evento e passa pelo Motor de Eventos.</p>
+        </div>
+        <div class="ent core">
+          <div class="head"><span class="name">Linha do Tempo</span><span class="tag">P2 §27</span></div>
+          <p>Única, pertence à Pessoa (não ao canal). Reúne cronologicamente todos os eventos do relacionamento.</p>
+        </div>
+        <div class="ent">
+          <div class="head"><span class="name">Jornada · Estado</span><span class="tag">P4 §46</span></div>
+          <p>Posição estrutural (Lead → Cliente → Execução → Pós-venda…). Muda com pouca frequência.</p>
+        </div>
+        <div class="ent">
+          <div class="head"><span class="name">Momento</span><span class="tag">P4 §55</span></div>
+          <p>Situação operacional instantânea (aguardando documento, em análise…). Muda várias vezes ao dia.</p>
+        </div>
+        <div class="ent">
+          <div class="head"><span class="name">Objetivo · Subobjetivo</span><span class="tag">P5 §62</span></div>
+          <p>O que a pessoa deseja. Um objetivo gera vários processos e subobjetivos com responsáveis próprios.</p>
+        </div>
+        <div class="ent">
+          <div class="head"><span class="name">Missão</span><span class="tag">P9 §132</span></div>
+          <p>Tudo que precisa acontecer para atingir um objetivo. Tem dono, participantes, dependências e índice de risco.</p>
+        </div>
+        <div class="ent">
+          <div class="head"><span class="name">Compromisso</span><span class="tag">P10 §156</span></div>
+          <p>Toda promessa (da empresa, do cliente, de terceiros). Rastreável, com prazo, alerta e impacto na confiança.</p>
+        </div>
+        <div class="ent">
+          <div class="head"><span class="name">Perfil · Memória</span><span class="tag">P6 §78</span></div>
+          <p>Preferências, comportamento e fatos aprendidos continuamente. Gera o resumo executivo da pessoa.</p>
+        </div>
+        <div class="ent">
+          <div class="head"><span class="name">Rede · Ecossistema</span><span class="tag">P7 §95</span></div>
+          <p>Vínculos entre pessoas e empresas: família, secretária, contador, indicações — com permissões e validade.</p>
+        </div>
+        <div class="ent">
+          <div class="head"><span class="name">Life Event</span><span class="tag">P8 §114</span></div>
+          <p>Acontecimentos da vida (nascimento, novo emprego, gravidez…). Cada um abre uma matriz de oportunidades.</p>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--green)"></i> núcleo (Identidade + Eventos)</span>
+        <span><i class="dot" style="background:var(--blue)"></i> demais entidades</span>
+      </div>
+    </section>
+
+    <!-- FLOW -->
+    <section>
+      <div class="kicker"><span class="n">03</span><h2>O fluxo obrigatório de todo evento</h2><p>Parte 9 · §141</p></div>
+      <div class="flow">
+        <ol>
+          <li class="trigger"><span class="idx">▸</span> Evento</li>
+          <span class="arrow">→</span>
+          <li><span class="idx">1</span> Identificar Pessoa</li>
+          <span class="arrow">→</span>
+          <li><span class="idx">2</span> Atualizar Missão</li>
+          <span class="arrow">→</span>
+          <li><span class="idx">3</span> Atualizar Objetivo</li>
+          <span class="arrow">→</span>
+          <li><span class="idx">4</span> Atualizar Jornada</li>
+          <span class="arrow">→</span>
+          <li><span class="idx">5</span> Registrar Linha do Tempo</li>
+          <span class="arrow">→</span>
+          <li class="ai"><span class="idx">6</span> Executar IA</li>
+          <span class="arrow">→</span>
+          <li><span class="idx">7</span> Criar Tarefas</li>
+          <span class="arrow">→</span>
+          <li><span class="idx">8</span> Atualizar Indicadores</li>
+          <span class="arrow">→</span>
+          <li><span class="idx">9</span> Gerar Alertas</li>
+          <span class="arrow">→</span>
+          <li><span class="idx">10</span> Notificar Responsáveis</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- LAYERS -->
+    <section>
+      <div class="kicker"><span class="n">04</span><h2>As sete camadas desacopladas</h2><p>Parte 3 · §32</p></div>
+      <div class="layers">
+        <div class="layer"><span class="lname">1 · Identidade</span><p>Descobre quem é a pessoa e todos os seus identificadores. Não conhece WhatsApp — conhece Pessoas.</p></div>
+        <div class="layer"><span class="lname">2 · Comunicação</span><p>Apenas conectores de canal (WhatsApp, Instagram, e-mail, telefone). Sem inteligência.</p></div>
+        <div class="layer"><span class="lname">3 · Relacionamento</span><p>Jornada, histórico, contexto, objetivos, pendências. Conhece toda a história da pessoa.</p></div>
+        <div class="layer"><span class="lname">4 · Operação</span><p>Filas, responsáveis, transferências, escalonamento, SLA, produtividade, capacidade.</p></div>
+        <div class="layer"><span class="lname">5 · Inteligência</span><p>Interpreta, resume, detecta risco/oportunidade, cria alertas e tarefas. Um gerente operacional invisível.</p></div>
+        <div class="layer"><span class="lname">6 · Conhecimento</span><p>Base permanente que aprende com cada relacionamento — dúvidas, motivos, padrões, decisões.</p></div>
+        <div class="layer"><span class="lname">7 · Gestão</span><p>Dashboards, indicadores, qualidade, satisfação, riscos e previsões.</p></div>
+      </div>
+    </section>
+
+    <!-- MAPPING -->
+    <section>
+      <div class="kicker"><span class="n">05</span><h2>O que já existe × o alvo CRI</h2><p>de onde partimos</p></div>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr><th>Hoje no MVP</th><th>Vira, no modelo CRI</th><th>Situação</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="m">Adaptador de ingestão</span> (webhook do WhatsApp)</td><td>Camada de Comunicação + entrada do Motor de Eventos</td><td><span class="chip ok">já alinhado</span></td></tr>
+            <tr><td><span class="m">Supabase self-hosted</span></td><td>Verdade Única — nossa base é a fonte oficial</td><td><span class="chip ok">já alinhado</span></td></tr>
+            <tr><td><span class="m">contactos</span> + colunas whatsapp_1/2/3</td><td><span class="m">pessoas</span> + <span class="m">identificadores</span> (1 linha por número/CPF)</td><td><span class="chip evo">evolui</span></td></tr>
+            <tr><td><span class="m">mensagens</span></td><td><span class="m">eventos</span> (tipo = mensagem) na Linha do Tempo única</td><td><span class="chip evo">evolui</span></td></tr>
+            <tr><td><span class="m">conversas</span> + rastreio de SLA</td><td>Camada de Operação → Missões e Compromissos</td><td><span class="chip evo">evolui</span></td></tr>
+            <tr><td><span class="m">usuarios</span> / papéis</td><td>Responsáveis e participantes de Missões</td><td><span class="chip ok">base pronta</span></td></tr>
+            <tr><td>Painel de pendências</td><td>Camada de Gestão (indicadores por objetivo/missão)</td><td><span class="chip ok">base pronta</span></td></tr>
+            <tr><td>—</td><td>Objetivos, Jornada, Perfil, Rede, Life Events, IA</td><td><span class="chip new">novo</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ROADMAP -->
+    <section>
+      <div class="kicker"><span class="n">06</span><h2>Roadmap proposto</h2><p>sequência sugerida — a validar</p></div>
+      <div class="phases">
+        <div class="phase done">
+          <div class="ph">Fase 0<small>concluída</small></div>
+          <div><h4>Captura + Painel de SLA</h4><p>WhatsApp entrando via Baileys, contatos, conversas, mensagens, dashboard de pendências e login. Valida a ponta a ponta.</p></div>
+        </div>
+        <div class="phase">
+          <div class="ph">Fase 1<small>fundação</small></div>
+          <div><h4>Núcleo de Identidade</h4><p>Tabelas <span class="m">pessoas</span> + <span class="m">identificadores</span>; migração dos contatos; identificação automática por número/CPF com grau de confiança e cadastro provisório.</p></div>
+        </div>
+        <div class="phase">
+          <div class="ph">Fase 2<small>núcleo</small></div>
+          <div><h4>Motor de Eventos + Linha do Tempo</h4><p>Toda interação vira evento; linha do tempo única por pessoa; base para auditoria e reprocessamento.</p></div>
+        </div>
+        <div class="phase">
+          <div class="ph">Fase 3<small>operação</small></div>
+          <div><h4>Objetivos, Jornada e Missões</h4><p>Estado × momento, objetivos e subobjetivos, missões com dono, dependências e priorização. A operação passa a girar por resultado.</p></div>
+        </div>
+        <div class="phase">
+          <div class="ph">Fase 4<small>confiança</small></div>
+          <div><h4>Compromissos</h4><p>Promessas rastreáveis com prazo, alerta e índice de confiança bidirecional. Ataca a dor central: promessa esquecida.</p></div>
+        </div>
+        <div class="phase">
+          <div class="ph">Fase 5<small>contexto</small></div>
+          <div><h4>Rede + Life Events</h4><p>Ecossistema (família, secretária, contador, indicações) com permissões; eventos da vida e matriz de oportunidades.</p></div>
+        </div>
+        <div class="phase">
+          <div class="ph">Fase 6<small>inteligência</small></div>
+          <div><h4>Camada de IA</h4><p>Resumo executivo, extração automática de compromissos, detecção de eventos, priorização e perfil aprendido — sempre com grau de confiança e explicação.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <p class="note">
+      Este blueprint reflete fielmente as Partes 1–10 do PRD, acrescido do mapeamento com o que já foi construído e de uma proposta de sequência. Nada do schema atual será alterado sem sua aprovação. As fases 1–6 são uma recomendação de ordem, não um compromisso de escopo — cada uma será detalhada antes de iniciar.
+    </p>
+
+  </div>
+</div>

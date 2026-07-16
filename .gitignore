@@ -1,0 +1,42 @@
+# ============================================================
+# O que NUNCA vai para o GitHub.
+# Regra de ouro: senha, chave e sessão ficam só nesta máquina
+# (e nos campos próprios da Vercel/Railway). Nada disso aqui.
+# ============================================================
+
+# --- SENHAS E CHAVES (o mais importante) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Configuração do conector do Supabase: contém o token de acesso em texto puro.
+.mcp.json
+
+# Sessão pareada do WhatsApp (Baileys): equivale a estar logado no WhatsApp.
+whatsapp-service/auth_state/
+
+# Preferências locais do Claude Code (permissões desta máquina).
+.claude/settings.local.json
+
+# --- DEPENDÊNCIAS (baixadas de novo em cada servidor) ---
+node_modules/
+.pnp
+.pnp.*
+
+# --- BUILD / TEMPORÁRIOS ---
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+.vercel
+
+# --- LOGS E LIXO ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.DS_Store
+Thumbs.db

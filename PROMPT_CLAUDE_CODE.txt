@@ -1,0 +1,341 @@
+# 🤖 PROMPT MASTER - PARA CONSTRUIR TUDO NO CLAUDE CODE
+
+Copie este texto inteiro e mande no Claude Code. Ele vai entender e começar a construir!
+
+---
+
+## COMEÇAR AQUI
+
+Você é um arquiteto de software especializado em sistemas de atendimento ao cliente. Sua tarefa é construir um **Sistema de Gestão de Atendimento Previdenciário MVP** de alta qualidade.
+
+## CONTEXTO
+
+- **Cliente:** Ronaldo Galeão (Aposentar Soluções Previdenciárias)
+- **Problema:** Está perdendo clientes porque colaboradores não conseguem rastrear quem respondeu, quanto tempo sem resposta, se é cliente ou lead
+- **Solução:** Dashboard simples + multi-instância WhatsApp + rastreamento de SLA
+- **Timeline:** MVP em 7 dias
+- **Prioridade:** Parar hemorragia de conversas sem resposta
+
+⚠️ **IMPORTANTE - FASES DO PROJETO:**
+
+**FASE 1 (MVP - AGORA - 7 DIAS):** Multi-Atendimento
+- Você vai construir ISTO agora
+- Foco: resolver urgência de falta de resposta
+
+**FASE 2 (CRM Previdenciário - DEPOIS - Semana 2-3):**
+- Será construído DEPOIS
+- Baseado em briefing específico que Ronaldo vai passar (arquivo: BRIEFING_CRM_PREVIDENCIARIO_TEMPLATE.md)
+- Nada de CRM previdenciário NESTE prompt
+
+### ESCOPO MVP - FASE 1
+
+**O que deve fazer:**
+1. Receber mensagens do WhatsApp (via YCloud)
+2. Armazenar conversas com rastreamento de "quem respondeu por último" e "tempo sem resposta"
+3. Criar/atualizar contactos automaticamente (unificar por CPF)
+4. Dashboard mostrando conversas pendentes com flags de urgência
+5. Diferenciação automática: CLIENTE vs LEAD
+6. Login simples (magic link por email)
+7. Multi-instância (suportar múltiplos números de WhatsApp)
+8. Rastreamento de SLA (tempo de resposta)
+
+**O que NÃO deve fazer (Fase 2):**
+- ❌ CRM previdenciário - será feito DEPOIS baseado em briefing específico
+- ❌ Tipos de benefício - NADA de suposição
+- ❌ Estrutura de funis - será passado no briefing da Fase 2
+- ❌ Automação de respostas específicas
+- ❌ Instagram - vem depois
+- ❌ Relatórios avançados - vem depois
+
+### TECNOLOGIAS
+
+- **Frontend:** React 18 + TypeScript + Tailwind CSS
+- **Backend:** Node.js + Express + TypeScript
+- **Database:** PostgreSQL (via Supabase)
+- **Hospedagem:** Railway
+- **WhatsApp API:** YCloud
+- **Auth:** Magic Link (email simples)
+
+### ESTRUTURA DE PASTAS
+
+```
+/projeto-raiz
+├── backend/
+│   ├── src/
+│   │   ├── index.ts (Express app)
+│   │   ├── config/
+│   │   │   ├── database.ts (Supabase client)
+│   │   │   ├── ycloud.ts (YCloud client)
+│   │   │   └── env.ts
+│   │   ├── routes/
+│   │   │   ├── webhooks.ts
+│   │   │   ├── contactos.ts
+│   │   │   ├── conversas.ts
+│   │   │   └── usuarios.ts
+│   │   ├── controllers/
+│   │   │   ├── webhookController.ts
+│   │   │   └── conversaController.ts
+│   │   ├── services/
+│   │   │   ├── ycloud.service.ts
+│   │   │   ├── contacto.service.ts
+│   │   │   └── conversa.service.ts
+│   │   ├── middleware/
+│   │   │   ├── auth.ts
+│   │   │   └── validateWebhook.ts
+│   │   └── utils/
+│   │       └── formatters.ts
+│   ├── .env.example
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── Dockerfile
+├── frontend/
+│   ├── src/
+│   │   ├── App.tsx
+│   │   ├── pages/
+│   │   │   ├── Login.tsx
+│   │   │   ├── Dashboard.tsx
+│   │   │   ├── ConversaDetail.tsx
+│   │   │   └── GestorPanel.tsx
+│   │   ├── components/
+│   │   │   ├── Header.tsx
+│   │   │   ├── ConversaCard.tsx
+│   │   │   ├── MetricasRapidas.tsx
+│   │   │   └── ConversaPendente.tsx
+│   │   ├── hooks/
+│   │   │   ├── useAuth.ts
+│   │   │   ├── useContacto.ts
+│   │   │   └── useConversa.ts
+│   │   ├── services/
+│   │   │   └── api.ts
+│   │   ├── styles/
+│   │   │   └── globals.css
+│   │   └── index.tsx
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── vite.config.ts
+├── sql/
+│   └── schema.sql (criar tabelas)
+├── docker-compose.yml
+└── README.md
+```
+
+### BANCO DE DADOS - SCHEMAS PRINCIPAIS
+
+```sql
+-- Tabela: contactos
+id (UUID, PK)
+cpf (VARCHAR 14, UNIQUE)
+nome (VARCHAR 255)
+email (VARCHAR 255)
+whatsapp_instancia_1 (VARCHAR 20)
+whatsapp_instancia_2 (VARCHAR 20)
+whatsapp_instancia_3 (VARCHAR 20)
+tipo (ENUM: 'LEAD', 'CLIENTE')
+data_primeiro_contato (TIMESTAMP)
+data_ultima_msg (TIMESTAMP)
+responsavel_id (UUID, FK usuarios)
+flag_sem_resposta (BOOLEAN)
+tempo_sem_resposta (INTEGER, horas)
+flag_urgente (BOOLEAN)
+created_at, updated_at
+
+-- Tabela: conversas
+id (UUID, PK)
+contacto_id (UUID, FK contactos)
+canal (VARCHAR: 'whatsapp', 'instagram')
+instancia (VARCHAR 20)
+ultima_resposta_quem (VARCHAR: 'CLIENTE', 'COLABORADOR')
+ultimo_respondido_por (UUID, FK usuarios)
+data_inicio (TIMESTAMP)
+data_ultima_msg_cliente (TIMESTAMP)
+data_ultima_resposta_colaborador (TIMESTAMP)
+tempo_sem_resposta (INTEGER, horas)
+status (VARCHAR: 'ABERTA', 'RESPONDIDA', 'FECHADA', 'PENDENTE')
+created_at, updated_at
+
+-- Tabela: mensagens
+id (UUID, PK)
+conversa_id (UUID, FK conversas)
+quem (VARCHAR: 'CLIENTE', 'COLABORADOR')
+enviado_por (UUID, FK usuarios)
+conteudo (TEXT)
+tipo (VARCHAR: 'texto', 'imagem', 'arquivo')
+external_message_id (VARCHAR 255)
+timestamp_recebido (TIMESTAMP)
+
+-- Tabela: usuarios
+id (UUID, PK)
+email (VARCHAR 255, UNIQUE)
+nome (VARCHAR 255)
+telefone (VARCHAR 20)
+role (VARCHAR: 'ADMIN', 'GESTOR', 'COLABORADOR')
+data_criacao (TIMESTAMP)
+```
+
+### FLUXO CRÍTICO: WEBHOOK YCLOUD
+
+Quando mensagem chega do WhatsApp:
+
+1. **Receber** em `POST /api/webhooks/ycloud`
+2. **Validar** signature do webhook (secret)
+3. **Extrair:**
+   - Número de origem
+   - Instância (qual número recebeu)
+   - Texto da mensagem
+   - Timestamp
+4. **Procurar contacto** por (número + instância)
+   - Se não existe: CRIAR novo contacto como LEAD
+   - Se existe: carregar dados
+5. **Procurar conversa aberta** para esse contacto
+   - Se não existe: CRIAR nova
+   - Se existe: reutilizar
+6. **Inserir mensagem** na conversa
+7. **ATUALIZAR contacto + conversa:**
+   ```
+   ultima_resposta_quem = 'CLIENTE'
+   data_ultima_msg_cliente = NOW()
+   tempo_sem_resposta = 0
+   status = 'ABERTA'
+   ```
+8. **Notificar dashboard** (WebSocket ou polling)
+
+### ENDPOINTS PRINCIPAIS
+
+**Webhooks:**
+- `POST /api/webhooks/ycloud` → recebe mensagens
+
+**Contactos:**
+- `GET /api/contactos/:cpf` → detalhes + histórico
+- `POST /api/contactos` → criar
+- `PATCH /api/contactos/:id` → atualizar
+
+**Conversas:**
+- `GET /api/conversas/pendentes` → lista com filtros
+- `GET /api/conversas/:id` → detalhes + mensagens
+- `POST /api/conversas/:id/mensagens` → enviar (colaborador)
+
+**Usuários:**
+- `POST /api/auth/magic-link` → enviar link por email
+- `POST /api/auth/verify` → verificar link
+- `GET /api/usuarios/perfil` → dados do usuário
+
+### FRONTEND - PÁGINAS PRINCIPAIS
+
+1. **Login (Magic Link)**
+   - Input email
+   - Mensagem: "Link enviado para seu email"
+   - Verificação automática
+
+2. **Dashboard**
+   - Métricas rápidas (conversas abertas, sem resposta, leads)
+   - Lista de conversas pendentes (ordered por tempo sem resposta)
+   - Cada linha mostra: cliente, última msg, tempo sem resposta, responsável
+   - Clique abre conversa em detail
+
+3. **Conversa Detail**
+   - Dados do contacto no topo
+   - Histórico de mensagens
+   - Input para responder
+   - Status da conversa
+
+4. **Painel Gestor** (se role = ADMIN/GESTOR)
+   - Conversas pendentes por colaborador
+   - SLA violados (em vermelho)
+   - Opção de atribuir conversas
+
+### PRIORIDADES DE IMPLEMENTAÇÃO
+
+**Dia 1-2:**
+- [ ] Setup repositório + dependências
+- [ ] Conexão Supabase (criar tabelas)
+- [ ] Autenticação simples (magic link)
+- [ ] CRUD básico de contactos
+
+**Dia 3-4:**
+- [ ] Webhook YCloud funcionando
+- [ ] Fluxo completo: mensagem → banco de dados
+- [ ] Rastreamento de tempo sem resposta
+- [ ] Diferenciação CLIENTE/LEAD
+
+**Dia 5-6:**
+- [ ] Dashboard React simples
+- [ ] Tela de conversa
+- [ ] Notificações em tempo real (WebSocket)
+
+**Dia 7:**
+- [ ] Deploy Railway
+- [ ] Testes com número real
+- [ ] Ajustes finais
+
+### VARIÁVEIS DE AMBIENTE
+
+```
+# SUPABASE
+SUPABASE_URL=https://xxxxx.supabase.co
+SUPABASE_KEY=eyJhbGc...
+SUPABASE_SERVICE_ROLE=eyJhbGc...
+
+# YCLOUD
+YCLOUD_API_KEY=sk_live_xxxxx
+YCLOUD_WEBHOOK_SECRET=webhook_secret_aqui
+
+# APP
+NODE_ENV=production
+PORT=3000
+FRONTEND_URL=https://seu-railway.railway.app
+
+# JWT (gerar um secret seguro)
+JWT_SECRET=gerar_um_string_aleatorio_seguro_64_chars
+
+# EMAIL (se usar nodemailer)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=seu@email.com
+SMTP_PASS=sua_senha_app
+```
+
+### QUALIDADE DE CÓDIGO
+
+- TypeScript em tudo (sem `any`)
+- Erros bem tratados (try-catch, validação)
+- Logs estruturados (console.log → logger)
+- Testes unitários para services críticos
+- Documentação inline em funções complexas
+
+### COMEÇAR A CONSTRUIR
+
+**Execute estes passos na ordem:**
+
+1. Gerar estrutura de pastas (criar arquivos base)
+2. Instalar dependências (package.json)
+3. Criar arquivo `/sql/schema.sql` com tabelas
+4. Implementar autenticação (magic link)
+5. Implementar webhook YCloud
+6. Implementar CRUD de contactos
+7. Implementar CRUD de conversas
+8. Implementar rastreamento de timing
+9. Criar frontend Dashboard
+10. Testes e ajustes
+
+**Não esquecer:**
+- Usar environment variables
+- Validar inputs
+- Erros claros
+- Logs úteis
+- README com instruções
+
+---
+
+## PRONTO?
+
+Quando estiver pronto, o resultado será:
+✅ Backend Node.js rodando em Railway
+✅ Frontend React acessível
+✅ Webhook recebendo mensagens YCloud
+✅ Rastreamento completo de conversas
+✅ Dashboard mostrando pendências
+✅ Pronto para seus 11 colaboradores usarem
+
+---
+
+**Construa! 🚀**

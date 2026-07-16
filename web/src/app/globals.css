@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+/* ─── Paleta PrevAtendimento / SIAP ─────────────────────── */
+:root {
+  --background: #F8FAFC;
+  --foreground: #333333;
+  --card: #FFFFFF;
+  --card-foreground: #333333;
+  --border: #DCE6EF;
+  --input: #DCE6EF;
+  --ring: #4B7BA6;
+
+  /* Paleta primária (SIAP azul) */
+  --primary: #1A3C5A;
+  --primary-foreground: #FFFFFF;
+
+  /* Paleta secundária */
+  --secondary: #4B7BA6;
+  --secondary-foreground: #FFFFFF;
+
+  /* Acento de atendimento (WhatsApp verde) */
+  --accent: #16A34A;
+  --accent-foreground: #FFFFFF;
+
+  /* Textos */
+  --muted: #F8FAFC;
+  --muted-foreground: #6B7280;
+
+  /* Estados */
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
+  --success: #16A34A;
+  --warning: #D97706;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 24px;
+
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+}
+
+* {
+  box-sizing: border-box;
+  border-color: var(--border);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Montserrat', 'Open Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #F1F5F9; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
