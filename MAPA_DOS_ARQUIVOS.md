@@ -1,3 +1,9 @@
+> ⚠️ **DOCUMENTO HISTÓRICO — NÃO É O SISTEMA DE HOJE.**
+> Escrito na fase de planejamento (julho/2026), **antes** da decisão de usar o Multi360.
+> Ele descreve um WhatsApp próprio (Baileys/YCloud) que foi **engavetado**, e usa a palavra
+> "Lead", que é **proibida** no projeto (o certo é "Pretenso Cliente").
+> **Leia o `README.md`** para saber como o sistema realmente funciona.
+
 # 🗺️ MAPA DOS 5 ARQUIVOS - GUIA RÁPIDO
 
 Você tem 5 arquivos. Vamos deixar claro quando usar cada um.
