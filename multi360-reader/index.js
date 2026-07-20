@@ -6,7 +6,6 @@
 // Prioridade (Documento 08): capturar conversas/mensagens NOVAS e mostrar na tela.
 // ============================================================================
 
-require('dotenv').config()
 const { createClient } = require('@supabase/supabase-js')
 
 const BASE = (process.env.MULTI360_BASE_URL || 'https://painel.multi360.com.br/api').replace(/\/$/, '')
