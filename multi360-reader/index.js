@@ -39,13 +39,6 @@ const db = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_R
   auth: { persistSession: false, autoRefreshToken: false },
 })
 
-// Debug: verificar variáveis de ambiente
-console.log('🔍 DEBUG - Variáveis recebidas:')
-console.log('  EMPRESA_SLUG:', process.env.EMPRESA_SLUG ? '✓ presente' : '✗ vazio')
-console.log('  SUPABASE_URL:', process.env.SUPABASE_URL ? '✓ presente' : '✗ vazio')
-console.log('  SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? '✓ presente' : '✗ vazio')
-console.log('  MULTI360_TOKEN:', process.env.MULTI360_TOKEN ? '✓ presente' : '✗ vazio')
-
 let empresaId = null
 
 // ── Chamada à API do Multi360 ───────────────────────────────────────────────
