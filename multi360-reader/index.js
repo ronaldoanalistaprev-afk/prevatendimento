@@ -519,8 +519,14 @@ async function sync() {
 // ── Loop ────────────────────────────────────────────────────────────────────
 async function resolverEmpresa() {
   const slug = process.env.EMPRESA_SLUG || 'aposentar'
-  const { data } = await db.from('empresas').select('id').eq('slug', slug).maybeSingle()
-  return data?.id ?? null
+  try {
+    const { data, error } = await db.from('empresas').select('id').eq('slug', slug).maybeSingle()
+    if (error) throw error
+    return data?.id ?? null
+  } catch (e) {
+    console.error(`❌ Erro ao buscar empresa (slug: ${slug}):`, e.message)
+    throw e
+  }
 }
 
 async function main() {
