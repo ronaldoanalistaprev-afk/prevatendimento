@@ -20,35 +20,40 @@ export default function NovaSenhaPage() {
   // ouvimos a mudança de estado em vez de perguntar uma vez só.
   useEffect(() => {
     const supabase = createClient()
+    const expirado = 'Este link expirou ou já foi usado. Peça um novo em "Esqueci minha senha".'
 
-    // Erro devolvido pelo próprio link (expirado, já usado).
-    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''))
-    if (hash.get('error')) {
-      setErro('Este link expirou ou já foi usado. Peça um novo em "Esqueci minha senha".')
-      setPronto(true)
-      return
-    }
+    async function preparar() {
+      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''))
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_evento, sessao) => {
-      if (sessao) {
-        setErro(null)
+      // Erro devolvido pelo próprio link (expirado, já usado).
+      if (hash.get('error')) {
+        setErro(expirado)
         setPronto(true)
+        return
       }
-    })
 
-    // Rede de segurança: se nada chegar, avisa em vez de deixar o botão travado.
-    const prazo = setTimeout(async () => {
+      // O link de recuperação entrega os tokens depois do "#".
+      const accessToken = hash.get('access_token')
+      const refreshToken = hash.get('refresh_token')
+      if (accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        })
+        // Tira os tokens da barra de endereços depois de usar.
+        window.history.replaceState(null, '', window.location.pathname)
+        setErro(error ? expirado : null)
+        setPronto(true)
+        return
+      }
+
+      // Sem tokens no endereço: talvez já exista sessão (fluxo com ?code=).
       const { data } = await supabase.auth.getSession()
-      if (!data.session) {
-        setErro('Este link expirou ou já foi usado. Peça um novo em "Esqueci minha senha".')
-      }
+      if (!data.session) setErro(expirado)
       setPronto(true)
-    }, 2500)
-
-    return () => {
-      sub.subscription.unsubscribe()
-      clearTimeout(prazo)
     }
+
+    preparar()
   }, [])
 
   async function handleSalvar(e: React.FormEvent) {
