@@ -10,6 +10,8 @@ export async function proxy(request: NextRequest) {
   // Rotas públicas ou com autenticação própria
   if (
     pathname.startsWith('/login') ||
+    pathname.startsWith('/auth/callback') || // retorno dos links de e-mail do Supabase
+    pathname.startsWith('/nova-senha') || // definir senha vinda do link de recuperação
     pathname.startsWith('/api/webhook') // protegida por INGEST_SECRET
   ) {
     return NextResponse.next()

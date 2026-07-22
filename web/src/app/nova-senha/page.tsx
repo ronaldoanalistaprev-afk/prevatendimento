@@ -1,54 +1,51 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react'
 
-export default function LoginPage() {
+export default function NovaSenhaPage() {
   const router = useRouter()
 
-  const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
+  const [confirmacao, setConfirmacao] = useState('')
   const [mostrarSenha, setMostrarSenha] = useState(false)
   const [carregando, setCarregando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
-  const [aviso, setAviso] = useState<string | null>(null)
+  const [pronto, setPronto] = useState(false)
 
-  // Envia o e-mail com o link para criar uma nova senha.
-  async function handleEsqueciSenha() {
-    setErro(null)
-    setAviso(null)
-
-    if (!email) {
-      setErro('Digite seu e-mail acima e clique de novo em "Esqueci minha senha".')
-      return
-    }
-
-    setCarregando(true)
+  // O link do e-mail pode trazer a sessão no endereço (#access_token=...).
+  // O cliente do Supabase lê isso sozinho; aqui só esperamos ele terminar.
+  useEffect(() => {
     const supabase = createClient()
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) {
+        setErro('Este link expirou ou já foi usado. Peça um novo link de recuperação.')
+      }
+      setPronto(true)
     })
-    setCarregando(false)
+  }, [])
 
-    if (error) {
-      setErro('Não foi possível enviar o e-mail agora. Tente novamente em alguns minutos.')
-      return
-    }
-    setAviso('Enviamos um link para o seu e-mail. Abra e crie a nova senha.')
-  }
-
-  async function handleLogin(e: React.FormEvent) {
+  async function handleSalvar(e: React.FormEvent) {
     e.preventDefault()
     setErro(null)
-    setCarregando(true)
 
+    if (senha.length < 8) {
+      setErro('A senha precisa ter pelo menos 8 caracteres.')
+      return
+    }
+    if (senha !== confirmacao) {
+      setErro('As duas senhas não são iguais. Digite de novo.')
+      return
+    }
+
+    setCarregando(true)
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
+    const { error } = await supabase.auth.updateUser({ password: senha })
 
     if (error) {
-      setErro('E-mail ou senha incorretos. Verifique e tente novamente.')
+      setErro('Não foi possível salvar a senha. O link pode ter expirado — peça um novo.')
       setCarregando(false)
       return
     }
@@ -96,31 +93,16 @@ export default function LoginPage() {
           }}
         >
           <h2 className="text-xl font-bold mb-1" style={{ color: '#1A3C5A' }}>
-            Acesse sua conta
+            Criar nova senha
           </h2>
-          <p className="text-sm text-gray-400 mb-7">Digite suas credenciais para continuar</p>
+          <p className="text-sm text-gray-400 mb-7">
+            Escolha uma senha com pelo menos 8 caracteres
+          </p>
 
-          <form onSubmit={handleLogin} className="flex flex-col gap-5">
+          <form onSubmit={handleSalvar} className="flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-semibold" style={{ color: '#1A3C5A' }}>
-                E-mail
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="seu@email.com"
-                required
-                className="h-12 px-4 rounded-2xl border-2 text-sm outline-none transition-all"
-                style={{ borderColor: '#DCE6EF', background: '#F8FAFC', color: '#1A3C5A' }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = '#16A34A')}
-                onBlur={(e) => (e.currentTarget.style.borderColor = '#DCE6EF')}
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold" style={{ color: '#1A3C5A' }}>
-                Senha
+                Nova senha
               </label>
               <div className="relative">
                 <input
@@ -145,6 +127,23 @@ export default function LoginPage() {
               </div>
             </div>
 
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold" style={{ color: '#1A3C5A' }}>
+                Repita a nova senha
+              </label>
+              <input
+                type={mostrarSenha ? 'text' : 'password'}
+                value={confirmacao}
+                onChange={(e) => setConfirmacao(e.target.value)}
+                placeholder="••••••••"
+                required
+                className="h-12 px-4 rounded-2xl border-2 text-sm outline-none transition-all"
+                style={{ borderColor: '#DCE6EF', background: '#F8FAFC', color: '#1A3C5A' }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = '#16A34A')}
+                onBlur={(e) => (e.currentTarget.style.borderColor = '#DCE6EF')}
+              />
+            </div>
+
             {erro && (
               <div
                 className="flex items-center gap-2 text-sm rounded-2xl px-4 py-3"
@@ -155,44 +154,24 @@ export default function LoginPage() {
               </div>
             )}
 
-            {aviso && (
-              <div
-                className="flex items-center gap-2 text-sm rounded-2xl px-4 py-3"
-                style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', color: '#15803D' }}
-              >
-                <span>✓</span>
-                <span>{aviso}</span>
-              </div>
-            )}
-
             <button
               type="submit"
-              disabled={carregando}
+              disabled={carregando || !pronto}
               className="h-12 rounded-2xl text-white font-bold text-sm transition-all flex items-center justify-center gap-2 mt-1"
               style={{
-                background: carregando ? '#6B7280' : 'linear-gradient(135deg, #1A3C5A, #16A34A)',
-                boxShadow: carregando ? 'none' : '0 4px 16px rgba(22, 163, 74, 0.4)',
-                cursor: carregando ? 'not-allowed' : 'pointer',
+                background: carregando || !pronto ? '#6B7280' : 'linear-gradient(135deg, #1A3C5A, #16A34A)',
+                boxShadow: carregando || !pronto ? 'none' : '0 4px 16px rgba(22, 163, 74, 0.4)',
+                cursor: carregando || !pronto ? 'not-allowed' : 'pointer',
               }}
             >
               {carregando ? (
                 <>
                   <Loader2 size={16} className="animate-spin" />
-                  Entrando...
+                  Salvando...
                 </>
               ) : (
-                'Entrar no sistema'
+                'Salvar nova senha'
               )}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleEsqueciSenha}
-              disabled={carregando}
-              className="text-sm font-semibold transition-colors"
-              style={{ color: '#4B7BA6', cursor: carregando ? 'not-allowed' : 'pointer' }}
-            >
-              Esqueci minha senha
             </button>
           </form>
         </div>
