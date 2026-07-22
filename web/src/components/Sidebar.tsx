@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import UsuarioLogado from '@/components/UsuarioLogado'
 import type { UsuarioRole } from '@/lib/tipos'
 
 const itensMenu: { chave: string; href: string; label: string; icone: typeof Radar }[] = [
@@ -30,7 +31,23 @@ const itensMenu: { chave: string; href: string; label: string; icone: typeof Rad
   { chave: 'configuracoes', href: '/dashboard/configuracoes', label: 'Configurações', icone: Settings },
 ]
 
-export default function Sidebar({ role = 'COLABORADOR', telasPermitidas = [] }: { role?: UsuarioRole; telasPermitidas?: string[] }) {
+export default function Sidebar({
+  role = 'COLABORADOR',
+  telasPermitidas = [],
+  nome = null,
+  email = null,
+  rotulo = 'Colaborador',
+  atendente = null,
+  entrouEm = null,
+}: {
+  role?: UsuarioRole
+  telasPermitidas?: string[]
+  nome?: string | null
+  email?: string | null
+  rotulo?: string
+  atendente?: string | null
+  entrouEm?: string | null
+}) {
   const pathname = usePathname()
   const router = useRouter()
   const [recolhido, setRecolhido] = useState(false)
@@ -128,6 +145,18 @@ export default function Sidebar({ role = 'COLABORADOR', telasPermitidas = [] }: 
           )
         })}
       </nav>
+
+      <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <UsuarioLogado
+          nome={nome}
+          email={email}
+          rotulo={rotulo}
+          role={role}
+          atendente={atendente}
+          entrouEm={entrouEm}
+          recolhido={recolhido}
+        />
+      </div>
 
       <div style={{ padding: '12px 8px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
         <button

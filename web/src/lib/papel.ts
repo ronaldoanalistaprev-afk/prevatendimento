@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getPapeis, poderesDo } from '@/lib/poderes'
+import { rotuloPapel } from '@/lib/papeis'
 import type { UsuarioRole } from '@/lib/tipos'
 
 // Reexporta as regras puras para quem já importa de '@/lib/papel'.
@@ -12,6 +13,11 @@ export interface PapelAtual {
   /** Nome do atendente no Multi360 que este login representa (para quem só vê o dele). */
   colaboradorNome: string | null
   nome: string | null
+  email: string | null
+  /** Nome do papel como aparece na tela ("Supervisor"), já resolvido. */
+  rotulo: string
+  /** Momento do último login — serve para mostrar há quanto tempo a pessoa está no sistema. */
+  entrouEm: string | null
   /** Vê as conversas de todos? (vem dos poderes do papel, editáveis em Configurações) */
   verTudo: boolean
   /** Pode criar/editar/cancelar cobranças? */
@@ -24,6 +30,9 @@ const FALLBACK: PapelAtual = {
   atColaboradorId: null,
   colaboradorNome: null,
   nome: null,
+  email: null,
+  rotulo: 'Colaborador',
+  entrouEm: null,
   verTudo: false,
   cobrar: false,
 }
@@ -44,7 +53,8 @@ export async function getPapelAtual(): Promise<PapelAtual> {
         .maybeSingle(),
       getPapeis(true),
     ])
-    if (!data) return { ...FALLBACK, id: user.id }
+    const entrouEm = (user.last_sign_in_at as string | undefined) ?? null
+    if (!data) return { ...FALLBACK, id: user.id, email: user.email ?? null, entrouEm }
     const rel = (data as { at_colaboradores?: { nome?: string } | { nome?: string }[] }).at_colaboradores
     const colaboradorNome = Array.isArray(rel) ? rel[0]?.nome ?? null : rel?.nome ?? null
     const role = ((data.role as UsuarioRole) ?? 'COLABORADOR') as string
@@ -55,6 +65,9 @@ export async function getPapelAtual(): Promise<PapelAtual> {
       atColaboradorId: (data.at_colaborador_id as string | null) ?? null,
       colaboradorNome,
       nome: (data.nome as string | null) ?? null,
+      email: user.email ?? null,
+      rotulo: rotuloPapel(role, papeis),
+      entrouEm,
       verTudo: poderes.verTudo,
       cobrar: poderes.cobrar,
     }
