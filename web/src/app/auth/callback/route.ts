@@ -26,7 +26,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/login?erro=link_invalido', origin))
     }
   } else {
-    return NextResponse.redirect(new URL('/login', origin))
+    // Sem parâmetros na query: o Supabase devolveu a sessão depois do "#",
+    // que só o navegador enxerga. Mandamos para a tela de nova senha —
+    // o trecho após o "#" sobrevive ao redirecionamento e é lido lá.
+    return NextResponse.redirect(new URL('/nova-senha', origin))
   }
 
   // Recuperação de senha e convite caem na tela de definir senha.

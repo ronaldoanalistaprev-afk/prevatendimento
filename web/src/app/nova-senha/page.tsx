@@ -15,16 +15,40 @@ export default function NovaSenhaPage() {
   const [erro, setErro] = useState<string | null>(null)
   const [pronto, setPronto] = useState(false)
 
-  // O link do e-mail pode trazer a sessão no endereço (#access_token=...).
-  // O cliente do Supabase lê isso sozinho; aqui só esperamos ele terminar.
+  // O link do e-mail traz a sessão depois do "#" (#access_token=...).
+  // O cliente do Supabase lê isso sozinho, mas leva um instante — então
+  // ouvimos a mudança de estado em vez de perguntar uma vez só.
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getSession().then(({ data }) => {
+
+    // Erro devolvido pelo próprio link (expirado, já usado).
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''))
+    if (hash.get('error')) {
+      setErro('Este link expirou ou já foi usado. Peça um novo em "Esqueci minha senha".')
+      setPronto(true)
+      return
+    }
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_evento, sessao) => {
+      if (sessao) {
+        setErro(null)
+        setPronto(true)
+      }
+    })
+
+    // Rede de segurança: se nada chegar, avisa em vez de deixar o botão travado.
+    const prazo = setTimeout(async () => {
+      const { data } = await supabase.auth.getSession()
       if (!data.session) {
-        setErro('Este link expirou ou já foi usado. Peça um novo link de recuperação.')
+        setErro('Este link expirou ou já foi usado. Peça um novo em "Esqueci minha senha".')
       }
       setPronto(true)
-    })
+    }, 2500)
+
+    return () => {
+      sub.subscription.unsubscribe()
+      clearTimeout(prazo)
+    }
   }, [])
 
   async function handleSalvar(e: React.FormEvent) {
