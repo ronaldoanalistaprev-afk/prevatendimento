@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { UserPlus, Loader2 } from 'lucide-react'
+import { UserPlus, Loader2, Eye, EyeOff } from 'lucide-react'
 
 export interface PapelOpcao {
   codigo: string
@@ -25,6 +25,7 @@ export default function NovoColaborador({
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
+  const [mostrarSenha, setMostrarSenha] = useState(false)
   const [role, setRole] = useState('COLABORADOR')
   const [atColaboradorId, setAtColaboradorId] = useState('')
   const [salvando, setSalvando] = useState(false)
@@ -112,7 +113,24 @@ export default function NovoColaborador({
 
       <input style={inputStyle} placeholder="Nome completo" value={nome} onChange={(e) => setNome(e.target.value)} required />
       <input style={inputStyle} type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} required />
-      <input style={inputStyle} type="password" placeholder="Senha (mín. 6)" value={senha} onChange={(e) => setSenha(e.target.value)} required />
+      <div style={{ position: 'relative' }}>
+        <input
+          style={{ ...inputStyle, paddingRight: 44, width: '100%' }}
+          type={mostrarSenha ? 'text' : 'password'}
+          placeholder="Senha (mín. 6)"
+          value={senha}
+          onChange={(e) => setSenha(e.target.value)}
+          required
+        />
+        <button
+          type="button"
+          onClick={() => setMostrarSenha((v) => !v)}
+          aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
+          style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: '#6B7280', cursor: 'pointer', display: 'flex' }}
+        >
+          {mostrarSenha ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+      </div>
       <select style={inputStyle} value={role} onChange={(e) => setRole(e.target.value)}>
         {papeis.map((p) => (
           <option key={p.codigo} value={p.codigo}>

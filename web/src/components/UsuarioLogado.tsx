@@ -37,9 +37,13 @@ export default function UsuarioLogado({
   entrouEm: string | null
   recolhido: boolean
 }) {
-  // Recalcula o tempo de sessão sozinho, sem precisar recarregar a página.
+  // O "há X min" depende da hora atual, que difere entre servidor e navegador.
+  // Só mostramos depois de montar no navegador — senão o texto do HTML do
+  // servidor não bate com o do cliente e o React reclama (erro de hidratação #418).
+  const [montado, setMontado] = useState(false)
   const [, redesenhar] = useState(0)
   useEffect(() => {
+    setMontado(true)
     if (!entrouEm) return
     const t = setInterval(() => redesenhar((n) => n + 1), 30_000)
     return () => clearInterval(t)
@@ -142,7 +146,9 @@ export default function UsuarioLogado({
 
       {hora && (
         <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 10.5, lineHeight: 1.5 }}>
-          Entrou às {hora} · há {formatarDuracao(entrouEm)}
+          Entrou às {hora}
+          {/* "há X" só depois de montar: depende da hora atual e não pode divergir do servidor. */}
+          {montado && entrouEm ? ` · há ${formatarDuracao(entrouEm)}` : ''}
         </div>
       )}
     </div>

@@ -84,7 +84,17 @@ export async function POST(req: Request) {
     user_metadata: { nome },
   })
   if (errAuth || !created?.user) {
-    return NextResponse.json({ erro: `falha no Auth: ${errAuth?.message ?? 'desconhecido'}` }, { status: 400 })
+    // Traduz os erros técnicos do Auth para algo que o usuário entenda.
+    const bruto = (errAuth?.message ?? '').toLowerCase()
+    let amigavel = 'Não foi possível criar o login. Confira os dados e tente de novo.'
+    if (bruto.includes('already been registered') || bruto.includes('already registered')) {
+      amigavel = 'Este e-mail já está cadastrado. Use outro e-mail ou edite o login existente.'
+    } else if (bruto.includes('password')) {
+      amigavel = 'A senha não atende aos requisitos. Use pelo menos 8 caracteres.'
+    } else if (bruto.includes('email') && bruto.includes('invalid')) {
+      amigavel = 'O e-mail informado não é válido.'
+    }
+    return NextResponse.json({ erro: amigavel }, { status: 400 })
   }
 
   // 2) Vincula na tabela usuarios
