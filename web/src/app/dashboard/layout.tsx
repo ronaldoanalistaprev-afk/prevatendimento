@@ -14,6 +14,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const telasPermitidas = TELAS.filter((t) => podeAcessar(mapa, t.chave, papel.role)).map((t) => t.chave)
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC' }}>
+      {/* No celular a barra do topo do menu é fixa (52px); o conteúdo desce para não ficar embaixo dela. */}
+      <style>{`@media (max-width: 820px){ .dash-main{ padding-top: 52px; } }`}</style>
       <Sidebar
         role={papel.role}
         telasPermitidas={telasPermitidas}
@@ -23,7 +25,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         atendente={papel.colaboradorNome}
         entrouEm={papel.entrouEm}
       />
-      <main style={{ flex: 1, overflow: 'auto' }}>{children}</main>
+      <main className="dash-main" style={{ flex: 1, overflow: 'auto', minWidth: 0 }}>{children}</main>
     </div>
   )
 }

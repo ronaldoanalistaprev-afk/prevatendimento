@@ -235,8 +235,10 @@ export default function Sidebar({
     <>
       <header
         style={{
-          position: 'sticky',
+          position: 'fixed',
           top: 0,
+          left: 0,
+          right: 0,
           zIndex: 40,
           height: 52,
           display: 'flex',
