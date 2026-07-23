@@ -23,6 +23,17 @@ function isoParaInput(iso: string | null): string {
   const d = new Date(iso)
   return Number.isNaN(d.getTime()) ? '' : paraInputLocal(d)
 }
+/**
+ * Valor do <input type="datetime-local"> -> ISO absoluto.
+ * O campo devolve "2026-07-24T18:00", sem fuso. Quem converte é o navegador,
+ * que está no horário de Brasília — o servidor roda em UTC e leria 18:00 como
+ * se fosse em Londres, adiantando o prazo em 3 horas a cada gravação.
+ */
+function inputParaIso(valor: string): string | null {
+  if (!valor) return null
+  const d = new Date(valor)
+  return Number.isNaN(d.getTime()) ? null : d.toISOString()
+}
 
 type Acao = 'resolver' | 'cancelar' | 'editar' | 'excluir' | 'reabrir'
 
@@ -74,11 +85,9 @@ export default function AcoesCobranca({
     }
   }
 
-  function excluir() {
-    if (confirm('Excluir esta cobrança? Ela some do histórico e das métricas. Isso não pode ser desfeito.')) {
-      chamar('excluir')
-    }
-  }
+  // Confirmação dentro da própria tela — o confirm() do navegador foge do
+  // visual do sistema e não dá para prever onde aparece.
+  const [confirmandoExclusao, setConfirmandoExclusao] = useState(false)
 
   const btn: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', gap: 6, height: 34, padding: '0 12px',
@@ -94,7 +103,7 @@ export default function AcoesCobranca({
       <form
         onSubmit={(e) => {
           e.preventDefault()
-          chamar('editar', { mensagem: texto, prazo: novoPrazo || null })
+          chamar('editar', { mensagem: texto, prazo: inputParaIso(novoPrazo) })
         }}
         style={{ background: '#F8FAFC', border: '1px solid #DCE6EF', borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column', gap: 8, minWidth: 280, flex: 1 }}
       >
@@ -156,12 +165,33 @@ export default function AcoesCobranca({
             </button>
           )
         )}
-        {podeGerenciar && (
-          <button onClick={excluir} disabled={carregando !== null} style={{ ...btn, color: '#B91C1C', borderColor: '#FECACA' }} title="Excluir de vez">
-            {carregando === 'excluir' ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+        {podeGerenciar && !confirmandoExclusao && (
+          <button onClick={() => setConfirmandoExclusao(true)} disabled={carregando !== null} style={{ ...btn, color: '#B91C1C', borderColor: '#FECACA' }} title="Excluir de vez">
+            <Trash2 size={14} />
           </button>
         )}
       </div>
+
+      {confirmandoExclusao && (
+        <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: '10px 12px', maxWidth: 320 }}>
+          <div style={{ fontSize: 12.5, color: '#B91C1C', fontWeight: 600, marginBottom: 8 }}>
+            Excluir esta cobrança? Ela some do histórico e das métricas, e isso não pode ser desfeito.
+          </div>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+            <button onClick={() => setConfirmandoExclusao(false)} disabled={carregando !== null} style={btn}>
+              Manter
+            </button>
+            <button
+              onClick={() => chamar('excluir')}
+              disabled={carregando !== null}
+              style={{ ...btn, background: '#B91C1C', color: '#fff', borderColor: '#B91C1C' }}
+            >
+              {carregando === 'excluir' ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Excluir de vez
+            </button>
+          </div>
+        </div>
+      )}
+
       {erro && <div style={{ fontSize: 12, color: '#B91C1C', maxWidth: 260, textAlign: 'right' }}>{erro}</div>}
     </div>
   )

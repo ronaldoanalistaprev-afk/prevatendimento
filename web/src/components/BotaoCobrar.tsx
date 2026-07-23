@@ -13,6 +13,16 @@ function paraInputLocal(d: Date): string {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`
 }
 
+/**
+ * Valor do campo de data/hora -> ISO absoluto. O campo não carrega fuso;
+ * o servidor roda em UTC e leria "18:00" como se fosse em Londres.
+ */
+function inputParaIso(valor: string): string | null {
+  if (!valor) return null
+  const d = new Date(valor)
+  return Number.isNaN(d.getTime()) ? null : d.toISOString()
+}
+
 /** Hoje + N dias, às 18h (fim do expediente). */
 function prazoEmDias(dias: number): string {
   const d = new Date()
@@ -65,7 +75,7 @@ export default function BotaoCobrar({
       const res = await fetch('/api/cobrancas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ protocolo_id: protocoloId, mensagem, prazo: prazo || null, modelo_id: modeloId || null }),
+        body: JSON.stringify({ protocolo_id: protocoloId, mensagem, prazo: inputParaIso(prazo), modelo_id: modeloId || null }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data?.erro ?? 'Falha ao cobrar')

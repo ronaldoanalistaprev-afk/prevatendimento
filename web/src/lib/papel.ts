@@ -14,6 +14,8 @@ export interface PapelAtual {
   colaboradorNome: string | null
   nome: string | null
   email: string | null
+  /** Login ativo? Desativado perde o acesso na hora, mesmo com a sessão aberta. */
+  ativo: boolean
   /** Nome do papel como aparece na tela ("Supervisor"), já resolvido. */
   rotulo: string
   /** Momento do último login — serve para mostrar há quanto tempo a pessoa está no sistema. */
@@ -31,6 +33,7 @@ const FALLBACK: PapelAtual = {
   colaboradorNome: null,
   nome: null,
   email: null,
+  ativo: true,
   rotulo: 'Colaborador',
   entrouEm: null,
   verTudo: false,
@@ -48,7 +51,7 @@ export async function getPapelAtual(): Promise<PapelAtual> {
     const [{ data }, papeis] = await Promise.all([
       supabase
         .from('usuarios')
-        .select('nome, role, at_colaborador_id, at_colaboradores(nome)')
+        .select('nome, role, ativo, at_colaborador_id, at_colaboradores(nome)')
         .eq('id', user.id)
         .maybeSingle(),
       getPapeis(true),
@@ -66,6 +69,7 @@ export async function getPapelAtual(): Promise<PapelAtual> {
       colaboradorNome,
       nome: (data.nome as string | null) ?? null,
       email: user.email ?? null,
+      ativo: (data.ativo as boolean | null) !== false,
       rotulo: rotuloPapel(role, papeis),
       entrouEm,
       verTudo: poderes.verTudo,

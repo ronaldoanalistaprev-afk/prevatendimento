@@ -42,7 +42,10 @@ export async function POST(req: Request) {
   const db = createAdminClient()
 
   // Só ADMIN pode cadastrar
-  const { data: perfil } = await db.from('usuarios').select('role').eq('id', user.id).maybeSingle()
+  const { data: perfil } = await db.from('usuarios').select('role, ativo').eq('id', user.id).maybeSingle()
+  if ((perfil as { ativo?: boolean } | null)?.ativo === false) {
+    return NextResponse.json({ erro: 'este login está desativado' }, { status: 403 })
+  }
   if (perfil?.role !== 'ADMIN') {
     return NextResponse.json({ erro: 'apenas administradores podem cadastrar colaboradores' }, { status: 403 })
   }
@@ -111,7 +114,10 @@ async function garantirAdmin() {
     return { erro: NextResponse.json({ erro: 'SUPABASE_SERVICE_ROLE_KEY não configurada.' }, { status: 500 }) }
   }
   const db = createAdminClient()
-  const { data: perfil } = await db.from('usuarios').select('role').eq('id', user.id).maybeSingle()
+  const { data: perfil } = await db.from('usuarios').select('role, ativo').eq('id', user.id).maybeSingle()
+  if ((perfil as { ativo?: boolean } | null)?.ativo === false) {
+    return { erro: NextResponse.json({ erro: 'este login está desativado' }, { status: 403 }) }
+  }
   if (perfil?.role !== 'ADMIN') {
     return { erro: NextResponse.json({ erro: 'apenas administradores podem gerenciar acessos' }, { status: 403 }) }
   }

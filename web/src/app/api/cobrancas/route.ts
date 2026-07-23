@@ -17,10 +17,14 @@ async function usuarioAtual() {
   } = await supabase.auth.getUser()
   if (!user) return { supabase, user: null, perfil: null, poderes: { verTudo: false, cobrar: false } }
   const [{ data: perfil }, papeis] = await Promise.all([
-    supabase.from('usuarios').select('role, nome, at_colaborador_id').eq('id', user.id).maybeSingle(),
+    supabase.from('usuarios').select('role, nome, ativo, at_colaborador_id').eq('id', user.id).maybeSingle(),
     getPapeis(true),
   ])
-  const p = perfil as { role?: string; nome?: string; at_colaborador_id?: string } | null
+  const p = perfil as { role?: string; nome?: string; ativo?: boolean; at_colaborador_id?: string } | null
+  // Login desativado não age, nem pelas telas nem por fora delas.
+  if (p?.ativo === false) {
+    return { supabase, user: null, perfil: null, poderes: { verTudo: false, cobrar: false } }
+  }
   return { supabase, user, perfil: p, poderes: poderesDo(p?.role ?? '', papeis) }
 }
 
