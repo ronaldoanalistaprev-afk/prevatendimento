@@ -13,6 +13,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Menu,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -51,14 +52,22 @@ export default function Sidebar({
   const pathname = usePathname()
   const router = useRouter()
   const [recolhido, setRecolhido] = useState(false)
-  // Em telas pequenas (tablet/celular) o menu recolhe sozinho, sobrando espaço p/ o conteúdo.
+  // No celular o menu vira uma gaveta que abre por um botão, em vez de comer
+  // a largura da tela. `celular` decide qual dos dois comportamentos vale.
+  const [celular, setCelular] = useState(false)
+  const [gavetaAberta, setGavetaAberta] = useState(false)
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 820px)')
-    const aplicar = () => setRecolhido(mq.matches)
+    const aplicar = () => setCelular(mq.matches)
     aplicar()
     mq.addEventListener('change', aplicar)
     return () => mq.removeEventListener('change', aplicar)
   }, [])
+  // Trocar de tela fecha a gaveta (senão ela fica por cima do conteúdo novo).
+  useEffect(() => {
+    setGavetaAberta(false)
+  }, [pathname])
+
   const permitido = new Set(telasPermitidas)
   const itens = itensMenu.filter((i) => permitido.has(i.chave))
 
@@ -68,27 +77,36 @@ export default function Sidebar({
     router.push('/login')
   }
 
-  return (
+  // No celular a gaveta nunca fica no modo "recolhido" (mostra tudo por extenso).
+  const compacto = recolhido && !celular
+
+  const menu = (
     <aside
       style={{
-        width: recolhido ? '72px' : '240px',
-        minHeight: '100vh',
+        width: compacto ? '72px' : '240px',
+        height: celular ? '100dvh' : undefined,
+        minHeight: celular ? undefined : '100vh',
         background: 'linear-gradient(180deg, #0f2236 0%, #1A3C5A 100%)',
         display: 'flex',
         flexDirection: 'column',
         transition: 'width 0.2s ease',
-        position: 'relative',
+        position: celular ? 'fixed' : 'relative',
+        top: 0,
+        left: 0,
+        transform: celular ? (gavetaAberta ? 'translateX(0)' : 'translateX(-100%)') : undefined,
+        transitionProperty: 'width, transform',
+        zIndex: 50,
         flexShrink: 0,
       }}
     >
       <div
         style={{
-          padding: recolhido ? '20px 0' : '24px 20px',
+          padding: compacto ? '20px 0' : '24px 20px',
           borderBottom: '1px solid rgba(255,255,255,0.08)',
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
-          justifyContent: recolhido ? 'center' : 'flex-start',
+          justifyContent: compacto ? 'center' : 'flex-start',
         }}
       >
         <div
@@ -105,7 +123,7 @@ export default function Sidebar({
         >
           <span style={{ color: 'white', fontWeight: 700, fontSize: '14px' }}>PA</span>
         </div>
-        {!recolhido && (
+        {!compacto && (
           <div>
             <div style={{ color: 'white', fontWeight: 700, fontSize: '15px', lineHeight: 1.2 }}>
               PrevAtendimento
@@ -115,21 +133,21 @@ export default function Sidebar({
         )}
       </div>
 
-      <nav style={{ flex: 1, padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+      <nav style={{ flex: 1, padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: '2px', overflowY: 'auto' }}>
         {itens.map(({ href, label, icone: Icone }) => {
           const ativo = pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
           return (
             <Link
               key={href}
               href={href}
-              title={recolhido ? label : undefined}
+              title={compacto ? label : undefined}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
-                padding: recolhido ? '10px 0' : '10px 12px',
+                padding: compacto ? '10px 0' : '10px 12px',
                 borderRadius: '10px',
-                justifyContent: recolhido ? 'center' : 'flex-start',
+                justifyContent: compacto ? 'center' : 'flex-start',
                 background: ativo ? 'rgba(22,163,74,0.25)' : 'transparent',
                 borderLeft: ativo ? '3px solid #16A34A' : '3px solid transparent',
                 color: ativo ? 'white' : 'rgba(255,255,255,0.78)',
@@ -140,7 +158,7 @@ export default function Sidebar({
               }}
             >
               <Icone size={18} style={{ flexShrink: 0 }} />
-              {!recolhido && <span>{label}</span>}
+              {!compacto && <span>{label}</span>}
             </Link>
           )
         })}
@@ -154,21 +172,21 @@ export default function Sidebar({
           role={role}
           atendente={atendente}
           entrouEm={entrouEm}
-          recolhido={recolhido}
+          recolhido={compacto}
         />
       </div>
 
       <div style={{ padding: '12px 8px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
         <button
           onClick={handleSair}
-          title={recolhido ? 'Sair' : undefined}
+          title={compacto ? 'Sair' : undefined}
           style={{
             width: '100%',
             display: 'flex',
             alignItems: 'center',
             gap: '10px',
-            padding: recolhido ? '10px 0' : '10px 12px',
-            justifyContent: recolhido ? 'center' : 'flex-start',
+            padding: compacto ? '10px 0' : '10px 12px',
+            justifyContent: compacto ? 'center' : 'flex-start',
             borderRadius: '10px',
             background: 'transparent',
             border: 'none',
@@ -178,31 +196,86 @@ export default function Sidebar({
           }}
         >
           <LogOut size={18} style={{ flexShrink: 0 }} />
-          {!recolhido && <span>Sair</span>}
+          {!compacto && <span>Sair</span>}
         </button>
       </div>
 
-      <button
-        onClick={() => setRecolhido(!recolhido)}
+      {/* No desktop: botão redondo que recolhe/expande. No celular a gaveta não usa isto. */}
+      {!celular && (
+        <button
+          onClick={() => setRecolhido(!recolhido)}
+          style={{
+            position: 'absolute',
+            top: '24px',
+            right: '-12px',
+            width: '24px',
+            height: '24px',
+            borderRadius: '50%',
+            background: '#16A34A',
+            border: '2px solid #0f2236',
+            color: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 10,
+          }}
+        >
+          {recolhido ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
+        </button>
+      )}
+    </aside>
+  )
+
+  // Desktop: menu fixo na lateral, como sempre.
+  if (!celular) return menu
+
+  // Celular: barra no topo com o botão que abre a gaveta; a gaveta desliza por cima.
+  return (
+    <>
+      <header
         style={{
-          position: 'absolute',
-          top: '24px',
-          right: '-12px',
-          width: '24px',
-          height: '24px',
-          borderRadius: '50%',
-          background: '#16A34A',
-          border: '2px solid #0f2236',
-          color: 'white',
+          position: 'sticky',
+          top: 0,
+          zIndex: 40,
+          height: 52,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          zIndex: 10,
+          gap: 12,
+          padding: '0 12px',
+          background: 'linear-gradient(90deg, #0f2236, #1A3C5A)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
         }}
       >
-        {recolhido ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
-      </button>
-    </aside>
+        <button
+          onClick={() => setGavetaAberta(true)}
+          aria-label="Abrir menu"
+          style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }}
+        >
+          <Menu size={22} />
+        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div
+            style={{
+              width: 28, height: 28, borderRadius: 8,
+              background: 'linear-gradient(135deg, #16A34A, #1A3C5A)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <span style={{ color: 'white', fontWeight: 700, fontSize: 12 }}>PA</span>
+          </div>
+          <span style={{ color: 'white', fontWeight: 700, fontSize: 14 }}>PrevAtendimento</span>
+        </div>
+      </header>
+
+      {gavetaAberta && (
+        <div
+          onClick={() => setGavetaAberta(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 45 }}
+        />
+      )}
+
+      {menu}
+    </>
   )
 }
