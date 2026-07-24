@@ -59,7 +59,7 @@ export default async function GestaoPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
             <thead>
               <tr style={{ background: '#F8FAFC', color: '#6B7280', textAlign: 'left' }}>
-                <th style={{ padding: '12px 20px', fontWeight: 600 }}>Colaborador</th>
+                <th style={{ padding: '12px 20px', fontWeight: 600 }}>Atendente</th>
                 <th style={{ padding: '12px 20px', fontWeight: 600 }}>Conversas</th>
                 <th style={{ padding: '12px 20px', fontWeight: 600 }}>Abertas</th>
                 <th style={{ padding: '12px 20px', fontWeight: 600 }}>Pendentes</th>

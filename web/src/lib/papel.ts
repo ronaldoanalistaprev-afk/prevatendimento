@@ -34,7 +34,7 @@ const FALLBACK: PapelAtual = {
   nome: null,
   email: null,
   ativo: true,
-  rotulo: 'Colaborador',
+  rotulo: 'Atendente',
   entrouEm: null,
   verTudo: false,
   cobrar: false,

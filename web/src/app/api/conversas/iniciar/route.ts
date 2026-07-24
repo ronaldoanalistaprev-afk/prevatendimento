@@ -95,7 +95,7 @@ export async function POST(req: Request) {
   if (!empresaId) return NextResponse.json({ erro: 'empresa não configurada' }, { status: 500 })
 
   const { data: perfil } = await db.from('usuarios').select('id, nome').eq('id', user.id).maybeSingle()
-  const nomeColaborador = perfil?.nome ?? user.email ?? 'Colaborador'
+  const nomeColaborador = perfil?.nome ?? user.email ?? 'Atendente'
   const agora = new Date().toISOString()
 
   const { pessoaId, criada } = await resolverPessoaPorIdentificador(db, {

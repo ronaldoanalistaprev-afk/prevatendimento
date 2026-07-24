@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     .select('id, nome')
     .eq('id', user.id)
     .maybeSingle()
-  const nomeColaborador = perfil?.nome ?? user.email ?? 'Colaborador'
+  const nomeColaborador = perfil?.nome ?? user.email ?? 'Atendente'
 
   // Dados da conversa/pessoa para saber para onde enviar
   const { data: conversa } = await db

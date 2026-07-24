@@ -22,10 +22,10 @@ export interface PapelDef {
  * tabela at_papeis existir. Servem de reserva se a tabela ainda não foi criada.
  */
 export const PAPEIS_FABRICA: PapelDef[] = [
-  { codigo: 'ADMIN', nome: 'Administrador', descricao: 'Acesso total. Gerencia logins, papéis e permissões.', sistema: true, pode_ver_tudo: true, pode_cobrar: true, ativo: true, ordem: 1 },
-  { codigo: 'GESTOR', nome: 'Gestor', descricao: 'Enxerga tudo e cobra. Não gerencia acessos do sistema.', sistema: true, pode_ver_tudo: true, pode_cobrar: true, ativo: true, ordem: 2 },
-  { codigo: 'SUPERVISOR', nome: 'Supervisor', descricao: 'Garante que todo cliente seja respondido. Enxerga tudo e cobra.', sistema: true, pode_ver_tudo: true, pode_cobrar: true, ativo: true, ordem: 3 },
-  { codigo: 'COLABORADOR', nome: 'Colaborador', descricao: 'Atendente: vê apenas as próprias conversas e as suas cobranças.', sistema: true, pode_ver_tudo: false, pode_cobrar: false, ativo: true, ordem: 4 },
+  { codigo: 'ADMIN', nome: 'Administrador', descricao: 'Dono do sistema. Cadastra e remove logins, define papéis e permissões. Garante que só as pessoas certas tenham acesso.', sistema: true, pode_ver_tudo: true, pode_cobrar: true, ativo: true, ordem: 1 },
+  { codigo: 'GESTOR', nome: 'Gestor', descricao: 'Responsável pelo resultado. Enxerga a operação inteira e o desempenho de cada atendente; age sobre padrões e gargalos. Também pode cobrar.', sistema: true, pode_ver_tudo: true, pode_cobrar: true, ativo: true, ordem: 2 },
+  { codigo: 'SUPERVISOR', nome: 'Supervisor', descricao: 'Guardião das respostas. Vigia a fila, identifica quem ficou sem resposta e cobra o atendente responsável até resolver.', sistema: true, pode_ver_tudo: true, pode_cobrar: true, ativo: true, ordem: 3 },
+  { codigo: 'COLABORADOR', nome: 'Atendente', descricao: 'Linha de frente. Responde os próprios clientes, dá sequência a cada conversa e resolve as cobranças que recebe.', sistema: true, pode_ver_tudo: false, pode_cobrar: false, ativo: true, ordem: 4 },
 ]
 
 export const soAdmin = (r: UsuarioRole) => r === 'ADMIN'
@@ -39,7 +39,7 @@ export const ROTULO_PAPEL: Record<string, string> = {
   ADMIN: 'Administrador',
   GESTOR: 'Gestor',
   SUPERVISOR: 'Supervisor',
-  COLABORADOR: 'Colaborador',
+  COLABORADOR: 'Atendente',
 }
 
 /** Rótulo do papel; para papéis criados pelo admin, usa a lista vinda do banco. */

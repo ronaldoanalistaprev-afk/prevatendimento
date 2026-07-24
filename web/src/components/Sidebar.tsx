@@ -37,7 +37,7 @@ export default function Sidebar({
   telasPermitidas = [],
   nome = null,
   email = null,
-  rotulo = 'Colaborador',
+  rotulo = 'Atendente',
   atendente = null,
   entrouEm = null,
 }: {

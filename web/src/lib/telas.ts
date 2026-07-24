@@ -23,7 +23,7 @@ export const TELAS: TelaConfig[] = [
 export const PAPEIS_CONFIG = ['COLABORADOR', 'SUPERVISOR', 'GESTOR'] as const
 
 export const ROTULO_PAPEL_CONFIG: Record<string, string> = {
-  COLABORADOR: 'Colaborador',
+  COLABORADOR: 'Atendente',
   SUPERVISOR: 'Supervisor',
   GESTOR: 'Gestor',
 }
