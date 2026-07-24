@@ -118,7 +118,7 @@ export default async function CobrancasPage({
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
                 <Cartao icone={BellRing} cor="#1A3C5A" valor={metricas.criadas} label="cobranças criadas" />
                 <Cartao icone={Check} cor="#15803D" valor={metricas.resolvidas} label="resolvidas" />
-                <Cartao icone={Clock} cor="#B45309" valor={metricas.abertas} label="ainda abertas" />
+                <Cartao icone={Clock} cor="#B45309" valor={metricas.abertas} label="ainda a resolver" />
                 <Cartao icone={AlarmClock} cor="#DC2626" valor={metricas.atrasadas} label="com prazo vencido" />
                 <Cartao icone={X} cor="#6B7280" valor={metricas.canceladas} label="canceladas" />
                 <Cartao icone={TrendingUp} cor="#15803D" valor={`${metricas.taxaResolucao}%`} label="taxa de resolução" />
@@ -178,8 +178,8 @@ export default async function CobrancasPage({
           <BellRing size={30} style={{ margin: '0 auto 10px', opacity: 0.4 }} />
           {situacao === 'ABERTA'
             ? souAtendente
-              ? 'Você não tem cobranças abertas. 🎉'
-              : 'Nenhuma cobrança aberta no momento.'
+              ? 'Você não tem cobranças a resolver. 🎉'
+              : 'Nenhuma cobrança a resolver no momento.'
             : `Nenhuma cobrança ${ROTULO_STATUS[situacao as 'RESOLVIDA' | 'CANCELADA']?.toLowerCase() ?? ''} por aqui.`}
           {souAtendente && !papel.atColaboradorId && (
             <div style={{ marginTop: 10, color: '#C2410C', fontSize: 13 }}>
