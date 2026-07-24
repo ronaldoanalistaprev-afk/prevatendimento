@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
+  KeyRound,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -176,7 +177,27 @@ export default function Sidebar({
         />
       </div>
 
-      <div style={{ padding: '12px 8px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+      <div style={{ padding: '12px 8px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Link
+          href="/dashboard/conta"
+          title={compacto ? 'Minha conta' : undefined}
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: compacto ? '10px 0' : '10px 12px',
+            justifyContent: compacto ? 'center' : 'flex-start',
+            borderRadius: '10px',
+            background: pathname.startsWith('/dashboard/conta') ? 'rgba(22,163,74,0.25)' : 'transparent',
+            color: 'rgba(255,255,255,0.78)',
+            textDecoration: 'none',
+            fontSize: '13.5px',
+          }}
+        >
+          <KeyRound size={18} style={{ flexShrink: 0 }} />
+          {!compacto && <span>Minha conta</span>}
+        </Link>
         <button
           onClick={handleSair}
           title={compacto ? 'Sair' : undefined}
