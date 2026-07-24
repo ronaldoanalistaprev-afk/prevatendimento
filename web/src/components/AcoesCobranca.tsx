@@ -144,8 +144,8 @@ export default function AcoesCobranca({
       <div style={{ display: 'inline-flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
         {status === 'ABERTA' ? (
           <>
-            <button onClick={() => chamar('resolver')} disabled={carregando !== null} style={{ ...btn, background: '#16A34A', color: '#fff', border: 'none' }} title="O atendente já respondeu o cliente">
-              {carregando === 'resolver' ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Resolvida
+            <button onClick={() => chamar('resolver')} disabled={carregando !== null} style={{ ...btn, background: '#16A34A', color: '#fff', border: 'none' }} title="Marcar esta cobrança como resolvida (você já respondeu o cliente)">
+              {carregando === 'resolver' ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Resolver
             </button>
             {podeGerenciar && (
               <>

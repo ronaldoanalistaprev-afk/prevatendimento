@@ -16,7 +16,7 @@ import { BellRing, AlarmClock, Check, X, Clock, TrendingUp } from 'lucide-react'
 export const dynamic = 'force-dynamic'
 
 const SITUACOES: { chave: FiltroStatus; label: string }[] = [
-  { chave: 'ABERTA', label: 'Abertas' },
+  { chave: 'ABERTA', label: 'A resolver' },
   { chave: 'RESOLVIDA', label: 'Resolvidas' },
   { chave: 'CANCELADA', label: 'Canceladas' },
   { chave: 'TODAS', label: 'Todas' },
@@ -133,7 +133,7 @@ export default async function CobrancasPage({
                         <th style={{ padding: '10px 12px', fontWeight: 600 }}>Atendente</th>
                         <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center' }}>Cobranças</th>
                         <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center' }}>Resolvidas</th>
-                        <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center' }}>Abertas</th>
+                        <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center' }}>A resolver</th>
                         <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center' }}>Prazo vencido</th>
                         <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center' }}>Tempo médio</th>
                       </tr>
@@ -211,11 +211,13 @@ export default async function CobrancasPage({
                         {formatarTelefone(c.at_clientes?.telefone ?? null)}
                         {c.at_protocolos?.departamento ? ` · ${c.at_protocolos.departamento}` : ''}
                       </span>
-                      {c.status !== 'ABERTA' && (
-                        <span style={{ fontSize: 11, fontWeight: 700, borderRadius: 999, padding: '3px 9px', background: c.status === 'RESOLVIDA' ? '#DCFCE7' : '#F1F5F9', color: c.status === 'RESOLVIDA' ? '#15803D' : '#64748B' }}>
-                          {ROTULO_STATUS[c.status]}
-                        </span>
-                      )}
+                      <span style={{
+                        fontSize: 11, fontWeight: 700, borderRadius: 999, padding: '3px 9px',
+                        background: c.status === 'RESOLVIDA' ? '#DCFCE7' : c.status === 'CANCELADA' ? '#F1F5F9' : atrasada ? '#FEE2E2' : '#FEF3C7',
+                        color: c.status === 'RESOLVIDA' ? '#15803D' : c.status === 'CANCELADA' ? '#64748B' : atrasada ? '#DC2626' : '#B45309',
+                      }}>
+                        {c.status === 'ABERTA' && atrasada ? 'A resolver · atrasada' : ROTULO_STATUS[c.status]}
+                      </span>
                     </div>
                     <div style={{ fontSize: 14, color: '#374151', marginTop: 8, whiteSpace: 'pre-wrap' }}>{c.mensagem}</div>
                     <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 8, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
