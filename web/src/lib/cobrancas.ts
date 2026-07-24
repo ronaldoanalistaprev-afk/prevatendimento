@@ -73,6 +73,7 @@ export interface LinhaAtendenteCobranca {
   criadas: number
   resolvidas: number
   abertas: number
+  canceladas: number
   atrasadas: number
   /** Horas médias entre a cobrança e a resposta ao cliente. */
   tempoMedioHoras: number | null
@@ -136,6 +137,7 @@ export async function getMetricasCobrancas(dias = 30): Promise<MetricasCobranca>
         criadas: ls.length,
         resolvidas: ls.filter((l) => l.status === 'RESOLVIDA').length,
         abertas: ls.filter((l) => l.status === 'ABERTA').length,
+        canceladas: ls.filter((l) => l.status === 'CANCELADA').length,
         atrasadas: ls.filter(atrasou).length,
         tempoMedioHoras: media(ls.map(duracao).filter((n): n is number => n !== null)),
       }))

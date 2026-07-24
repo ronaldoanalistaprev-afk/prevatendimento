@@ -127,13 +127,14 @@ export default async function CobrancasPage({
 
               {metricas.porAtendente.length > 0 && (
                 <div style={{ marginTop: 16, overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 520 }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 600 }}>
                     <thead>
                       <tr style={{ background: '#F8FAFC', color: '#6B7280', textAlign: 'left' }}>
                         <th style={{ padding: '10px 12px', fontWeight: 600 }}>Atendente</th>
                         <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center' }}>Cobranças</th>
                         <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center' }}>Resolvidas</th>
                         <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center' }}>A resolver</th>
+                        <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center' }}>Canceladas</th>
                         <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center' }}>Prazo vencido</th>
                         <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center' }}>Tempo médio</th>
                       </tr>
@@ -145,6 +146,7 @@ export default async function CobrancasPage({
                           <td style={{ padding: '10px 12px', textAlign: 'center' }}>{a.criadas}</td>
                           <td style={{ padding: '10px 12px', textAlign: 'center', color: '#15803D', fontWeight: 700 }}>{a.resolvidas}</td>
                           <td style={{ padding: '10px 12px', textAlign: 'center' }}>{a.abertas}</td>
+                          <td style={{ padding: '10px 12px', textAlign: 'center', color: '#94A3B8' }}>{a.canceladas || '—'}</td>
                           <td style={{ padding: '10px 12px', textAlign: 'center', color: a.atrasadas > 0 ? '#DC2626' : '#9CA3AF', fontWeight: a.atrasadas > 0 ? 700 : 400 }}>
                             {a.atrasadas || '—'}
                           </td>

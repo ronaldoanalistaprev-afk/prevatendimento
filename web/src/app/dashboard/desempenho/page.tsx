@@ -30,7 +30,7 @@ export default async function DesempenhoPage() {
     { label: 'Sem resposta', valor: resumo.esperando, icone: AlarmClock, cor: '#C2410C', href: '/dashboard/monitor?so=esperando' },
     { label: 'Sem resposta há +24h', valor: resumo.esperando24, icone: Clock, cor: '#B91C1C', href: '/dashboard/auditoria' },
     { label: 'Finalizadas', valor: resumo.finalizadas, icone: CheckCircle2, cor: '#15803D', href: '/dashboard/monitor?situacao=finalizadas&periodo=tudo' },
-    { label: 'Cobranças abertas', valor: resumo.cobrancasAbertas, icone: BellRing, cor: '#B45309', href: '/dashboard/cobrancas' },
+    { label: 'Cobranças a resolver', valor: resumo.cobrancasAbertas, icone: BellRing, cor: '#B45309', href: '/dashboard/cobrancas' },
     { label: 'Cobranças vencidas', valor: resumo.cobrancasVencidas, icone: BellRing, cor: '#DC2626', href: '/dashboard/cobrancas' },
   ]
 
