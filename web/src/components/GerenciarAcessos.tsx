@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Pencil, Trash2, Check, X, Power, Loader2 } from 'lucide-react'
+import { Pencil, Trash2, Check, X, Power, Loader2, KeyRound, Copy } from 'lucide-react'
 
 interface UsuarioLinha {
   id: string
@@ -40,6 +40,37 @@ export default function GerenciarAcessos({
   const [vinculo, setVinculo] = useState('')
   const [ocupado, setOcupado] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
+  const [gerandoId, setGerandoId] = useState<string | null>(null)
+  const [linkReset, setLinkReset] = useState<{ nome: string; link: string } | null>(null)
+  const [copiado, setCopiado] = useState(false)
+
+  async function gerarLinkSenha(u: UsuarioLinha) {
+    setGerandoId(u.id)
+    setErro(null)
+    setLinkReset(null)
+    setCopiado(false)
+    try {
+      const res = await fetch('/api/usuarios/reset-link', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: u.id }) })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.erro ?? 'Falha ao gerar o link')
+      setLinkReset({ nome: u.nome, link: data.link })
+    } catch (e) {
+      setErro((e as Error).message)
+    } finally {
+      setGerandoId(null)
+    }
+  }
+
+  async function copiar() {
+    if (!linkReset) return
+    try {
+      await navigator.clipboard.writeText(linkReset.link)
+      setCopiado(true)
+      setTimeout(() => setCopiado(false), 2500)
+    } catch {
+      setErro('Não consegui copiar automaticamente. Selecione o link e copie com Ctrl+C.')
+    }
+  }
 
   function abrirEdicao(u: UsuarioLinha) {
     setEditId(u.id)
@@ -70,6 +101,27 @@ export default function GerenciarAcessos({
   return (
     <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #EEF2F7', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', overflow: 'hidden', marginTop: 20 }}>
       {erro && <div style={{ background: '#FEF2F2', color: '#B91C1C', fontSize: 13, padding: '10px 20px' }}>{erro}</div>}
+      {linkReset && (
+        <div style={{ background: '#F0FDF4', borderBottom: '1px solid #BBF7D0', padding: '14px 20px' }}>
+          <div style={{ fontSize: 13.5, color: '#15803D', fontWeight: 700, marginBottom: 8 }}>
+            Link de senha para {linkReset.nome} — copie e envie para a pessoa (vale por 1 hora):
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <input
+              readOnly
+              value={linkReset.link}
+              onFocus={(e) => e.currentTarget.select()}
+              style={{ flex: 1, minWidth: 240, height: 36, padding: '0 12px', borderRadius: 8, border: '1px solid #BBF7D0', background: '#fff', fontSize: 12.5, color: '#374151' }}
+            />
+            <button onClick={copiar} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 36, padding: '0 14px', borderRadius: 8, border: 'none', background: '#16A34A', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+              <Copy size={14} /> {copiado ? 'Copiado!' : 'Copiar'}
+            </button>
+            <button onClick={() => setLinkReset(null)} style={{ height: 36, padding: '0 12px', borderRadius: 8, border: '1px solid #DCE6EF', background: '#fff', color: '#6B7280', fontSize: 13, cursor: 'pointer' }}>
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
       {usuarios.length === 0 ? (
         <div style={{ padding: '40px 20px', textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>Nenhum acesso cadastrado ainda.</div>
       ) : (
@@ -136,6 +188,9 @@ export default function GerenciarAcessos({
                           <>
                             <button disabled={ocupado} onClick={() => abrirEdicao(u)} style={{ ...btn('#fff'), color: '#1A3C5A', border: '1px solid #DCE6EF' }}>
                               <Pencil size={14} /> Editar
+                            </button>
+                            <button disabled={ocupado || gerandoId === u.id} onClick={() => gerarLinkSenha(u)} style={{ ...btn('#fff'), color: '#4B7BA6', border: '1px solid #DCE6EF' }} title="Gerar um link para a pessoa criar uma nova senha">
+                              {gerandoId === u.id ? <Loader2 size={14} className="animate-spin" /> : <KeyRound size={14} />} Redefinir senha
                             </button>
                             <button disabled={ocupado} onClick={() => chamar('PATCH', { id: u.id, ativo: !u.ativo })} style={{ ...btn('#fff'), color: u.ativo ? '#B45309' : '#15803D', border: '1px solid #DCE6EF' }}>
                               <Power size={14} /> {u.ativo ? 'Desativar' : 'Ativar'}
