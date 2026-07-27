@@ -6,7 +6,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "once": "node index.js --once"
+    "start:local": "node -r dotenv/config index.js",
+    "once": "node -r dotenv/config index.js --once",
+    "finalizados": "node -r dotenv/config index.js --finalizados"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",

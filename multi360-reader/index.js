@@ -466,6 +466,47 @@ async function atualizarMetricas() {
   else console.log(`   métricas atualizadas (${meses} meses) + foto do dia`)
 }
 
+// Marca como FINALIZADO, no nosso banco, as conversas que saíram de TODAS as
+// filas de abertas da Multi360 (foram encerradas lá). Corrige o "resíduo" de
+// conversas que ficavam presas como ATIVO/AGUARDANDO no nosso lado.
+// SEGURANÇA: só encerra quem NÃO está em nenhuma fila de abertas; se a lista
+// vier vazia (falha de leitura), não faz nada — para nunca encerrar por engano.
+async function reconciliarFinalizadas(idsAbertos) {
+  if (!idsAbertos || idsAbertos.size === 0) {
+    console.log('   ⏭️  reconciliação pulada (lista de abertas vazia — evitando encerrar por engano).')
+    return 0
+  }
+  const { data: nossasAbertas, error } = await db
+    .from('at_protocolos')
+    .select('id, numero_protocolo, ultima_mensagem_em, finalizado_em')
+    .eq('empresa_id', empresaId)
+    .in('status_multi360', ['ATIVO', 'AGUARDANDO'])
+  if (error) {
+    console.error('   ⚠️  reconciliação: erro ao ler abertas do banco:', error.message)
+    return 0
+  }
+  const fantasmas = (nossasAbertas || []).filter(
+    (p) => !idsAbertos.has(String(p.numero_protocolo))
+  )
+  if (!fantasmas.length) {
+    console.log('   ✔️  reconciliação: banco bate com a Multi360 (nada a encerrar).')
+    return 0
+  }
+  let n = 0
+  for (const p of fantasmas) {
+    const { error: upErr } = await db
+      .from('at_protocolos')
+      .update({
+        status_multi360: 'FINALIZADO',
+        finalizado_em: p.finalizado_em || p.ultima_mensagem_em || new Date().toISOString(),
+      })
+      .eq('id', p.id)
+    if (!upErr) n++
+  }
+  console.log(`   🧹 reconciliação: ${n} conversa(s) marcada(s) como FINALIZADA (saíram das filas de abertas da Multi360).`)
+  return n
+}
+
 async function sync() {
   console.log(`\n🔄  ${new Date().toLocaleString('pt-BR')} — sincronizando...`)
   const ativos = await listar('ativos')
@@ -506,6 +547,20 @@ async function sync() {
   }
   if (semTelefone) console.log(`   (${semTelefone} conversas sem telefone identificável — ignoradas)`)
   await resolverCobrancasRespondidas()
+
+  // Reconcilia: o que saiu de TODAS as filas de abertas (Ativos + Pendentes +
+  // Potenciais) foi encerrado na Multi360 → marca como FINALIZADO no nosso banco.
+  // Só roda quando conseguimos ler as três filas — senão, adia (nunca encerra às cegas).
+  try {
+    const potenciais = await listar('potenciais')
+    const idsAbertos = new Set(
+      [...ativos, ...pendentes, ...potenciais].map((r) => String(r.id))
+    )
+    await reconciliarFinalizadas(idsAbertos)
+  } catch (e) {
+    console.warn(`   ⚠️  reconciliação adiada nesta rodada (não li todas as filas de abertas): ${e.message}`)
+  }
+
   await atualizarMetricas()
   await db.from('at_extracao_log').insert({
     empresa_id: empresaId,
