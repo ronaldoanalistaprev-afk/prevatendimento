@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Pencil, Trash2, Check, X, Power, Loader2, KeyRound, Copy } from 'lucide-react'
+import { useConfirmacao } from './Confirmacao'
 
 interface UsuarioLinha {
   id: string
@@ -35,6 +36,7 @@ export default function GerenciarAcessos({
   papeis?: { codigo: string; nome: string }[]
 }) {
   const router = useRouter()
+  const { confirmar, modal } = useConfirmacao()
   const [editId, setEditId] = useState<string | null>(null)
   const [role, setRole] = useState('COLABORADOR')
   const [vinculo, setVinculo] = useState('')
@@ -99,6 +101,7 @@ export default function GerenciarAcessos({
 
   return (
     <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #EEF2F7', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', overflow: 'hidden', marginTop: 20 }}>
+      {modal}
       {erro && <div style={{ background: '#FEF2F2', color: '#B91C1C', fontSize: 13, padding: '10px 20px' }}>{erro}</div>}
       {linkReset && (
         <div style={{ background: '#F0FDF4', borderBottom: '1px solid #BBF7D0', padding: '14px 20px' }}>
@@ -185,7 +188,7 @@ export default function GerenciarAcessos({
                             <IconBtn icon={KeyRound} title="Redefinir senha — gera um link para a pessoa criar uma nova senha" cor="#4B7BA6" loading={gerandoId === u.id} disabled={ocupado || gerandoId === u.id} onClick={() => gerarLinkSenha(u)} />
                             <IconBtn icon={Power} title={u.ativo ? 'Desativar acesso' : 'Ativar acesso'} cor={u.ativo ? '#B45309' : '#15803D'} disabled={ocupado} onClick={() => chamar('PATCH', { id: u.id, ativo: !u.ativo })} />
                             {!souEu && (
-                              <IconBtn icon={Trash2} title="Excluir acesso" cor="#B91C1C" borderCor="#FECACA" disabled={ocupado} onClick={() => { if (confirm(`Excluir o acesso de ${u.nome}?`)) chamar('DELETE', { id: u.id }) }} />
+                              <IconBtn icon={Trash2} title="Excluir acesso" cor="#B91C1C" borderCor="#FECACA" disabled={ocupado} onClick={async () => { if (await confirmar({ titulo: 'Excluir acesso', mensagem: `O acesso de ${u.nome} será excluído e a pessoa perde o login no sistema. Isso não pode ser desfeito.`, confirmar: 'Excluir acesso', perigo: true })) chamar('DELETE', { id: u.id }) }} />
                             )}
                           </>
                         )}

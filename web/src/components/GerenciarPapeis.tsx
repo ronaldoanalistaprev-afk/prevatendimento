@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Check, Loader2, Pencil, Trash2, Power, Lock } from 'lucide-react'
+import { useConfirmacao } from './Confirmacao'
 
 export interface PapelItem {
   codigo: string
@@ -29,6 +30,7 @@ const btnBase: React.CSSProperties = {
 /** CRUD dos papéis (cargos). Só o Administrador. */
 export default function GerenciarPapeis({ papeis }: { papeis: PapelItem[] }) {
   const router = useRouter()
+  const { confirmar, avisar, modal } = useConfirmacao()
   const [criando, setCriando] = useState(false)
   const [editando, setEditando] = useState<string | null>(null)
   const [ocupado, setOcupado] = useState<string | null>(null)
@@ -93,12 +95,17 @@ export default function GerenciarPapeis({ papeis }: { papeis: PapelItem[] }) {
     else chamar('POST', corpo)
   }
 
-  function excluir(p: PapelItem) {
+  async function excluir(p: PapelItem) {
     if (p.emUso > 0) {
-      alert(`${p.emUso} login(s) usam o papel "${p.nome}". Troque o papel dessas pessoas antes de excluir.`)
+      await avisar({
+        titulo: 'Não dá para excluir ainda',
+        mensagem: `${p.emUso} ${p.emUso === 1 ? 'login usa' : 'logins usam'} o papel "${p.nome}". Troque o papel dessas pessoas antes de excluir.`,
+      })
       return
     }
-    if (confirm(`Excluir o papel "${p.nome}"? Isso não pode ser desfeito.`)) chamar('DELETE', undefined, p.codigo)
+    if (await confirmar({ titulo: 'Excluir papel', mensagem: `O papel "${p.nome}" será excluído. Isso não pode ser desfeito.`, confirmar: 'Excluir papel', perigo: true })) {
+      chamar('DELETE', undefined, p.codigo)
+    }
   }
 
   const editandoAdmin = editando === 'ADMIN'
@@ -152,6 +159,7 @@ export default function GerenciarPapeis({ papeis }: { papeis: PapelItem[] }) {
 
   return (
     <div>
+      {modal}
       {!criando && !editando && (
         <button onClick={abrirNovo} style={{ ...btnBase, height: 40, background: 'linear-gradient(135deg, #1A3C5A, #16A34A)', color: '#fff', border: 'none', marginBottom: 14 }}>
           <Plus size={16} /> Novo papel

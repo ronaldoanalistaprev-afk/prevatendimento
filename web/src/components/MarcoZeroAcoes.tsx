@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Rocket, Copy, Check, Trash2, Loader2 } from 'lucide-react'
+import { useConfirmacao } from './Confirmacao'
+import { formatarNome } from '@/lib/utils'
 
 /** Preparar um novo lote: registra os N mais antigos que esperam. */
 export function PrepararLote({ padrao = 40 }: { padrao?: number }) {
@@ -97,9 +99,16 @@ export function CopiarLista({ linhas, quantos }: { linhas: string; quantos: numb
 /** Remove UMA pessoa do lote (tira um contato indevido, sem desfazer o lote). */
 export function RemoverPessoa({ id, nome }: { id: string; nome?: string | null }) {
   const router = useRouter()
+  const { confirmar, modal } = useConfirmacao()
   const [carregando, setCarregando] = useState(false)
   async function remover() {
-    if (!confirm(`Remover ${nome ? nome + ' ' : ''}deste lote? A pessoa não vai receber a mensagem neste lote (volta a ficar disponível para um lote futuro).`)) return
+    const quem = nome ? formatarNome(nome) : 'Esta pessoa'
+    if (!(await confirmar({
+      titulo: 'Remover do lote',
+      mensagem: `${quem} sai deste lote e não vai receber a mensagem agora. Volta a ficar disponível para um lote futuro.`,
+      confirmar: 'Remover do lote',
+      perigo: true,
+    }))) return
     setCarregando(true)
     try {
       const r = await fetch(`/api/marco-zero?id=${id}`, { method: 'DELETE' })
@@ -109,27 +118,36 @@ export function RemoverPessoa({ id, nome }: { id: string; nome?: string | null }
     }
   }
   return (
-    <button
-      onClick={remover}
-      disabled={carregando}
-      title="Remover esta pessoa do lote"
-      style={{
-        height: 30, padding: '0 10px', borderRadius: 8, border: '1px solid #FECACA',
-        background: '#fff', color: '#B4232A', fontSize: 12, fontWeight: 700,
-        cursor: carregando ? 'default' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5,
-      }}
-    >
-      <Trash2 size={13} /> Remover
-    </button>
+    <>
+      {modal}
+      <button
+        onClick={remover}
+        disabled={carregando}
+        title="Remover esta pessoa do lote"
+        style={{
+          height: 30, padding: '0 10px', borderRadius: 8, border: '1px solid #FECACA',
+          background: '#fff', color: '#B4232A', fontSize: 12, fontWeight: 700,
+          cursor: carregando ? 'default' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5,
+        }}
+      >
+        <Trash2 size={13} /> Remover
+      </button>
+    </>
   )
 }
 
 /** Desfaz um lote inteiro (corrigir antes do disparo). */
 export function DesfazerLote({ lote }: { lote: number }) {
   const router = useRouter()
+  const { confirmar, modal } = useConfirmacao()
   const [carregando, setCarregando] = useState(false)
   async function desfazer() {
-    if (!confirm(`Desfazer o lote ${lote}? As pessoas voltam a ficar disponíveis para um novo lote. (Use isto só ANTES do disparo.)`)) return
+    if (!(await confirmar({
+      titulo: `Desfazer o lote ${lote}`,
+      mensagem: `As pessoas deste lote voltam a ficar disponíveis para um novo lote. Use isto só antes do disparo.`,
+      confirmar: 'Desfazer o lote',
+      perigo: true,
+    }))) return
     setCarregando(true)
     try {
       const r = await fetch(`/api/marco-zero?lote=${lote}`, { method: 'DELETE' })
@@ -139,17 +157,20 @@ export function DesfazerLote({ lote }: { lote: number }) {
     }
   }
   return (
-    <button
-      onClick={desfazer}
-      disabled={carregando}
-      title={`Desfazer o lote ${lote}`}
-      style={{
-        height: 34, padding: '0 12px', borderRadius: 999, border: '1px solid #FECACA',
-        background: '#fff', color: '#B4232A', fontSize: 12.5, fontWeight: 700,
-        cursor: carregando ? 'default' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
-      }}
-    >
-      <Trash2 size={14} /> Desfazer
-    </button>
+    <>
+      {modal}
+      <button
+        onClick={desfazer}
+        disabled={carregando}
+        title={`Desfazer o lote ${lote}`}
+        style={{
+          height: 34, padding: '0 12px', borderRadius: 999, border: '1px solid #FECACA',
+          background: '#fff', color: '#B4232A', fontSize: 12.5, fontWeight: 700,
+          cursor: carregando ? 'default' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
+        }}
+      >
+        <Trash2 size={14} /> Desfazer
+      </button>
+    </>
   )
 }

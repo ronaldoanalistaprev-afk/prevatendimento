@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Check, Loader2, Pencil, Trash2, Power } from 'lucide-react'
+import { Plus, Check, Loader2, Pencil, Trash2, Power, X } from 'lucide-react'
+import { useConfirmacao } from './Confirmacao'
 
 export interface ModeloItem {
   id: string
@@ -28,6 +29,7 @@ const btnBase: React.CSSProperties = {
 /** CRUD dos textos prontos de cobrança. Só quem pode cobrar enxerga esta tela. */
 export default function GerenciarModelos({ modelos, podeEditar }: { modelos: ModeloItem[]; podeEditar: boolean }) {
   const router = useRouter()
+  const { confirmar, modal } = useConfirmacao()
   const [criando, setCriando] = useState(false)
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [ocupado, setOcupado] = useState<string | null>(null)
@@ -89,8 +91,8 @@ export default function GerenciarModelos({ modelos, podeEditar }: { modelos: Mod
     else chamar('POST', { titulo, texto, prazo_dias: prazoDias })
   }
 
-  function excluir(m: ModeloItem) {
-    if (confirm(`Excluir o modelo "${m.titulo}"? As cobranças já criadas com ele não mudam.`)) {
+  async function excluir(m: ModeloItem) {
+    if (await confirmar({ titulo: 'Excluir modelo', mensagem: `O modelo "${m.titulo}" será excluído. As cobranças já criadas com ele não mudam.`, confirmar: 'Excluir modelo', perigo: true })) {
       chamar('DELETE', undefined, m.id)
     }
   }
@@ -126,7 +128,7 @@ export default function GerenciarModelos({ modelos, podeEditar }: { modelos: Mod
           })}
           {prazoDias !== null && (
             <button type="button" onClick={() => setPrazoDias(null)} style={{ ...btnBase, height: 30, padding: '0 10px', fontSize: 12.5 }}>
-              ✕ sem prazo
+              <X size={13} /> sem prazo
             </button>
           )}
         </div>
@@ -145,6 +147,7 @@ export default function GerenciarModelos({ modelos, podeEditar }: { modelos: Mod
 
   return (
     <div>
+      {modal}
       {podeEditar && !criando && !editandoId && (
         <button onClick={abrirNovo} style={{ ...btnBase, height: 40, background: 'linear-gradient(135deg, #1A3C5A, #16A34A)', color: '#fff', border: 'none', marginBottom: 14 }}>
           <Plus size={16} /> Novo modelo
