@@ -35,7 +35,6 @@ const SITUACOES: { chave: FiltroStatus; label: string }[] = [
   { chave: 'TODAS', label: 'Todas' },
 ]
 
-/** Períodos das métricas, em dias. */
 const PERIODOS = [7, 30, 90]
 
 function nomeCliente(c: Cobranca): string {
@@ -44,7 +43,6 @@ function nomeCliente(c: Cobranca): string {
 function venceu(prazo: string | null): boolean {
   return !!prazo && new Date(prazo).getTime() < Date.now()
 }
-/** 32.6 -> "1d 8h" ; 5.2 -> "5h" */
 function horasLegivel(h: number | null): string {
   if (h === null) return '—'
   if (h < 1) return `${Math.round(h * 60)} min`
@@ -54,11 +52,7 @@ function horasLegivel(h: number | null): string {
   return r ? `${d}d ${r}h` : `${d}d`
 }
 
-export default async function CobrancasPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ situacao?: string; dias?: string }>
-}) {
+export default async function CobrancasPage({ searchParams }: { searchParams: Promise<{ situacao?: string; dias?: string }> }) {
   const sp = await searchParams
   const situacao: FiltroStatus = (SITUACOES.find((s) => s.chave === sp.situacao)?.chave ?? 'ABERTA') as FiltroStatus
   const dias = PERIODOS.includes(Number(sp.dias)) ? Number(sp.dias) : 30
@@ -89,205 +83,157 @@ export default async function CobrancasPage({
     return `/dashboard/cobrancas${s2 ? `?${s2}` : ''}`
   }
 
-  const chip = (ativo: boolean): React.CSSProperties => ({
-    height: 32, padding: '0 14px', borderRadius: 999, fontSize: 12.5, fontWeight: 700,
-    display: 'inline-flex', alignItems: 'center', textDecoration: 'none',
-    border: ativo ? '1px solid #1A3C5A' : '1px solid #DCE6EF',
-    background: ativo ? '#1A3C5A' : '#fff',
-    color: ativo ? '#fff' : '#6B7280',
-  })
-
   return (
-    <div style={{ padding: '28px 32px', maxWidth: 1120, margin: '0 auto' }}>
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1A3C5A', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <BellRing size={22} style={{ color: '#C2410C' }} /> {titulo}
+    <main id="conteudo" className="conteudo" tabIndex={-1}>
+      <div className="cabeca">
+        <div className="cabeca-texto">
+          <h1 className="titulo" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <BellRing className="icone icone-g" style={{ color: 'var(--atencao)' }} aria-hidden="true" focusable="false" /> {titulo}
           </h1>
-          <SeloAtualizacao />
+          <p className="subtitulo">{subtitulo}</p>
+          <p className="texto-apoio" style={{ marginTop: 4 }}><SeloAtualizacao /></p>
         </div>
-        <p style={{ fontSize: 14, color: '#6B7280', marginTop: 4 }}>{subtitulo}</p>
       </div>
 
       {supervisiona && (
         <div style={{ marginBottom: 18 }}>
-          <NovaCobranca
-            atendentes={atendentes}
-            modelos={modelos.map((m) => ({ id: m.id, titulo: m.titulo, texto: m.texto, prazo_dias: m.prazo_dias }))}
-          />
+          <NovaCobranca atendentes={atendentes} modelos={modelos.map((m) => ({ id: m.id, titulo: m.titulo, texto: m.texto, prazo_dias: m.prazo_dias }))} />
         </div>
       )}
 
-      {/* ===== Métricas (só para quem cobra) ===== */}
+      {/* Métricas (só para quem cobra) */}
       {supervisiona && metricas && (
-        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #EEF2F7', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '16px 18px', marginBottom: 18 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#1A3C5A' }}>O que a cobrança está produzindo</h2>
-            <span style={{ fontSize: 12.5, color: '#9CA3AF' }}>cobranças criadas nos últimos</span>
-            <div style={{ display: 'flex', gap: 6 }}>
-              {PERIODOS.map((d) => (
-                <Link key={d} href={href({ dias: d })} style={{ ...chip(d === dias), height: 26, padding: '0 10px', fontSize: 12 }}>
-                  {d} dias
-                </Link>
-              ))}
+        <section className="cartao" style={{ marginBottom: 18 }}>
+          <div className="cartao-cabeca">
+            <h2 className="cartao-titulo">O que a cobrança está produzindo</h2>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <span className="texto-apoio">últimos</span>
+              <div className="abas">
+                {PERIODOS.map((d) => (<Link key={d} className="aba" aria-selected={d === dias} href={href({ dias: d })}>{d} dias</Link>))}
+              </div>
             </div>
           </div>
-
-          {!metricas.temDados ? (
-            <div style={{ fontSize: 13.5, color: '#9CA3AF', padding: '8px 0' }}>
-              Nenhuma cobrança criada nesse período. As métricas aparecem quando você começar a cobrar.
-            </div>
-          ) : (
-            <>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
-                <Cartao icone={BellRing} cor="#1A3C5A" valor={metricas.criadas} label="cobranças criadas" />
-                <Cartao icone={Check} cor="#15803D" valor={metricas.resolvidas} label="resolvidas" />
-                <Cartao icone={Clock} cor="#B45309" valor={metricas.abertas} label="ainda a resolver" />
-                <Cartao icone={AlarmClock} cor="#DC2626" valor={metricas.atrasadas} label="com prazo vencido" />
-                <Cartao icone={X} cor="#6B7280" valor={metricas.canceladas} label="canceladas" />
-                <Cartao icone={TrendingUp} cor="#15803D" valor={`${metricas.taxaResolucao}%`} label="taxa de resolução" />
-                <Cartao icone={Clock} cor="#1A3C5A" valor={horasLegivel(metricas.tempoMedioHoras)} label="tempo médio até resolver" />
-              </div>
-
-              {metricas.porAtendente.length > 0 && (
-                <div style={{ marginTop: 16, overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 600 }}>
-                    <thead>
-                      <tr style={{ background: '#F8FAFC', color: '#6B7280', textAlign: 'left' }}>
-                        <th style={{ padding: '10px 12px', fontWeight: 600 }}>Atendente</th>
-                        <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center' }}>Cobranças</th>
-                        <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center' }}>Resolvidas</th>
-                        <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center' }}>A resolver</th>
-                        <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center' }}>Canceladas</th>
-                        <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center' }}>Prazo vencido</th>
-                        <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center' }}>Tempo médio</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {metricas.porAtendente.map((a) => (
-                        <tr key={a.nome} style={{ borderTop: '1px solid #EEF2F7' }}>
-                          <td style={{ padding: '10px 12px', fontWeight: 600, color: '#1A3C5A' }}>{formatarNome(a.nome)}</td>
-                          <td style={{ padding: '10px 12px', textAlign: 'center' }}>{a.criadas}</td>
-                          <td style={{ padding: '10px 12px', textAlign: 'center', color: '#15803D', fontWeight: 700 }}>{a.resolvidas}</td>
-                          <td style={{ padding: '10px 12px', textAlign: 'center' }}>{a.abertas}</td>
-                          <td style={{ padding: '10px 12px', textAlign: 'center', color: '#94A3B8' }}>{a.canceladas || '—'}</td>
-                          <td style={{ padding: '10px 12px', textAlign: 'center', color: a.atrasadas > 0 ? '#DC2626' : '#9CA3AF', fontWeight: a.atrasadas > 0 ? 700 : 400 }}>
-                            {a.atrasadas || '—'}
-                          </td>
-                          <td style={{ padding: '10px 12px', textAlign: 'center' }}>{horasLegivel(a.tempoMedioHoras)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <div style={{ fontSize: 11.5, color: '#9CA3AF', marginTop: 8 }}>
-                    Tempo médio = da hora em que você cobrou até a cobrança ser marcada como resolvida.
-                  </div>
+          <div className="cartao-corpo">
+            {!metricas.temDados ? (
+              <p className="texto-apoio">Nenhuma cobrança criada nesse período. As métricas aparecem quando você começar a cobrar.</p>
+            ) : (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
+                  <Cartao icone={BellRing} cor="var(--tinta)" valor={metricas.criadas} label="cobranças criadas" />
+                  <Cartao icone={Check} cor="var(--sucesso)" valor={metricas.resolvidas} label="resolvidas" />
+                  <Cartao icone={Clock} cor="var(--atencao)" valor={metricas.abertas} label="ainda a resolver" />
+                  <Cartao icone={AlarmClock} cor="var(--perigo)" valor={metricas.atrasadas} label="com prazo vencido" />
+                  <Cartao icone={X} cor="var(--tinta-2)" valor={metricas.canceladas} label="canceladas" />
+                  <Cartao icone={TrendingUp} cor="var(--sucesso)" valor={`${metricas.taxaResolucao}%`} label="taxa de resolução" />
+                  <Cartao icone={Clock} cor="var(--acao)" valor={horasLegivel(metricas.tempoMedioHoras)} label="tempo médio até resolver" />
                 </div>
-              )}
-            </>
-          )}
-        </div>
+
+                {metricas.porAtendente.length > 0 && (
+                  <div className="tabela-caixa" style={{ marginTop: 16, overflowX: 'auto' }}>
+                    <table className="tabela" style={{ minWidth: 600 }}>
+                      <thead>
+                        <tr>
+                          <th>Atendente</th>
+                          <th style={{ textAlign: 'center' }}>Cobranças</th>
+                          <th style={{ textAlign: 'center' }}>Resolvidas</th>
+                          <th style={{ textAlign: 'center' }}>A resolver</th>
+                          <th style={{ textAlign: 'center' }}>Canceladas</th>
+                          <th style={{ textAlign: 'center' }}>Prazo vencido</th>
+                          <th style={{ textAlign: 'center' }}>Tempo médio</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {metricas.porAtendente.map((a) => (
+                          <tr key={a.nome}>
+                            <td className="nome" style={{ color: 'var(--tinta)' }}>{formatarNome(a.nome)}</td>
+                            <td style={{ textAlign: 'center' }}>{a.criadas}</td>
+                            <td style={{ textAlign: 'center', color: 'var(--sucesso)', fontWeight: 700 }}>{a.resolvidas}</td>
+                            <td style={{ textAlign: 'center' }}>{a.abertas}</td>
+                            <td style={{ textAlign: 'center', color: 'var(--tinta-3)' }}>{a.canceladas || '—'}</td>
+                            <td style={{ textAlign: 'center', color: a.atrasadas > 0 ? 'var(--perigo)' : 'var(--tinta-3)', fontWeight: a.atrasadas > 0 ? 700 : 400 }}>{a.atrasadas || '—'}</td>
+                            <td style={{ textAlign: 'center' }}>{horasLegivel(a.tempoMedioHoras)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <p className="texto-apoio" style={{ marginTop: 8 }}>Tempo médio = da hora em que você cobrou até a cobrança ser marcada como resolvida.</p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </section>
       )}
 
-      {/* ===== Filtro de situação ===== */}
+      {/* Filtro de situação */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap', alignItems: 'center' }}>
-        <span style={{ fontSize: 12.5, color: '#6B7280', fontWeight: 600 }}>Situação:</span>
-        {SITUACOES.map((s) => (
-          <Link key={s.chave} href={href({ situacao: s.chave })} style={chip(s.chave === situacao)}>
-            {s.label}
-          </Link>
-        ))}
+        <span className="mon-rot">Situação</span>
+        <div className="abas">
+          {SITUACOES.map((s) => (<Link key={s.chave} className="aba" aria-selected={s.chave === situacao} href={href({ situacao: s.chave })}>{s.label}</Link>))}
+        </div>
       </div>
 
       {cobrancas.length === 0 ? (
-        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #EEF2F7', padding: '44px 20px', textAlign: 'center', color: situacao === 'ABERTA' ? '#15803D' : '#9CA3AF', fontSize: 14, lineHeight: 1.6 }}>
-          <BellRing size={30} style={{ margin: '0 auto 10px', opacity: 0.4 }} />
-          {situacao === 'ABERTA'
-            ? souAtendente
-              ? 'Você não tem cobranças a resolver.'
-              : 'Nenhuma cobrança a resolver no momento.'
-            : `Nenhuma cobrança ${ROTULO_STATUS[situacao as 'RESOLVIDA' | 'CANCELADA']?.toLowerCase() ?? ''} por aqui.`}
+        <div className="cartao"><div className="vazio" style={{ alignItems: 'center', textAlign: 'center' }}>
+          <BellRing className="icone" style={{ width: 30, height: 30, color: 'var(--tinta-3)' }} aria-hidden="true" focusable="false" />
+          <p className="vazio-texto" style={{ maxWidth: 'none' }}>
+            {situacao === 'ABERTA'
+              ? souAtendente ? 'Você não tem cobranças a resolver.' : 'Nenhuma cobrança a resolver no momento.'
+              : `Nenhuma cobrança ${ROTULO_STATUS[situacao as 'RESOLVIDA' | 'CANCELADA']?.toLowerCase() ?? ''} por aqui.`}
+          </p>
           {souAtendente && !papel.atColaboradorId && (
-            <div style={{ marginTop: 10, color: '#C2410C', fontSize: 13 }}>
-              (Seu login ainda não está vinculado a um atendente do Multi360 — peça ao gestor para vincular.)
-            </div>
+            <p style={{ color: 'var(--atencao)', fontSize: 13.5 }}>(Seu login ainda não está vinculado a um atendente do Multi360 — peça ao gestor para vincular.)</p>
           )}
-        </div>
+        </div></div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {cobrancas.map((c) => {
             const atrasada = c.status === 'ABERTA' && venceu(c.prazo)
-            const borda = c.status === 'RESOLVIDA' ? '#16A34A' : c.status === 'CANCELADA' ? '#CBD5E1' : atrasada ? '#DC2626' : '#F59E0B'
+            const seloClasse = c.status === 'RESOLVIDA' ? 'selo-sucesso' : c.status === 'CANCELADA' ? 'selo-neutro' : atrasada ? 'selo-perigo' : 'selo-atencao'
             return (
-              <div
-                key={c.id}
-                style={{
-                  background: '#fff', borderRadius: 16, border: '1px solid #EEF2F7',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '16px 18px',
-                  borderLeft: `4px solid ${borda}`,
-                }}
-              >
+              <section key={c.id} className="cartao" style={{ padding: '16px 18px' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, flexWrap: 'wrap' }}>
                   <div style={{ flex: 1, minWidth: 240 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                      <Link href={c.protocolo_id ? `/dashboard/monitor/${c.protocolo_id}` : '#'} style={{ fontWeight: 700, color: '#1A3C5A', fontSize: 15, textDecoration: 'none' }}>
-                        {nomeCliente(c)}
-                      </Link>
-                      <span style={{ fontSize: 12, color: '#6B7280' }}>
-                        {formatarTelefone(c.at_clientes?.telefone ?? null)}
-                        {c.at_protocolos?.departamento ? ` · ${c.at_protocolos.departamento}` : ''}
+                      <Link href={c.protocolo_id ? `/dashboard/monitor/${c.protocolo_id}` : '#'} className="sub-titulo" style={{ textDecoration: 'none' }}>{nomeCliente(c)}</Link>
+                      <span style={{ fontSize: 13, color: 'var(--tinta-3)' }}>
+                        {formatarTelefone(c.at_clientes?.telefone ?? null)}{c.at_protocolos?.departamento ? ` · ${c.at_protocolos.departamento}` : ''}
                       </span>
-                      <span style={{
-                        fontSize: 11, fontWeight: 700, borderRadius: 999, padding: '3px 9px',
-                        background: c.status === 'RESOLVIDA' ? '#DCFCE7' : c.status === 'CANCELADA' ? '#F1F5F9' : atrasada ? '#FEE2E2' : '#FEF3C7',
-                        color: c.status === 'RESOLVIDA' ? '#15803D' : c.status === 'CANCELADA' ? '#64748B' : atrasada ? '#DC2626' : '#B45309',
-                      }}>
-                        {c.status === 'ABERTA' && atrasada ? 'A resolver · atrasada' : ROTULO_STATUS[c.status]}
-                      </span>
+                      <span className={`selo ${seloClasse}`}>{c.status === 'ABERTA' && atrasada ? 'A resolver · atrasada' : ROTULO_STATUS[c.status]}</span>
                     </div>
-                    <div style={{ fontSize: 14, color: '#374151', marginTop: 8, whiteSpace: 'pre-wrap' }}>{c.mensagem}</div>
-                    <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 8, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                      {!souAtendente && <span>Atendente: <b style={{ color: '#374151' }}>{c.colaborador_nome ? formatarNome(c.colaborador_nome) : '—'}</b></span>}
+                    <div style={{ fontSize: 14, color: 'var(--tinta)', marginTop: 8, whiteSpace: 'pre-wrap' }}>{c.mensagem}</div>
+                    <div className="texto-apoio" style={{ marginTop: 8, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                      {!souAtendente && <span>Atendente: <b style={{ color: 'var(--tinta-2)' }}>{c.colaborador_nome ? formatarNome(c.colaborador_nome) : '—'}</b></span>}
                       <span>Por: {c.criado_por_nome ?? '—'}</span>
-                      <span>Criada <b style={{ color: '#1A3C5A' }}>{formatarDataHora(c.criado_em)}</b></span>
+                      <span>Criada <b style={{ color: 'var(--tinta-2)' }}>{formatarDataHora(c.criado_em)}</b></span>
                       {c.editado_em && <span title={`Editada por ${c.editado_por_nome ?? 'alguém'}`}>(editada)</span>}
                       {c.prazo && c.status === 'ABERTA' && (
-                        <span style={{ color: atrasada ? '#DC2626' : '#B45309', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                          <AlarmClock size={13} /> {atrasada ? 'Venceu ' : 'Prazo '}{formatarDataHora(c.prazo)}
+                        <span style={{ color: atrasada ? 'var(--perigo)' : 'var(--atencao)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <AlarmClock className="icone icone-p" aria-hidden="true" focusable="false" /> {atrasada ? 'Venceu ' : 'Prazo '}{formatarDataHora(c.prazo)}
                         </span>
                       )}
                       {c.status === 'RESOLVIDA' && c.resolvido_em && (
-                        <span style={{ color: '#15803D' }}>Resolvida em {formatarDataHora(c.resolvido_em)} · levou {formatarDuracao(c.criado_em, c.resolvido_em)}</span>
+                        <span style={{ color: 'var(--sucesso)' }}>Resolvida em {formatarDataHora(c.resolvido_em)} · levou {formatarDuracao(c.criado_em, c.resolvido_em)}</span>
                       )}
                     </div>
                   </div>
                   <AcoesCobranca id={c.id} status={c.status} mensagem={c.mensagem} prazo={c.prazo} podeGerenciar={supervisiona} />
                 </div>
-              </div>
+              </section>
             )
           })}
         </div>
       )}
-    </div>
+    </main>
   )
 }
 
-function Cartao({
-  icone: Icone,
-  valor,
-  label,
-  cor,
-}: {
-  icone: React.ComponentType<{ size?: number; style?: React.CSSProperties }>
-  valor: number | string
-  label: string
-  cor: string
-}) {
+function Cartao({ icone: Icone, valor, label, cor }: { icone: typeof BellRing; valor: number | string; label: string; cor: string }) {
   return (
-    <div style={{ background: '#F8FAFC', borderRadius: 12, padding: '10px 12px' }}>
-      <Icone size={14} style={{ color: cor, marginBottom: 2 }} />
-      <div style={{ fontSize: 20, fontWeight: 700, color: cor, lineHeight: 1.15 }}>{valor}</div>
-      <div style={{ fontSize: 11, color: '#9CA3AF' }}>{label}</div>
+    <div style={{ background: 'var(--recuo)', borderRadius: 12, padding: '10px 12px' }}>
+      <Icone className="icone icone-p" style={{ color: cor, marginBottom: 2 }} aria-hidden="true" focusable="false" />
+      <div style={{ fontSize: 20, fontWeight: 650, color: cor, lineHeight: 1.15, fontVariantNumeric: 'tabular-nums' }}>{valor}</div>
+      <div style={{ fontSize: 12, color: 'var(--tinta-3)' }}>{label}</div>
     </div>
   )
 }
