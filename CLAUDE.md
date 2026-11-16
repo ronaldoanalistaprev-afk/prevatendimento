@@ -120,15 +120,17 @@ A decisão do Ronaldo é trazê-lo para o mesmo padrão. Situação de cada pila
   - **Como aplicar:** a folha `web/src/app/apple-design.css` (cópia do `estilo.css` do PrevSystem) é
     global (importada no root layout, com a fonte Inter). O pacote de referência fica em
     `docs/apple-design/` (estilo.css, comportamento.js, monitor-referencia.html + fotos).
-  - **Progresso (16/11/2026):** ✅ convertidas — **casca** (menu lateral claro + topo do celular, em
-    `dashboard/layout.tsx` e `Sidebar.tsx`), **Monitor**, **Início** (`PainelInicio`), **Ações**,
-    **Desempenho**, **Auditoria**, **Cobranças** (+ filtros do Monitor, `BannerConfig`,
-    `SeloAtualizacao`). ⏳ **Faltam:** **Colaboradores** (+ `GerenciarAcessos`, `NovoColaborador`,
-    `AtendentesSemConversaAberta`), **Configurações** e suas sub-telas, a **janela de confirmação**
-    (`Confirmacao.tsx` → classe `.janela-confirma`), o **`NovaCobranca`** (formulário), e as telas
-    secundárias (`monitor/[id]`, `pessoas`, `catalogo`, `marco-zero`, `conta`, `conversas`). Enquanto
-    uma tela não é convertida, ela ainda aparece no visual antigo dentro da casca nova (estado de
-    transição normal). Cada conversão: build limpo + commit; foto no aparelho é do Ronaldo.
+  - **Progresso: front-end INTEIRO convertido em 16/11/2026** ✅ — não há mais tela no visual antigo.
+    Casca (menu lateral + topo do celular), Entrar, Nova senha, Início, Monitor (+ conversa aberta),
+    Ações, Desempenho, Auditoria, Cobranças (+ Nova cobrança, Cobrar atendente, Ações da cobrança),
+    Colaboradores (+ acessos, cadastro, sem-conversa), Configurações e todas as sub-telas (Situação,
+    Permissões, Papéis, Modelos, Catálogo), Marco Zero, Minha conta, Laboratório WhatsApp, Pessoas; a
+    janela de confirmação do sistema e todos os filtros/avisos. Build limpo. **`UsuarioLogado.tsx`
+    ficou órfão** (o rodapé do menu passou a ser inline no `Sidebar`) — dá para apagar.
+  - **Falta ainda (pós-conversão):** a conferência na FOTO pelo Ronaldo (Regra 54, 390/1440/320 px) e
+    os itens de comportamento que a Rodada 1 do Documento Mestre deixou abertos (esqueleto de
+    carregamento = Regra 45; Enter avança campo nos formulários = Regra 55) — ver
+    `docs/conformidade-telas.md`.
 - **[⚠️ pende "sim" do Ronaldo — custa ~US$ 10/mês] Banco-rascunho:** cópia de teste do banco (branch
   Supabase) como o PrevSystem tem. Não criar sem o OK dele (regra de custo do CLAUDE global).
 
