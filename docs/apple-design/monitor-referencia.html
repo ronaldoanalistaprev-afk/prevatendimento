@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monitor Diário — PrevAtendimento</title>
+<meta name="description" content="Conversas do Multi360.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&display=swap">
+<link rel="stylesheet" href="estilo.css">
+<style>
+/* Peça do PrevAtendimento: Monitor Diário (por cima da base da Apple Design) */
+.mon-resumo { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:16px; }
+.mon-num { background:var(--superficie); border-radius:var(--raio-g); box-shadow:var(--sombra-cartao); padding:14px 16px; display:block; text-decoration:none; color:inherit; }
+.mon-num:hover { background:#FCFCFB; }
+.mon-num.ativo { box-shadow:0 0 0 1.5px var(--acao); }
+.mon-num .topo-num { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.mon-num dt { display:flex; align-items:center; gap:7px; font-size:13.5px; color:var(--tinta-2); line-height:1.3; }
+.mon-num dt .icone { width:16px; height:16px; color:var(--tinta-3); }
+.mon-num dd { margin:6px 0 0; font-size:28px; line-height:1.05; font-weight:650; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+.mon-num .pista { font-size:12.5px; color:var(--tinta-3); margin-top:2px; }
+.mon-num.perigo dd { color:var(--perigo); } .mon-num.acao dd { color:var(--acao); }
+
+.mon-barra { display:flex; align-items:center; gap:10px 12px; flex-wrap:wrap; padding:12px 16px; border-bottom:1px solid var(--linha); }
+.mon-chips { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.mon-chips .rot { font-size:12.5px; color:var(--tinta-3); font-weight:600; }
+.chip { display:inline-flex; align-items:center; min-height:32px; padding:0 12px; border-radius:999px; font-size:14px; font-weight:600; text-decoration:none; color:var(--tinta-2); box-shadow:inset 0 0 0 1px var(--linha-forte); background:var(--superficie); }
+.chip:hover { background:var(--recuo); }
+.chip[aria-current="true"] { background:var(--acao); color:#fff; box-shadow:none; }
+
+.mon-lista { list-style:none; margin:0; padding:0; }
+.mon-item { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 16px; align-items:start; padding:13px 16px; border-top:1px solid var(--linha); }
+.mon-item:first-child { border-top:0; }
+.mon-item:hover { background:#FAFAF8; }
+.mon-nome-linha { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.mon-nome { font-size:15.5px; font-weight:640; letter-spacing:-.008em; color:var(--tinta); text-decoration:none; }
+.mon-nome:hover { text-decoration:underline; }
+.mon-dep { font-size:12.5px; font-weight:620; padding:1px 8px; border-radius:999px; background:var(--recuo-2); color:var(--tinta-2); }
+.mon-meta { color:var(--tinta-3); font-size:13.5px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:1px; }
+.mon-meta .icone { width:14px; height:14px; color:var(--tinta-3); }
+.mon-meta .semat { color:var(--atencao); font-weight:600; }
+.mon-previa { font-size:14px; color:var(--tinta-2); margin-top:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60ch; }
+.mon-previa b.cli { color:var(--atencao); } .mon-previa b.eq { color:var(--sucesso); }
+.mon-quando { font-size:13px; color:var(--tinta-2); font-weight:600; margin-top:2px; }
+.mon-dir { display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
+.mon-abrir { display:inline-flex; align-items:center; gap:4px; min-height:34px; padding:0 10px 0 12px; border-radius:9px; background:var(--acao); color:#fff; font-size:14px; font-weight:600; text-decoration:none; }
+.mon-abrir:hover { background:var(--acao-forte); }
+@media (max-width:767px){
+  .mon-resumo{ grid-template-columns:1fr; }
+  .mon-item{ grid-template-columns:1fr; }
+  .mon-dir{ flex-direction:row; align-items:center; justify-content:space-between; width:100%; margin-top:6px; }
+  .mon-previa{ white-space:normal; }
+}
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 12h16"/><path d="M4 6h16"/><path d="M4 18h16"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+<symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="i-layout-dashboard" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></symbol>
+<symbol id="i-inbox" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+<symbol id="i-triangle-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+<symbol id="i-circle-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></symbol>
+<symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-chart-column" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+<symbol id="i-settings" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+<symbol id="i-alarm" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/><path d="M6.38 18.7 4 21"/><path d="M17.64 18.67 20 21"/></symbol>
+<symbol id="i-log-out" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></symbol>
+<symbol id="i-paperclip" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></symbol>
+<symbol id="i-radar" viewBox="0 0 24 24"><path d="M19.07 4.93A10 10 0 0 0 6.99 3.34"/><path d="M4 6h.01"/><path d="M2.29 9.62A10 10 0 1 0 21.31 8.35"/><path d="M16.24 7.76A6 6 0 1 0 8.23 16.67"/><path d="M12 18h.01"/><path d="M17.99 11.66A6 6 0 0 1 15.77 16.67"/><circle cx="12" cy="12" r="2"/><path d="m13.41 10.59 5.66-5.66"/></symbol>
+</svg>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+<div class="casca">
+<div class="lateral" id="menu">
+  <div class="lateral-marca"><span class="marca-p" aria-hidden="true">A</span><span><span class="marca-nome">PrevAtendimento</span><span class="marca-sub">Central de Atendimento</span></span></div>
+  <nav class="lateral-nav" aria-label="Menu principal">
+    <div class="grupo"><ul>
+      <li><a class="item" href="#"><svg class="icone"><use href="#i-layout-dashboard"/></svg><span>Início</span></a></li>
+      <li><a class="item" href="#" aria-current="page"><svg class="icone"><use href="#i-radar"/></svg><span>Monitor Diário</span></a></li>
+      <li><a class="item" href="#"><svg class="icone"><use href="#i-triangle-alert"/></svg><span>Ações necessárias</span><span class="contador"><span class="so-leitor">pendências: </span>3</span></a></li>
+      <li><a class="item" href="#"><svg class="icone"><use href="#i-shield-check"/></svg><span>Auditoria</span></a></li>
+      <li><a class="item" href="#"><svg class="icone"><use href="#i-circle-alert"/></svg><span>Cobranças</span></a></li>
+      <li><a class="item" href="#"><svg class="icone"><use href="#i-chart-column"/></svg><span>Desempenho</span></a></li>
+      <li><a class="item" href="#"><svg class="icone"><use href="#i-users"/></svg><span>Colaboradores</span></a></li>
+      <li><a class="item" href="#"><svg class="icone"><use href="#i-settings"/></svg><span>Configurações</span></a></li>
+    </ul></div>
+  </nav>
+  <div class="lateral-pe"><span class="usuario-nome">Ronaldo Carvalho dos Santos</span><button class="botao-sair" type="button"><svg class="icone icone-p"><use href="#i-log-out"/></svg>Sair da conta</button></div>
+</div>
+<div class="veu-menu" aria-hidden="true"></div>
+<div class="principal">
+<header class="topo"><button class="botao-menu" type="button"><svg class="icone"><use href="#i-menu"/></svg>Menu</button><span class="topo-nome">Monitor</span></header>
+<main id="conteudo" class="conteudo" tabindex="-1">
+<div class="cabeca"><div class="cabeca-texto">
+  <h1 class="titulo">Monitor Diário</h1>
+  <p class="subtitulo">Conversas do Multi360. Quem está esperando aparece primeiro, de quem espera há mais tempo.</p>
+  <p class="texto-apoio" style="margin-top:4px;display:flex;align-items:center;gap:6px;"><svg class="icone icone-p"><use href="#i-clock"/></svg>Atualizado com o Multi360: Seg 16/11/2026 15:28 · há 2 min</p>
+</div></div>
+
+<dl class="mon-resumo">
+  <a class="mon-num" href="#"><div class="topo-num"><dt><svg class="icone"><use href="#i-inbox"/></svg>Conversas</dt></div><dd>209</dd><div class="pista">total neste filtro</div></a>
+  <a class="mon-num perigo ativo" href="#"><div class="topo-num"><dt><svg class="icone"><use href="#i-alarm"/></svg>Escritório precisa responder</dt></div><dd>40</dd><div class="pista">vendo só estas — clique p/ tirar</div></a>
+  <a class="mon-num acao" href="#"><div class="topo-num"><dt><svg class="icone"><use href="#i-clock"/></svg>Aguardando o cliente</dt></div><dd>169</dd><div class="pista">clique para ver só estas</div></a>
+</dl>
+
+<section class="cartao" aria-label="Conversas">
+  <div class="mon-barra">
+    <div class="caixa-icone" style="flex:1 1 240px;min-width:0;"><svg class="icone"><use href="#i-search"/></svg><input class="entrada" type="search" placeholder="Buscar por nome ou telefone" aria-label="Buscar por nome ou telefone"></div>
+    <div class="mon-chips"><span class="rot">Situação</span><a class="chip" aria-current="true" href="#">Abertas</a><a class="chip" href="#">Finalizadas</a><a class="chip" href="#">Todas</a></div>
+  </div>
+  <div class="mon-barra" style="border-bottom:0;">
+    <div class="mon-chips"><span class="rot">Período</span><a class="chip" aria-current="true" href="#">Hoje</a><a class="chip" href="#">7 dias</a><a class="chip" href="#">30 dias</a><a class="chip" href="#">Tudo</a></div>
+    <div class="caixa-select" style="min-width:180px;"><select class="entrada" aria-label="Setor"><option>Todos os setores</option><option>Benefícios</option><option>Restituição</option><option>Judicial</option></select><svg class="icone"><use href="#i-chevron-down"/></svg></div>
+  </div>
+
+  <ul class="mon-lista">
+    <li class="mon-item">
+      <div>
+        <div class="mon-nome-linha"><a class="mon-nome" href="#">Maria de Souza de Jesus</a><span class="mon-dep">Benefícios</span></div>
+        <div class="mon-meta">(71) 98841-0521 <svg class="icone" aria-label="tem anexo"><use href="#i-paperclip"/></svg> · Atendente: Beatriz Andrade</div>
+        <div class="mon-previa"><b class="cli">Cliente:</b> Tem notícia do meu processo? Já faz um tempo que não recebo resposta.</div>
+        <div class="mon-quando">Qua 12/11/2026 09:14</div>
+      </div>
+      <div class="mon-dir"><span class="selo selo-atencao">Aguardando · 4d 6h</span><a class="mon-abrir" href="#">Abrir<svg class="icone icone-p"><use href="#i-chevron-right"/></svg></a></div>
+    </li>
+    <li class="mon-item">
+      <div>
+        <div class="mon-nome-linha"><a class="mon-nome" href="#">Luíza Conceição de Oliveira</a><span class="mon-dep">Gestão com o cliente</span></div>
+        <div class="mon-meta">(71) 3333-4444 · <span class="semat">sem atendente</span></div>
+        <div class="mon-previa"><b class="cli">Cliente:</b> Oi????</div>
+        <div class="mon-quando">Sex 13/11/2026 17:45</div>
+      </div>
+      <div class="mon-dir"><span class="selo selo-atencao">Aguardando · 2d 22h</span><a class="mon-abrir" href="#">Abrir<svg class="icone icone-p"><use href="#i-chevron-right"/></svg></a></div>
+    </li>
+    <li class="mon-item">
+      <div>
+        <div class="mon-nome-linha"><a class="mon-nome" href="#">Antônio Ferreira dos Santos</a><span class="mon-dep">Judicial</span></div>
+        <div class="mon-meta">(81) 97777-0001 · Atendente: Yago Martins</div>
+        <div class="mon-previa"><b class="cli">Cliente:</b> Bom dia, consegui os documentos que você pediu, vou enviar agora.</div>
+        <div class="mon-quando">Dom 15/11/2026 08:30</div>
+      </div>
+      <div class="mon-dir"><span class="selo selo-atencao">Aguardando · 1d 7h</span><a class="mon-abrir" href="#">Abrir<svg class="icone icone-p"><use href="#i-chevron-right"/></svg></a></div>
+    </li>
+    <li class="mon-item">
+      <div>
+        <div class="mon-nome-linha"><a class="mon-nome" href="#">João Carlos Pereira</a><span class="mon-dep">Restituição</span></div>
+        <div class="mon-meta">(75) 99998-8888 · Atendente: Bruna Lima</div>
+        <div class="mon-previa"><b class="eq">Equipe:</b> Já protocolei o pedido, qualquer novidade eu te aviso por aqui.</div>
+        <div class="mon-quando">Seg 16/11/2026 14:02</div>
+      </div>
+      <div class="mon-dir"><span class="selo selo-sucesso">Respondido</span><a class="mon-abrir" href="#">Abrir<svg class="icone icone-p"><use href="#i-chevron-right"/></svg></a></div>
+    </li>
+    <li class="mon-item">
+      <div>
+        <div class="mon-nome-linha"><a class="mon-nome" href="#">Severino Exemplo da Silva</a><span class="mon-dep">Benefícios</span></div>
+        <div class="mon-meta">(82) 98123-4567 · Atendente: Aline Sampaio</div>
+        <div class="mon-previa"><b class="eq">Equipe:</b> Seu benefício foi concedido! Parabéns, qualquer dúvida estamos à disposição.</div>
+        <div class="mon-quando">Sex 10/10/2026 11:20</div>
+      </div>
+      <div class="mon-dir"><span class="selo selo-neutro">Finalizada</span><a class="mon-abrir" href="#">Abrir<svg class="icone icone-p"><use href="#i-chevron-right"/></svg></a></div>
+    </li>
+  </ul>
+  <div class="tabela-pe"><span>Mostrando <strong>1–5</strong> de <strong>209</strong> conversas · página 1 de 42</span><a class="botao botao-discreto" href="#">Limpar filtros</a></div>
+</section>
+</main>
+</div>
+</div>
+</body>
+</html>
