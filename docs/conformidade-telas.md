@@ -122,8 +122,10 @@ rodar). Antes as duas diziam a mesma frase.
 
 ## Pendências de conformidade (ainda abertas)
 
-1. **Regra 45 — esqueleto de carregamento** em todas as telas de lista (Monitor, Início, Auditoria,
-   Cobranças, Colaboradores). Hoje são server components sem `loading.tsx`. ⏳
+1. **Regra 45 — esqueleto de carregamento** ✅ feito em 16/11/2026: `web/src/app/dashboard/loading.tsx`
+   (usa a classe `.esqueleto` da skill) aparece na hora em toda troca de tela do painel, então a tela
+   não "trava" na anterior enquanto o servidor responde. (Foi o que explicava a sensação de lentidão:
+   as consultas do banco levam ~4 ms — medido —, o problema era a falta desta tela de carregamento.)
 2. **Regra 44 — aparência:** 🙋 decisão do Ronaldo (rodada no Laboratório vs. exceção Apple Design).
    Enquanto não houver pacote, não se mexe em cores/tipografia/composição.
 3. **Regra 54 — foto e conferência no aparelho:** ⏳ depende de o Ronaldo abrir as telas (390/1440/320 px).
