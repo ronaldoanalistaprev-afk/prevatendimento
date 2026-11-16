@@ -12,10 +12,10 @@ export default async function SeloAtualizacao({ em }: { em?: string | null }) {
   return (
     <span
       title="Hora em que o leitor trouxe as conversas do Multi360 pela última vez"
-      style={{ fontSize: 11.5, color: '#9CA3AF', marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5 }}
+      style={{ fontSize: 'var(--t-pequeno)', color: 'var(--tinta-3)', display: 'inline-flex', alignItems: 'center', gap: 5 }}
     >
-      <RefreshCw size={12} style={{ color: '#CBD5E1' }} />
-      Atualizado com o Multi360: <b style={{ color: '#6B7280' }}>{formatarDataHoraSegundos(iso)}</b> · há {formatarDuracao(iso)}
+      <RefreshCw className="icone icone-p" aria-hidden="true" focusable="false" />
+      Atualizado com o Multi360: <b style={{ color: 'var(--tinta-2)' }}>{formatarDataHoraSegundos(iso)}</b> · há {formatarDuracao(iso)}
     </span>
   )
 }

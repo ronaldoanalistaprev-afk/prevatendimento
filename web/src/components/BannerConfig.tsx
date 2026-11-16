@@ -3,21 +3,9 @@ import { AlertTriangle } from 'lucide-react'
 /** Exibido quando o Supabase ainda não foi configurado (.env.local ausente). */
 export default function BannerConfig({ erro }: { erro?: string | null }) {
   return (
-    <div
-      style={{
-        background: '#FEF9C3',
-        border: '1px solid #FDE68A',
-        color: '#A16207',
-        borderRadius: 14,
-        padding: '14px 18px',
-        display: 'flex',
-        gap: 12,
-        alignItems: 'flex-start',
-        marginBottom: 20,
-      }}
-    >
-      <AlertTriangle size={20} style={{ flexShrink: 0, marginTop: 2 }} />
-      <div style={{ fontSize: 13.5, lineHeight: 1.5 }}>
+    <div className="aviso aviso-atencao" style={{ marginBottom: 16 }}>
+      <AlertTriangle className="icone" aria-hidden="true" focusable="false" />
+      <div>
         <strong>Banco de dados ainda não conectado.</strong>{' '}
         {erro ? (
           <>Erro: <code>{erro}</code>. </>

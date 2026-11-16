@@ -1,17 +1,13 @@
 import type { Metadata, Viewport } from 'next'
-import { Montserrat, Open_Sans } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import './globals.css'
+import './apple-design.css'
 
-const montserrat = Montserrat({
-  variable: '--font-montserrat',
+// Apple Design (skill): fonte Inter com tamanho óptico automático.
+const inter = Inter({
+  variable: '--font-inter',
   subsets: ['latin'],
-  weight: ['400', '500', '700'],
-})
-
-const openSans = Open_Sans({
-  variable: '--font-open-sans',
-  subsets: ['latin'],
-  weight: ['400', '500'],
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
@@ -23,15 +19,15 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#1A3C5A',
+  themeColor: '#0F6273',
 }
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="pt-BR" className={`${montserrat.variable} ${openSans.variable} h-full`}>
-      <body className="min-h-full bg-background text-foreground antialiased">
+    <html lang="pt-BR" className={`${inter.variable} h-full`}>
+      <body className="min-h-full antialiased">
         {children}
       </body>
     </html>
