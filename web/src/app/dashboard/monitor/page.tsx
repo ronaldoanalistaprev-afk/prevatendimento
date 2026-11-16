@@ -4,7 +4,7 @@ import BannerConfig from '@/components/BannerConfig'
 import AutoRefresh from '@/components/AutoRefresh'
 import SeloAtualizacao from '@/components/SeloAtualizacao'
 import { formatarTelefone, formatarDataHora, formatarDuracao, formatarNome } from '@/lib/utils'
-import { Radar, Clock, Users, AlarmClock, ChevronRight } from 'lucide-react'
+import { Radar, Clock, Users, AlarmClock, ChevronRight, Paperclip, X, Check } from 'lucide-react'
 import FiltroAtendente from '@/components/FiltroAtendente'
 import FiltroCompetencia from '@/components/FiltroCompetencia'
 import FiltroSetor from '@/components/FiltroSetor'
@@ -146,8 +146,8 @@ export default async function MonitorPage({ searchParams }: { searchParams: Prom
               </div>
               <div style={{ fontSize: 26, fontWeight: 700, color: c.cor, marginTop: 4 }}>{c.valor}</div>
               {c.href && (
-                <div style={{ fontSize: 11, color: ativo ? c.cor : '#9CA3AF', marginTop: 2, fontWeight: ativo ? 700 : 400 }}>
-                  {ativo ? '✓ vendo só estas — clique p/ tirar' : 'clique para ver só estas'}
+                <div style={{ fontSize: 11, color: ativo ? c.cor : '#9CA3AF', marginTop: 2, fontWeight: ativo ? 700 : 400, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                  {ativo ? (<><Check size={11} /> vendo só estas — clique p/ tirar</>) : 'clique para ver só estas'}
                 </div>
               )}
             </>
@@ -208,8 +208,8 @@ export default async function MonitorPage({ searchParams }: { searchParams: Prom
           </span>
         )}
         {temFiltro && (
-          <Link href="/dashboard/monitor" style={{ fontSize: 12, fontWeight: 600, color: '#B91C1C', textDecoration: 'none', marginLeft: 'auto' }}>
-            ✕ Limpar filtros
+          <Link href="/dashboard/monitor" style={{ fontSize: 12, fontWeight: 600, color: '#B91C1C', textDecoration: 'none', marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <X size={13} /> Limpar filtros
           </Link>
         )}
       </div>
@@ -217,7 +217,16 @@ export default async function MonitorPage({ searchParams }: { searchParams: Prom
       {itens.length === 0 ? (
         <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #EEF2F7', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '48px 24px', textAlign: 'center', color: '#9CA3AF', fontSize: 14, lineHeight: 1.6 }}>
           <Radar size={32} style={{ margin: '0 auto 12px', opacity: 0.4 }} />
-          Nenhuma conversa neste filtro.
+          {temFiltro ? (
+            <>
+              <div>Nenhuma conversa com estes filtros.</div>
+              <Link href="/dashboard/monitor" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 12, fontSize: 13, fontWeight: 600, color: '#1A3C5A', textDecoration: 'none' }}>
+                <X size={14} /> Limpar filtros
+              </Link>
+            </>
+          ) : (
+            <div>Ainda não há conversas sincronizadas do Multi360.<br />Assim que o leitor do Multi360 rodar, as conversas aparecem aqui.</div>
+          )}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -253,7 +262,7 @@ export default async function MonitorPage({ searchParams }: { searchParams: Prom
                   </div>
                   <div style={{ fontSize: 12.5, color: '#6B7280', marginTop: 3 }}>
                     {formatarTelefone(p.cliente_telefone)}
-                    {p.possui_anexo && <span title="tem anexo" style={{ marginLeft: 6, opacity: 0.6 }}>📎</span>}
+                    {p.possui_anexo && <span title="Tem anexo"><Paperclip size={13} style={{ marginLeft: 6, color: '#9CA3AF', verticalAlign: 'middle' }} aria-label="Tem anexo" /></span>}
                     {' · '}Atendente: {p.atendente_nome ? formatarNome(p.atendente_nome) : <span style={{ color: '#C2410C', fontWeight: 600 }}>sem atendente</span>}
                   </div>
                   <div style={{ marginTop: 9 }}>

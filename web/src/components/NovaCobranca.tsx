@@ -175,8 +175,8 @@ export default function NovaCobranca({ atendentes = [], modelos = [] }: { atende
             )
           })}
           {prazo && (
-            <button type="button" onClick={() => setPrazo('')} style={{ height: 30, padding: '0 10px', borderRadius: 999, border: '1px solid #DCE6EF', background: '#fff', color: '#6B7280', fontSize: 12.5, cursor: 'pointer' }}>
-              ✕ sem prazo
+            <button type="button" onClick={() => setPrazo('')} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, height: 30, padding: '0 10px', borderRadius: 999, border: '1px solid #DCE6EF', background: '#fff', color: '#6B7280', fontSize: 12.5, cursor: 'pointer' }}>
+              <X size={13} /> sem prazo
             </button>
           )}
         </div>

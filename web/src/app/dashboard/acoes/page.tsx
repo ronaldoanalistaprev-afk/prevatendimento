@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { AlertTriangle, UserX, ChevronRight, CheckCircle2, ChevronDown } from 'lucide-react'
+import { AlertTriangle, UserX, ChevronRight, CheckCircle2, ChevronDown, Check } from 'lucide-react'
 import { getAcoes, type SecaoAcao } from '@/lib/acoes'
 import { getPapelAtual } from '@/lib/papel'
 import { getPermissoesMapa, podeAcessar } from '@/lib/permissoes'
@@ -82,10 +82,11 @@ function Card({ secao, aberto }: { secao: SecaoAcao; aberto: boolean }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
         <Icone size={18} style={{ color: temPendencia ? '#C2410C' : '#15803D' }} />
         <span style={{
+          display: 'inline-flex', alignItems: 'center',
           fontSize: 12, fontWeight: 700, borderRadius: 999, padding: '2px 10px',
           background: temPendencia ? '#FEF3C7' : '#DCFCE7', color: temPendencia ? '#C2410C' : '#15803D',
         }}>
-          {temPendencia ? n : '✓'}
+          {temPendencia ? n : <Check size={13} aria-label="tudo certo" />}
         </span>
       </div>
       <div style={{ fontSize: 14.5, fontWeight: 700, color: '#1A3C5A', marginTop: 8 }}>{secao.titulo}</div>
@@ -118,7 +119,7 @@ function Detalhe({ secao }: { secao: SecaoAcao }) {
 
       {secao.itens.length === 0 ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#15803D', fontSize: 13.5, padding: '8px 0' }}>
-          <CheckCircle2 size={16} /> Nada a corrigir aqui. 🎉
+          <CheckCircle2 size={16} /> Nada a corrigir aqui.
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

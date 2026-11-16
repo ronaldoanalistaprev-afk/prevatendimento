@@ -10,7 +10,7 @@ import SeloAtualizacao from '@/components/SeloAtualizacao'
 import { formatarTelefone, formatarDataHora, formatarDuracao, formatarNome } from '@/lib/utils'
 import { getPapelAtual } from '@/lib/papel'
 import { getPermissoesMapa, podeAcessar } from '@/lib/permissoes'
-import { ShieldAlert, Archive } from 'lucide-react'
+import { ShieldAlert, Archive, X } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -148,8 +148,8 @@ export default async function AuditoriaPage({ searchParams }: { searchParams: Pr
           <FiltroAtendente comConversa={atendentesComConversa} semConversa={atendentesSemConversa} />
           <FiltroOrdem />
           {temFiltro && (
-            <Link href="/dashboard/auditoria" style={{ fontSize: 12, fontWeight: 600, color: '#B91C1C', textDecoration: 'none', marginLeft: 'auto' }}>
-              ✕ Limpar filtros
+            <Link href="/dashboard/auditoria" style={{ fontSize: 12, fontWeight: 600, color: '#B91C1C', textDecoration: 'none', marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <X size={13} /> Limpar filtros
             </Link>
           )}
         </div>
@@ -168,7 +168,7 @@ export default async function AuditoriaPage({ searchParams }: { searchParams: Pr
           </div>
           <div style={{ fontSize: 28, fontWeight: 700, color: '#C2410C', marginTop: 4 }}>{recentes.length}</div>
           <div style={{ fontSize: 11.5, color: !verAntigos ? '#C2410C' : '#9CA3AF', fontWeight: !verAntigos ? 700 : 400 }}>
-            sem resposta há +{rotuloMarco(marco)} (últimos 60 dias){!verAntigos ? ' — ✓ é a lista abaixo' : ' — clique para ver'}
+            sem resposta há +{rotuloMarco(marco)} (últimos 60 dias){!verAntigos ? ' — é a lista abaixo' : ' — clique para ver'}
           </div>
         </Link>
         <Link
@@ -182,7 +182,7 @@ export default async function AuditoriaPage({ searchParams }: { searchParams: Pr
           </div>
           <div style={{ fontSize: 28, fontWeight: 700, color: '#64748B', marginTop: 4 }}>{backlogCount}</div>
           <div style={{ fontSize: 11.5, color: verAntigos ? '#64748B' : '#9CA3AF', fontWeight: verAntigos ? 700 : 400 }}>
-            parados há mais de 60 dias{verAntigos ? ' — ✓ é a lista abaixo' : ' — clique para ver quem são'}
+            parados há mais de 60 dias{verAntigos ? ' — é a lista abaixo' : ' — clique para ver quem são'}
           </div>
         </Link>
       </div>
@@ -196,7 +196,7 @@ export default async function AuditoriaPage({ searchParams }: { searchParams: Pr
         {lista.length === 0 ? (
           <div style={{ padding: '40px 20px', textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>
             {totalCount === 0
-              ? 'Ninguém esperando resposta. 👏'
+              ? 'Ninguém esperando resposta.'
               : verAntigos
                 ? 'Nenhum caso na fila antiga com este filtro.'
                 : 'Nada recente — veja a “Fila antiga” no cartão acima.'}

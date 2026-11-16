@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { BellRing, Loader2 } from 'lucide-react'
+import { BellRing, Loader2, X } from 'lucide-react'
 
 /** Prazos rápidos: 1 a 5 dias. Preenchem o campo de data (que continua editável). */
 const DIAS_PRAZO = [1, 2, 3, 4, 5]
@@ -180,9 +180,9 @@ export default function BotaoCobrar({
             <button
               type="button"
               onClick={() => setPrazo('')}
-              style={{ height: 30, padding: '0 10px', borderRadius: 999, border: '1px solid #DCE6EF', background: '#fff', color: '#6B7280', fontSize: 12.5, cursor: 'pointer' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, height: 30, padding: '0 10px', borderRadius: 999, border: '1px solid #DCE6EF', background: '#fff', color: '#6B7280', fontSize: 12.5, cursor: 'pointer' }}
             >
-              ✕ sem prazo
+              <X size={13} /> sem prazo
             </button>
           )}
         </div>

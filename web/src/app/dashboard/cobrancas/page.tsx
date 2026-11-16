@@ -204,7 +204,7 @@ export default async function CobrancasPage({
           <BellRing size={30} style={{ margin: '0 auto 10px', opacity: 0.4 }} />
           {situacao === 'ABERTA'
             ? souAtendente
-              ? 'Você não tem cobranças a resolver. 🎉'
+              ? 'Você não tem cobranças a resolver.'
               : 'Nenhuma cobrança a resolver no momento.'
             : `Nenhuma cobrança ${ROTULO_STATUS[situacao as 'RESOLVIDA' | 'CANCELADA']?.toLowerCase() ?? ''} por aqui.`}
           {souAtendente && !papel.atColaboradorId && (
