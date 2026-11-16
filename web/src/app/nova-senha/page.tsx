@@ -15,201 +15,75 @@ export default function NovaSenhaPage() {
   const [erro, setErro] = useState<string | null>(null)
   const [pronto, setPronto] = useState(false)
 
-  // O link do e-mail traz a sessão depois do "#" (#access_token=...).
-  // O cliente do Supabase lê isso sozinho, mas leva um instante — então
-  // ouvimos a mudança de estado em vez de perguntar uma vez só.
   useEffect(() => {
     const supabase = createClient()
     const expirado = 'Este link expirou ou já foi usado. Peça um novo em "Esqueci minha senha".'
-
     async function preparar() {
       const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''))
-
-      // Erro devolvido pelo próprio link (expirado, já usado).
-      if (hash.get('error')) {
-        setErro(expirado)
-        setPronto(true)
-        return
-      }
-
-      // O link de recuperação entrega os tokens depois do "#".
+      if (hash.get('error')) { setErro(expirado); setPronto(true); return }
       const accessToken = hash.get('access_token')
       const refreshToken = hash.get('refresh_token')
       if (accessToken && refreshToken) {
-        const { error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        })
-        // Tira os tokens da barra de endereços depois de usar.
+        const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
         window.history.replaceState(null, '', window.location.pathname)
-        setErro(error ? expirado : null)
-        setPronto(true)
-        return
+        setErro(error ? expirado : null); setPronto(true); return
       }
-
-      // Sem tokens no endereço: talvez já exista sessão (fluxo com ?code=).
       const { data } = await supabase.auth.getSession()
       if (!data.session) setErro(expirado)
       setPronto(true)
     }
-
     preparar()
   }, [])
 
   async function handleSalvar(e: React.FormEvent) {
     e.preventDefault()
     setErro(null)
-
-    if (senha.length < 8) {
-      setErro('A senha precisa ter pelo menos 8 caracteres.')
-      return
-    }
-    if (senha !== confirmacao) {
-      setErro('As duas senhas não são iguais. Digite de novo.')
-      return
-    }
-
+    if (senha.length < 8) { setErro('A senha precisa ter pelo menos 8 caracteres.'); return }
+    if (senha !== confirmacao) { setErro('As duas senhas não são iguais. Digite de novo.'); return }
     setCarregando(true)
     const supabase = createClient()
     const { error } = await supabase.auth.updateUser({ password: senha })
-
-    if (error) {
-      setErro('Não foi possível salvar a senha. O link pode ter expirado — peça um novo.')
-      setCarregando(false)
-      return
-    }
-
-    router.push('/dashboard')
-    router.refresh()
+    if (error) { setErro('Não foi possível salvar a senha. O link pode ter expirado — peça um novo.'); setCarregando(false); return }
+    router.push('/dashboard'); router.refresh()
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden"
-      style={{ background: 'linear-gradient(135deg, #0f2236 0%, #1A3C5A 50%, #1e4d73 100%)' }}
-    >
-      <div
-        className="absolute top-[-120px] right-[-120px] w-[400px] h-[400px] rounded-full opacity-10"
-        style={{ background: 'radial-gradient(circle, #16A34A, transparent)' }}
-      />
-      <div
-        className="absolute bottom-[-80px] left-[-80px] w-[300px] h-[300px] rounded-full opacity-10"
-        style={{ background: 'radial-gradient(circle, #4B7BA6, transparent)' }}
-      />
-
-      <div className="w-full max-w-[420px] relative z-10">
-        <div className="text-center mb-8">
-          <div
-            className="inline-flex items-center justify-center w-20 h-20 rounded-3xl mb-5"
-            style={{
-              background: 'linear-gradient(135deg, #16A34A, #1A3C5A)',
-              boxShadow: '0 8px 32px rgba(22, 163, 74, 0.4)',
-            }}
-          >
-            <span className="text-white font-bold text-3xl tracking-tight">PA</span>
-          </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">PrevAtendimento</h1>
-          <p className="text-blue-200 text-sm mt-2 opacity-80">
-            Central de Atendimento Multicanal — Aposentar
-          </p>
+    <div className="pagina-entrar">
+      <div className="entrar">
+        <div className="entrar-marca">
+          <span className="marca-p" aria-hidden="true">A</span>
+          <span><span className="marca-nome">PrevAtendimento</span><span className="marca-sub">Central de Atendimento — Aposentar</span></span>
         </div>
+        <div className="entrar-cartao">
+          <h1 className="titulo">Criar nova senha</h1>
+          <p className="texto-apoio" style={{ marginTop: 4 }}>Escolha uma senha com pelo menos 8 caracteres.</p>
 
-        <div
-          className="rounded-3xl p-8"
-          style={{
-            background: 'rgba(255, 255, 255, 0.97)',
-            boxShadow: '0 24px 64px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0,0,0,0.2)',
-          }}
-        >
-          <h2 className="text-xl font-bold mb-1" style={{ color: '#1A3C5A' }}>
-            Criar nova senha
-          </h2>
-          <p className="text-sm text-gray-400 mb-7">
-            Escolha uma senha com pelo menos 8 caracteres
-          </p>
-
-          <form onSubmit={handleSalvar} className="flex flex-col gap-5">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold" style={{ color: '#1A3C5A' }}>
-                Nova senha
-              </label>
-              <div className="relative">
-                <input
-                  type={mostrarSenha ? 'text' : 'password'}
-                  value={senha}
-                  onChange={(e) => setSenha(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  className="h-12 w-full px-4 pr-12 rounded-2xl border-2 text-sm outline-none transition-all"
-                  style={{ borderColor: '#DCE6EF', background: '#F8FAFC', color: '#1A3C5A' }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = '#16A34A')}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = '#DCE6EF')}
-                />
-                <button
-                  type="button"
-                  onClick={() => setMostrarSenha(!mostrarSenha)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors"
-                  style={{ color: '#6B7280' }}
-                >
-                  {mostrarSenha ? <EyeOff size={18} /> : <Eye size={18} />}
+          <form onSubmit={handleSalvar}>
+            <label className="campo">
+              <span className="rotulo">Nova senha</span>
+              <div className="senha-caixa">
+                <input className="entrada" type={mostrarSenha ? 'text' : 'password'} value={senha} onChange={(e) => setSenha(e.target.value)} placeholder="••••••••" required autoFocus />
+                <button type="button" className="botao-icone" onClick={() => setMostrarSenha((v) => !v)} aria-label={mostrarSenha ? 'Ocultar a senha' : 'Mostrar a senha'}>
+                  {mostrarSenha ? <EyeOff className="icone icone-p" aria-hidden="true" focusable="false" /> : <Eye className="icone icone-p" aria-hidden="true" focusable="false" />}
                 </button>
               </div>
-            </div>
+            </label>
+            <label className="campo">
+              <span className="rotulo">Repita a nova senha</span>
+              <input className="entrada" type={mostrarSenha ? 'text' : 'password'} value={confirmacao} onChange={(e) => setConfirmacao(e.target.value)} placeholder="••••••••" required />
+            </label>
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold" style={{ color: '#1A3C5A' }}>
-                Repita a nova senha
-              </label>
-              <input
-                type={mostrarSenha ? 'text' : 'password'}
-                value={confirmacao}
-                onChange={(e) => setConfirmacao(e.target.value)}
-                placeholder="••••••••"
-                required
-                className="h-12 px-4 rounded-2xl border-2 text-sm outline-none transition-all"
-                style={{ borderColor: '#DCE6EF', background: '#F8FAFC', color: '#1A3C5A' }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = '#16A34A')}
-                onBlur={(e) => (e.currentTarget.style.borderColor = '#DCE6EF')}
-              />
-            </div>
+            {erro && <div className="aviso aviso-perigo">{erro}</div>}
 
-            {erro && (
-              <div
-                className="flex items-center gap-2 text-sm rounded-2xl px-4 py-3"
-                style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626' }}
-              >
-                <span>⚠</span>
-                <span>{erro}</span>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={carregando || !pronto}
-              className="h-12 rounded-2xl text-white font-bold text-sm transition-all flex items-center justify-center gap-2 mt-1"
-              style={{
-                background: carregando || !pronto ? '#6B7280' : 'linear-gradient(135deg, #1A3C5A, #16A34A)',
-                boxShadow: carregando || !pronto ? 'none' : '0 4px 16px rgba(22, 163, 74, 0.4)',
-                cursor: carregando || !pronto ? 'not-allowed' : 'pointer',
-              }}
-            >
-              {carregando ? (
-                <>
-                  <Loader2 size={16} className="animate-spin" />
-                  Salvando...
-                </>
-              ) : (
-                'Salvar nova senha'
-              )}
+            <button type="submit" disabled={carregando || !pronto} className="botao botao-principal">
+              {carregando ? <><Loader2 className="icone icone-p animate-spin" aria-hidden="true" focusable="false" /> Salvando…</> : 'Salvar nova senha'}
             </button>
           </form>
         </div>
 
-        <div className="flex items-center justify-center gap-2 mt-6">
-          <ShieldCheck size={14} className="text-blue-300 opacity-60" />
-          <p className="text-center text-xs text-blue-200 opacity-60">
-            © 2026 SIAP — Acesso restrito e monitorado
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 18 }}>
+          <ShieldCheck className="icone icone-p" style={{ color: 'var(--tinta-3)' }} aria-hidden="true" focusable="false" />
+          <p style={{ fontSize: 'var(--t-pequeno)', color: 'var(--tinta-3)' }}>© 2026 SIAP — Acesso restrito e monitorado</p>
         </div>
       </div>
     </div>

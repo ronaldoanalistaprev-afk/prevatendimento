@@ -50,40 +50,29 @@ export default function EditorPermissoes({ atual, papeis }: { atual: Record<stri
   }
 
   if (papeis.length === 0) {
-    return (
-      <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #EEF2F7', padding: '30px 20px', textAlign: 'center', color: '#9CA3AF', fontSize: 13.5 }}>
-        Não há papéis para configurar além do Administrador.
-      </div>
-    )
+    return <div className="cartao"><div className="vazio"><p className="vazio-texto">Não há papéis para configurar além do Administrador.</p></div></div>
   }
 
   return (
-    <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #EEF2F7', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5, minWidth: 560 }}>
+    <section className="cartao" style={{ overflow: 'hidden' }}>
+      <div className="tabela-caixa" style={{ overflowX: 'auto' }}>
+        <table className="tabela" style={{ minWidth: 560 }}>
           <thead>
-            <tr style={{ background: '#F8FAFC', color: '#6B7280', textAlign: 'left' }}>
-              <th style={{ padding: '12px 20px', fontWeight: 600 }}>Tela</th>
-              {papeis.map((p) => (
-                <th key={p.codigo} style={{ padding: '12px 14px', fontWeight: 600, textAlign: 'center' }}>{p.nome}</th>
-              ))}
+            <tr>
+              <th>Tela</th>
+              {papeis.map((p) => (<th key={p.codigo} style={{ textAlign: 'center' }}>{p.nome}</th>))}
             </tr>
           </thead>
           <tbody>
             {TELAS.map((t) => (
-              <tr key={t.chave} style={{ borderTop: '1px solid #F1F5F9' }}>
-                <td style={{ padding: '12px 20px' }}>
-                  <div style={{ fontWeight: 600, color: '#1A3C5A' }}>{t.label}</div>
-                  <div style={{ fontSize: 11.5, color: '#9CA3AF' }}>{t.descricao}</div>
+              <tr key={t.chave}>
+                <td>
+                  <div style={{ fontWeight: 600, color: 'var(--tinta)' }}>{t.label}</div>
+                  <div className="texto-apoio" style={{ fontSize: 'var(--t-pequeno)' }}>{t.descricao}</div>
                 </td>
                 {papeis.map((p) => (
-                  <td key={p.codigo} style={{ padding: '12px 14px', textAlign: 'center' }}>
-                    <input
-                      type="checkbox"
-                      checked={matriz[t.chave]?.[p.codigo] ?? false}
-                      onChange={() => toggle(t.chave, p.codigo)}
-                      style={{ width: 20, height: 20, cursor: 'pointer', accentColor: '#16A34A' }}
-                    />
+                  <td key={p.codigo} style={{ textAlign: 'center' }}>
+                    <input type="checkbox" checked={matriz[t.chave]?.[p.codigo] ?? false} onChange={() => toggle(t.chave, p.codigo)} aria-label={`${p.nome} vê ${t.label}`} style={{ width: 20, height: 20, cursor: 'pointer', accentColor: 'var(--acao)' }} />
                   </td>
                 ))}
               </tr>
@@ -91,17 +80,13 @@ export default function EditorPermissoes({ atual, papeis }: { atual: Record<stri
           </tbody>
         </table>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderTop: '1px solid #F1F5F9', flexWrap: 'wrap' }}>
-        <button
-          onClick={salvar}
-          disabled={salvando}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 42, padding: '0 22px', borderRadius: 12, border: 'none', background: salvando ? '#6B7280' : 'linear-gradient(135deg, #1A3C5A, #16A34A)', color: '#fff', fontWeight: 700, fontSize: 14, cursor: salvando ? 'wait' : 'pointer' }}
-        >
-          {salvando ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />} Salvar permissões
+      <div className="janela-pe" style={{ justifyContent: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+        <button className="botao botao-principal" onClick={salvar} disabled={salvando}>
+          {salvando ? <Loader2 className="icone icone-p animate-spin" aria-hidden="true" focusable="false" /> : <Check className="icone icone-p" aria-hidden="true" focusable="false" />} Salvar permissões
         </button>
-        <span style={{ fontSize: 12.5, color: '#9CA3AF' }}>O Administrador sempre vê tudo (não aparece na tabela).</span>
-        {msg && <span style={{ fontSize: 13, fontWeight: 600, color: msg.tipo === 'ok' ? '#15803D' : '#B91C1C' }}>{msg.texto}</span>}
+        <span className="texto-apoio">O Administrador sempre vê tudo (não aparece na tabela).</span>
+        {msg && <span style={{ fontSize: 13.5, fontWeight: 600, color: msg.tipo === 'ok' ? 'var(--sucesso)' : 'var(--perigo)' }}>{msg.texto}</span>}
       </div>
-    </div>
+    </section>
   )
 }

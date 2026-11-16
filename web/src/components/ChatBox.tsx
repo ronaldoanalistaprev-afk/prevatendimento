@@ -109,44 +109,27 @@ export default function ChatBox({
       </div>
 
       {erro && (
-        <div style={{ color: '#DC2626', fontSize: 12.5, marginTop: 6 }}>{erro}</div>
+        <div style={{ color: 'var(--perigo)', fontSize: 13, marginTop: 6 }}>{erro}</div>
       )}
 
       {/* Envio */}
       <form onSubmit={enviar} style={{ display: 'flex', gap: 8, marginTop: 10, paddingBottom: 12 }}>
         <input
+          className="entrada"
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
-          placeholder="Escreva uma resposta..."
-          style={{
-            flex: 1,
-            height: 46,
-            padding: '0 16px',
-            borderRadius: 999,
-            border: '1px solid #DCE6EF',
-            outline: 'none',
-            fontSize: 14,
-            background: '#fff',
-          }}
+          placeholder="Escreva uma resposta…"
+          aria-label="Escreva uma resposta"
+          style={{ flex: 1, minHeight: 46, borderRadius: 999 }}
         />
         <button
           type="submit"
           disabled={enviando}
-          style={{
-            width: 46,
-            height: 46,
-            borderRadius: '50%',
-            border: 'none',
-            background: '#16A34A',
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: enviando ? 'not-allowed' : 'pointer',
-            flexShrink: 0,
-          }}
+          className="botao botao-principal"
+          aria-label="Enviar resposta"
+          style={{ width: 46, minHeight: 46, padding: 0, borderRadius: '50%', flexShrink: 0 }}
         >
-          {enviando ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+          {enviando ? <Loader2 className="icone icone-p animate-spin" aria-hidden="true" focusable="false" /> : <Send className="icone icone-p" aria-hidden="true" focusable="false" />}
         </button>
       </form>
     </div>

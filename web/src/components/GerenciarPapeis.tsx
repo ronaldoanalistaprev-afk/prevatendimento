@@ -17,16 +17,6 @@ export interface PapelItem {
   emUso: number
 }
 
-const inputStyle: React.CSSProperties = {
-  padding: '10px 12px', borderRadius: 10, border: '1px solid #DCE6EF', outline: 'none',
-  fontSize: 14, background: '#fff', width: '100%',
-}
-const btnBase: React.CSSProperties = {
-  display: 'inline-flex', alignItems: 'center', gap: 6, height: 36, padding: '0 14px',
-  borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: 'pointer',
-  border: '1px solid #DCE6EF', background: '#fff', color: '#6B7280',
-}
-
 /** CRUD dos papéis (cargos). Só o Administrador. */
 export default function GerenciarPapeis({ papeis }: { papeis: PapelItem[] }) {
   const router = useRouter()
@@ -41,46 +31,19 @@ export default function GerenciarPapeis({ papeis }: { papeis: PapelItem[] }) {
   const [verTudo, setVerTudo] = useState(false)
   const [cobrar, setCobrar] = useState(false)
 
-  function limpar() {
-    setNome('')
-    setDescricao('')
-    setVerTudo(false)
-    setCobrar(false)
-    setErro(null)
-  }
-  function abrirNovo() {
-    limpar()
-    setEditando(null)
-    setCriando(true)
-  }
-  function abrirEdicao(p: PapelItem) {
-    setErro(null)
-    setCriando(false)
-    setEditando(p.codigo)
-    setNome(p.nome)
-    setDescricao(p.descricao ?? '')
-    setVerTudo(p.pode_ver_tudo)
-    setCobrar(p.pode_cobrar)
-  }
+  function limpar() { setNome(''); setDescricao(''); setVerTudo(false); setCobrar(false); setErro(null) }
+  function abrirNovo() { limpar(); setEditando(null); setCriando(true) }
+  function abrirEdicao(p: PapelItem) { setErro(null); setCriando(false); setEditando(p.codigo); setNome(p.nome); setDescricao(p.descricao ?? ''); setVerTudo(p.pode_ver_tudo); setCobrar(p.pode_cobrar) }
 
   async function chamar(metodo: 'POST' | 'PATCH' | 'DELETE', corpo?: Record<string, unknown>, codigo?: string) {
-    setOcupado(codigo ?? 'novo')
-    setErro(null)
+    setOcupado(codigo ?? 'novo'); setErro(null)
     try {
-      const res =
-        metodo === 'DELETE'
-          ? await fetch(`/api/papeis?codigo=${encodeURIComponent(codigo ?? '')}`, { method: 'DELETE' })
-          : await fetch('/api/papeis', {
-              method: metodo,
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(corpo),
-            })
+      const res = metodo === 'DELETE'
+        ? await fetch(`/api/papeis?codigo=${encodeURIComponent(codigo ?? '')}`, { method: 'DELETE' })
+        : await fetch('/api/papeis', { method: metodo, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data?.erro ?? 'Não foi possível salvar.')
-      setCriando(false)
-      setEditando(null)
-      limpar()
-      router.refresh()
+      setCriando(false); setEditando(null); limpar(); router.refresh()
     } catch (e) {
       setErro((e as Error).message)
     } finally {
@@ -97,10 +60,7 @@ export default function GerenciarPapeis({ papeis }: { papeis: PapelItem[] }) {
 
   async function excluir(p: PapelItem) {
     if (p.emUso > 0) {
-      await avisar({
-        titulo: 'Não dá para excluir ainda',
-        mensagem: `${p.emUso} ${p.emUso === 1 ? 'login usa' : 'logins usam'} o papel "${p.nome}". Troque o papel dessas pessoas antes de excluir.`,
-      })
+      await avisar({ titulo: 'Não dá para excluir ainda', mensagem: `${p.emUso} ${p.emUso === 1 ? 'login usa' : 'logins usam'} o papel "${p.nome}". Troque o papel dessas pessoas antes de excluir.` })
       return
     }
     if (await confirmar({ titulo: 'Excluir papel', mensagem: `O papel "${p.nome}" será excluído. Isso não pode ser desfeito.`, confirmar: 'Excluir papel', perigo: true })) {
@@ -111,48 +71,30 @@ export default function GerenciarPapeis({ papeis }: { papeis: PapelItem[] }) {
   const editandoAdmin = editando === 'ADMIN'
 
   const formulario = (
-    <form onSubmit={salvar} style={{ background: '#fff', border: '1px solid #DCE6EF', borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 14 }}>
-      <div style={{ fontWeight: 700, color: '#1A3C5A', fontSize: 14 }}>{editando ? 'Editar papel' : 'Novo papel'}</div>
-      <label style={{ fontSize: 12.5, color: '#6B7280' }}>
-        Nome do papel
-        <input style={{ ...inputStyle, marginTop: 4 }} value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Estagiário" required />
-      </label>
-      <label style={{ fontSize: 12.5, color: '#6B7280' }}>
-        Para que serve (opcional)
-        <input style={{ ...inputStyle, marginTop: 4 }} value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Uma frase explicando o cargo" />
-      </label>
+    <form onSubmit={salvar} className="cartao" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 14 }}>
+      <div className="cartao-titulo">{editando ? 'Editar papel' : 'Novo papel'}</div>
+      <label className="campo"><span className="rotulo">Nome do papel</span><input className="entrada" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Estagiário" required /></label>
+      <label className="campo"><span className="rotulo">Para que serve <span style={{ color: 'var(--tinta-3)', fontWeight: 400 }}>(opcional)</span></span><input className="entrada" value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Uma frase explicando o cargo" /></label>
 
-      <div style={{ fontSize: 12.5, color: '#6B7280' }}>
-        O que este papel pode fazer:
-        {editandoAdmin && (
-          <div style={{ fontSize: 12, color: '#B45309', marginTop: 4 }}>
-            O Administrador sempre pode tudo — esses poderes não podem ser tirados dele.
-          </div>
-        )}
-        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: 8, cursor: editandoAdmin ? 'not-allowed' : 'pointer' }}>
-          <input type="checkbox" checked={verTudo || editandoAdmin} disabled={editandoAdmin} onChange={(e) => setVerTudo(e.target.checked)} style={{ width: 18, height: 18, marginTop: 1, accentColor: '#16A34A' }} />
-          <span>
-            <b style={{ color: '#1A3C5A' }}>Ver as conversas de todos</b>
-            <div style={{ fontSize: 11.5, color: '#9CA3AF' }}>Desmarcado, a pessoa só vê as conversas em que ela é a atendente.</div>
-          </span>
-        </label>
-        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: 8, cursor: editandoAdmin ? 'not-allowed' : 'pointer' }}>
-          <input type="checkbox" checked={cobrar || editandoAdmin} disabled={editandoAdmin} onChange={(e) => setCobrar(e.target.checked)} style={{ width: 18, height: 18, marginTop: 1, accentColor: '#16A34A' }} />
-          <span>
-            <b style={{ color: '#1A3C5A' }}>Cobrar os atendentes</b>
-            <div style={{ fontSize: 11.5, color: '#9CA3AF' }}>Criar, editar, cancelar e excluir cobranças — e mexer nos modelos de cobrança.</div>
-          </span>
-        </label>
+      <div>
+        <span className="rotulo">O que este papel pode fazer:</span>
+        {editandoAdmin && <div style={{ fontSize: 13, color: 'var(--atencao)', marginTop: 4 }}>O Administrador sempre pode tudo — esses poderes não podem ser tirados dele.</div>}
+        <div className="escolhas" style={{ marginTop: 8 }}>
+          <label className="escolha">
+            <input type="checkbox" checked={verTudo || editandoAdmin} disabled={editandoAdmin} onChange={(e) => setVerTudo(e.target.checked)} />
+            <span><span className="titulo-escolha">Ver as conversas de todos</span><span className="detalhe-escolha">Desmarcado, a pessoa só vê as conversas em que ela é a atendente.</span></span>
+          </label>
+          <label className="escolha">
+            <input type="checkbox" checked={cobrar || editandoAdmin} disabled={editandoAdmin} onChange={(e) => setCobrar(e.target.checked)} />
+            <span><span className="titulo-escolha">Cobrar os atendentes</span><span className="detalhe-escolha">Criar, editar, cancelar e excluir cobranças — e mexer nos modelos de cobrança.</span></span>
+          </label>
+        </div>
       </div>
 
-      {erro && <div style={{ fontSize: 13, color: '#B91C1C' }}>{erro}</div>}
+      {erro && <div className="erro-campo"><Trash2 className="icone" aria-hidden="true" focusable="false" />{erro}</div>}
       <div style={{ display: 'flex', gap: 8 }}>
-        <button type="submit" disabled={ocupado !== null} style={{ ...btnBase, height: 40, background: 'linear-gradient(135deg, #1A3C5A, #16A34A)', color: '#fff', border: 'none' }}>
-          {ocupado !== null ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />} Salvar
-        </button>
-        <button type="button" onClick={() => { setCriando(false); setEditando(null); limpar() }} style={{ ...btnBase, height: 40 }}>
-          Cancelar
-        </button>
+        <button type="submit" disabled={ocupado !== null} className="botao botao-principal">{ocupado !== null ? <Loader2 className="icone icone-p animate-spin" aria-hidden="true" focusable="false" /> : <Check className="icone icone-p" aria-hidden="true" focusable="false" />} Salvar</button>
+        <button type="button" className="botao botao-secundario" onClick={() => { setCriando(false); setEditando(null); limpar() }}>Cancelar</button>
       </div>
     </form>
   )
@@ -161,84 +103,46 @@ export default function GerenciarPapeis({ papeis }: { papeis: PapelItem[] }) {
     <div>
       {modal}
       {!criando && !editando && (
-        <button onClick={abrirNovo} style={{ ...btnBase, height: 40, background: 'linear-gradient(135deg, #1A3C5A, #16A34A)', color: '#fff', border: 'none', marginBottom: 14 }}>
-          <Plus size={16} /> Novo papel
-        </button>
+        <button onClick={abrirNovo} className="botao botao-principal" style={{ marginBottom: 14 }}><Plus className="icone icone-p" aria-hidden="true" focusable="false" /> Novo papel</button>
       )}
 
       {(criando || editando) && formulario}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {papeis.map((p) => (
-          <div
-            key={p.codigo}
-            style={{
-              background: '#fff', borderRadius: 14, border: '1px solid #EEF2F7',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '14px 16px',
-              borderLeft: p.ativo ? '4px solid #16A34A' : '4px solid #CBD5E1',
-              opacity: p.ativo ? 1 : 0.7,
-            }}
-          >
+          <section key={p.codigo} className="cartao" style={{ padding: '14px 16px', opacity: p.ativo ? 1 : 0.7 }}>
             <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>
               <div style={{ flex: 1, minWidth: 240 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <span style={{ fontWeight: 700, color: '#1A3C5A', fontSize: 14.5 }}>{p.nome}</span>
-                  {p.sistema && (
-                    <span title="Papel de fábrica: pode editar o nome, mas não excluir" style={{ fontSize: 11, fontWeight: 700, borderRadius: 999, padding: '3px 9px', background: '#EFF6FF', color: '#1D4ED8', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                      <Lock size={10} /> de fábrica
-                    </span>
-                  )}
-                  {!p.ativo && (
-                    <span style={{ fontSize: 11, fontWeight: 700, borderRadius: 999, padding: '3px 9px', background: '#F1F5F9', color: '#64748B' }}>desativado</span>
-                  )}
-                  <span style={{ fontSize: 11.5, color: '#9CA3AF' }}>{p.emUso} {p.emUso === 1 ? 'login' : 'logins'}</span>
+                  <span className="sub-titulo">{p.nome}</span>
+                  {p.sistema && <span className="selo selo-acao" title="Papel de fábrica: pode editar o nome, mas não excluir"><Lock className="icone" aria-hidden="true" focusable="false" /> de fábrica</span>}
+                  {!p.ativo && <span className="selo selo-neutro">desativado</span>}
+                  <span className="texto-apoio">{p.emUso} {p.emUso === 1 ? 'login' : 'logins'}</span>
                 </div>
-                {p.descricao && <div style={{ fontSize: 13, color: '#374151', marginTop: 5 }}>{p.descricao}</div>}
+                {p.descricao && <div style={{ fontSize: 14, color: 'var(--tinta-2)', marginTop: 5 }}>{p.descricao}</div>}
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
                   <Poder ligado={p.pode_ver_tudo} texto={p.pode_ver_tudo ? 'Vê as conversas de todos' : 'Vê só as próprias conversas'} />
                   <Poder ligado={p.pode_cobrar} texto={p.pode_cobrar ? 'Pode cobrar' : 'Não cobra'} />
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <button onClick={() => abrirEdicao(p)} style={btnBase} title="Mudar nome, descrição e poderes">
-                  <Pencil size={14} /> Editar
-                </button>
+                <button onClick={() => abrirEdicao(p)} className="botao botao-secundario" title="Mudar nome, descrição e poderes"><Pencil className="icone icone-p" aria-hidden="true" focusable="false" /> Editar</button>
                 {p.codigo !== 'ADMIN' && (
-                  <button
-                    onClick={() => chamar('PATCH', { codigo: p.codigo, ativo: !p.ativo }, p.codigo)}
-                    disabled={ocupado !== null}
-                    style={{ ...btnBase, color: p.ativo ? '#B45309' : '#15803D' }}
-                    title={p.ativo ? 'Quem tiver este papel perde o acesso até reativar' : 'Volta a valer'}
-                  >
-                    {ocupado === p.codigo ? <Loader2 size={14} className="animate-spin" /> : <Power size={14} />}
-                    {p.ativo ? 'Desativar' : 'Ativar'}
+                  <button onClick={() => chamar('PATCH', { codigo: p.codigo, ativo: !p.ativo }, p.codigo)} disabled={ocupado !== null} className="botao botao-secundario" style={{ color: p.ativo ? 'var(--atencao)' : 'var(--sucesso)' }} title={p.ativo ? 'Quem tiver este papel perde o acesso até reativar' : 'Volta a valer'}>
+                    {ocupado === p.codigo ? <Loader2 className="icone icone-p animate-spin" aria-hidden="true" focusable="false" /> : <Power className="icone icone-p" aria-hidden="true" focusable="false" />} {p.ativo ? 'Desativar' : 'Ativar'}
                   </button>
                 )}
-                {!p.sistema && (
-                  <button onClick={() => excluir(p)} disabled={ocupado !== null} style={{ ...btnBase, color: '#B91C1C', borderColor: '#FECACA' }} title="Excluir de vez">
-                    <Trash2 size={14} />
-                  </button>
-                )}
+                {!p.sistema && <button onClick={() => excluir(p)} disabled={ocupado !== null} className="botao botao-perigo" title="Excluir de vez"><Trash2 className="icone icone-p" aria-hidden="true" focusable="false" /></button>}
               </div>
             </div>
-          </div>
+          </section>
         ))}
       </div>
-      {erro && !criando && !editando && <div style={{ fontSize: 13, color: '#B91C1C', marginTop: 10 }}>{erro}</div>}
+      {erro && !criando && !editando && <div className="erro-campo" style={{ marginTop: 10 }}><Trash2 className="icone" aria-hidden="true" focusable="false" />{erro}</div>}
     </div>
   )
 }
 
 function Poder({ ligado, texto }: { ligado: boolean; texto: string }) {
-  return (
-    <span
-      style={{
-        fontSize: 11.5, fontWeight: 600, borderRadius: 999, padding: '4px 10px',
-        background: ligado ? '#DCFCE7' : '#F1F5F9',
-        color: ligado ? '#15803D' : '#64748B',
-      }}
-    >
-      {texto}
-    </span>
-  )
+  return <span className={`selo ${ligado ? 'selo-sucesso' : 'selo-neutro'}`}>{texto}</span>
 }

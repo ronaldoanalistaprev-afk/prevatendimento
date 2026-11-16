@@ -7,8 +7,6 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 export default function Expansivel({
   titulo,
   subtitulo,
-  corBorda = '#EEF2F7',
-  corTitulo = '#1A3C5A',
   inicialAberto = true,
   children,
 }: {
@@ -21,18 +19,15 @@ export default function Expansivel({
 }) {
   const [aberto, setAberto] = useState(inicialAberto)
   return (
-    <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #EEF2F7', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', overflow: 'hidden', borderTop: `4px solid ${corBorda}` }}>
-      <button
-        onClick={() => setAberto((v) => !v)}
-        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', border: 'none', background: aberto ? '#fff' : '#F8FAFC', cursor: 'pointer', textAlign: 'left' }}
-      >
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 16.5, fontWeight: 700, color: corTitulo }}>{titulo}</div>
-          {subtitulo && <div style={{ fontSize: 12.5, color: '#9CA3AF' }}>{subtitulo}</div>}
+    <section className="cartao" style={{ overflow: 'hidden' }}>
+      <button onClick={() => setAberto((v) => !v)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', border: 'none', background: aberto ? 'var(--superficie)' : 'var(--recuo)', cursor: 'pointer', textAlign: 'left' }} aria-expanded={aberto}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="cartao-titulo">{titulo}</div>
+          {subtitulo && <div className="texto-apoio">{subtitulo}</div>}
         </div>
-        {aberto ? <ChevronUp size={20} style={{ color: '#9CA3AF' }} /> : <ChevronDown size={20} style={{ color: '#9CA3AF' }} />}
+        {aberto ? <ChevronUp className="icone" style={{ color: 'var(--tinta-3)' }} aria-hidden="true" focusable="false" /> : <ChevronDown className="icone" style={{ color: 'var(--tinta-3)' }} aria-hidden="true" focusable="false" />}
       </button>
-      {aberto && <div style={{ borderTop: '1px solid #F1F5F9' }}>{children}</div>}
-    </div>
+      {aberto && <div style={{ borderTop: '1px solid var(--linha)' }}>{children}</div>}
+    </section>
   )
 }

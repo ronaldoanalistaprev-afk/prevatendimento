@@ -15,193 +15,69 @@ export default function LoginPage() {
   const [erro, setErro] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
 
-  // Envia o e-mail com o link para criar uma nova senha.
   async function handleEsqueciSenha() {
-    setErro(null)
-    setAviso(null)
-
+    setErro(null); setAviso(null)
     if (!email) {
       setErro('Digite seu e-mail acima e clique de novo em "Esqueci minha senha".')
       return
     }
-
     setCarregando(true)
     const supabase = createClient()
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
-    })
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/auth/callback?type=recovery` })
     setCarregando(false)
-
-    if (error) {
-      setErro('Não foi possível enviar o e-mail agora. Tente novamente em alguns minutos.')
-      return
-    }
+    if (error) { setErro('Não foi possível enviar o e-mail agora. Tente novamente em alguns minutos.'); return }
     setAviso('Enviamos um link para o seu e-mail. Abra e crie a nova senha.')
   }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
-    setErro(null)
-    setCarregando(true)
-
+    setErro(null); setCarregando(true)
     const supabase = createClient()
     const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
-
-    if (error) {
-      setErro('E-mail ou senha incorretos. Verifique e tente novamente.')
-      setCarregando(false)
-      return
-    }
-
-    router.push('/dashboard')
-    router.refresh()
+    if (error) { setErro('E-mail ou senha incorretos. Verifique e tente novamente.'); setCarregando(false); return }
+    router.push('/dashboard'); router.refresh()
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden"
-      style={{ background: 'linear-gradient(135deg, #0f2236 0%, #1A3C5A 50%, #1e4d73 100%)' }}
-    >
-      <div
-        className="absolute top-[-120px] right-[-120px] w-[400px] h-[400px] rounded-full opacity-10"
-        style={{ background: 'radial-gradient(circle, #16A34A, transparent)' }}
-      />
-      <div
-        className="absolute bottom-[-80px] left-[-80px] w-[300px] h-[300px] rounded-full opacity-10"
-        style={{ background: 'radial-gradient(circle, #4B7BA6, transparent)' }}
-      />
-
-      <div className="w-full max-w-[420px] relative z-10">
-        <div className="text-center mb-8">
-          <div
-            className="inline-flex items-center justify-center w-20 h-20 rounded-3xl mb-5"
-            style={{
-              background: 'linear-gradient(135deg, #16A34A, #1A3C5A)',
-              boxShadow: '0 8px 32px rgba(22, 163, 74, 0.4)',
-            }}
-          >
-            <span className="text-white font-bold text-3xl tracking-tight">PA</span>
-          </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">PrevAtendimento</h1>
-          <p className="text-blue-200 text-sm mt-2 opacity-80">
-            Central de Atendimento Multicanal — Aposentar
-          </p>
+    <div className="pagina-entrar">
+      <div className="entrar">
+        <div className="entrar-marca">
+          <span className="marca-p" aria-hidden="true">A</span>
+          <span><span className="marca-nome">PrevAtendimento</span><span className="marca-sub">Central de Atendimento — Aposentar</span></span>
         </div>
+        <div className="entrar-cartao">
+          <h1 className="titulo">Acesse sua conta</h1>
+          <p className="texto-apoio" style={{ marginTop: 4 }}>Digite suas credenciais para continuar.</p>
 
-        <div
-          className="rounded-3xl p-8"
-          style={{
-            background: 'rgba(255, 255, 255, 0.97)',
-            boxShadow: '0 24px 64px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0,0,0,0.2)',
-          }}
-        >
-          <h2 className="text-xl font-bold mb-1" style={{ color: '#1A3C5A' }}>
-            Acesse sua conta
-          </h2>
-          <p className="text-sm text-gray-400 mb-7">Digite suas credenciais para continuar</p>
+          <form onSubmit={handleLogin}>
+            <label className="campo">
+              <span className="rotulo">E-mail</span>
+              <input className="entrada" type="email" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required autoFocus />
+            </label>
 
-          <form onSubmit={handleLogin} className="flex flex-col gap-5">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold" style={{ color: '#1A3C5A' }}>
-                E-mail
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="seu@email.com"
-                required
-                className="h-12 px-4 rounded-2xl border-2 text-sm outline-none transition-all"
-                style={{ borderColor: '#DCE6EF', background: '#F8FAFC', color: '#1A3C5A' }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = '#16A34A')}
-                onBlur={(e) => (e.currentTarget.style.borderColor = '#DCE6EF')}
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold" style={{ color: '#1A3C5A' }}>
-                Senha
-              </label>
-              <div className="relative">
-                <input
-                  type={mostrarSenha ? 'text' : 'password'}
-                  value={senha}
-                  onChange={(e) => setSenha(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  className="h-12 w-full px-4 pr-12 rounded-2xl border-2 text-sm outline-none transition-all"
-                  style={{ borderColor: '#DCE6EF', background: '#F8FAFC', color: '#1A3C5A' }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = '#16A34A')}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = '#DCE6EF')}
-                />
-                <button
-                  type="button"
-                  onClick={() => setMostrarSenha(!mostrarSenha)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors"
-                  style={{ color: '#6B7280' }}
-                >
-                  {mostrarSenha ? <EyeOff size={18} /> : <Eye size={18} />}
+            <label className="campo">
+              <span className="rotulo">Senha</span>
+              <div className="senha-caixa">
+                <input className="entrada" type={mostrarSenha ? 'text' : 'password'} value={senha} onChange={(e) => setSenha(e.target.value)} placeholder="••••••••" required />
+                <button type="button" className="botao-icone" onClick={() => setMostrarSenha((v) => !v)} aria-label={mostrarSenha ? 'Ocultar a senha' : 'Mostrar a senha'} title={mostrarSenha ? 'Ocultar a senha' : 'Mostrar a senha'}>
+                  {mostrarSenha ? <EyeOff className="icone icone-p" aria-hidden="true" focusable="false" /> : <Eye className="icone icone-p" aria-hidden="true" focusable="false" />}
                 </button>
               </div>
-            </div>
+            </label>
 
-            {erro && (
-              <div
-                className="flex items-center gap-2 text-sm rounded-2xl px-4 py-3"
-                style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626' }}
-              >
-                <span>⚠</span>
-                <span>{erro}</span>
-              </div>
-            )}
+            {erro && <div className="aviso aviso-perigo">{erro}</div>}
+            {aviso && <div className="aviso aviso-info">{aviso}</div>}
 
-            {aviso && (
-              <div
-                className="flex items-center gap-2 text-sm rounded-2xl px-4 py-3"
-                style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', color: '#15803D' }}
-              >
-                <span>✓</span>
-                <span>{aviso}</span>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={carregando}
-              className="h-12 rounded-2xl text-white font-bold text-sm transition-all flex items-center justify-center gap-2 mt-1"
-              style={{
-                background: carregando ? '#6B7280' : 'linear-gradient(135deg, #1A3C5A, #16A34A)',
-                boxShadow: carregando ? 'none' : '0 4px 16px rgba(22, 163, 74, 0.4)',
-                cursor: carregando ? 'not-allowed' : 'pointer',
-              }}
-            >
-              {carregando ? (
-                <>
-                  <Loader2 size={16} className="animate-spin" />
-                  Entrando...
-                </>
-              ) : (
-                'Entrar no sistema'
-              )}
+            <button type="submit" disabled={carregando} className="botao botao-principal">
+              {carregando ? <><Loader2 className="icone icone-p animate-spin" aria-hidden="true" focusable="false" /> Entrando…</> : 'Entrar no sistema'}
             </button>
-
-            <button
-              type="button"
-              onClick={handleEsqueciSenha}
-              disabled={carregando}
-              className="text-sm font-semibold transition-colors"
-              style={{ color: '#4B7BA6', cursor: carregando ? 'not-allowed' : 'pointer' }}
-            >
-              Esqueci minha senha
-            </button>
+            <button type="button" onClick={handleEsqueciSenha} disabled={carregando} className="link-discreto">Esqueci minha senha</button>
           </form>
         </div>
 
-        <div className="flex items-center justify-center gap-2 mt-6">
-          <ShieldCheck size={14} className="text-blue-300 opacity-60" />
-          <p className="text-center text-xs text-blue-200 opacity-60">
-            © 2026 SIAP — Acesso restrito e monitorado
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 18 }}>
+          <ShieldCheck className="icone icone-p" style={{ color: 'var(--tinta-3)' }} aria-hidden="true" focusable="false" />
+          <p style={{ fontSize: 'var(--t-pequeno)', color: 'var(--tinta-3)' }}>© 2026 SIAP — Acesso restrito e monitorado</p>
         </div>
       </div>
     </div>
