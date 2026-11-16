@@ -117,6 +117,18 @@ A decisão do Ronaldo é trazê-lo para o mesmo padrão. Situação de cada pila
   usada). Regras que não mudam: o Documento Mestre vence a skill; **não se inventa aparência fora da
   skill**; o Ronaldo aprova pela **foto** (390/1440/320 px — Regra 54); texto com trava jurídica e regra
   previdenciária não mudam por design. (Isto substitui o antigo "pende decisão do Ronaldo".)
+  - **Como aplicar:** a folha `web/src/app/apple-design.css` (cópia do `estilo.css` do PrevSystem) é
+    global (importada no root layout, com a fonte Inter). O pacote de referência fica em
+    `docs/apple-design/` (estilo.css, comportamento.js, monitor-referencia.html + fotos).
+  - **Progresso (16/11/2026):** ✅ convertidas — **casca** (menu lateral claro + topo do celular, em
+    `dashboard/layout.tsx` e `Sidebar.tsx`), **Monitor**, **Início** (`PainelInicio`), **Ações**,
+    **Desempenho**, **Auditoria**, **Cobranças** (+ filtros do Monitor, `BannerConfig`,
+    `SeloAtualizacao`). ⏳ **Faltam:** **Colaboradores** (+ `GerenciarAcessos`, `NovoColaborador`,
+    `AtendentesSemConversaAberta`), **Configurações** e suas sub-telas, a **janela de confirmação**
+    (`Confirmacao.tsx` → classe `.janela-confirma`), o **`NovaCobranca`** (formulário), e as telas
+    secundárias (`monitor/[id]`, `pessoas`, `catalogo`, `marco-zero`, `conta`, `conversas`). Enquanto
+    uma tela não é convertida, ela ainda aparece no visual antigo dentro da casca nova (estado de
+    transição normal). Cada conversão: build limpo + commit; foto no aparelho é do Ronaldo.
 - **[⚠️ pende "sim" do Ronaldo — custa ~US$ 10/mês] Banco-rascunho:** cópia de teste do banco (branch
   Supabase) como o PrevSystem tem. Não criar sem o OK dele (regra de custo do CLAUDE global).
 
