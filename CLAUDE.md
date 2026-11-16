@@ -108,11 +108,15 @@ A decisão do Ronaldo é trazê-lo para o mesmo padrão. Situação de cada pila
   "sem resultado" de "primeiro uso". **Falta:** esqueleto de carregamento (Regra 45 CARREGANDO),
   etiqueta removível de filtro ligado (Regra 1), percentuais (Regra 48) e a conferência no aparelho
   (Regra 54) — lista em `docs/conformidade-telas.md`.
-- **[⚠️ pende decisão do Ronaldo] Design:** hoje é "na mão" (estilos inline, cores digitadas em cada
-  tela; `globals.css` tem uma paleta que as telas não usam). A regra global manda a aparência vir do
-  **Laboratório de Design**, e o PrevAtendimento **não** está na exceção da skill Apple Design nem tem
-  pacote de entrega. Então **não se inventa aparência**: falta o Ronaldo decidir — rodada no
-  Laboratório, ou incluir o PrevAtendimento na exceção Apple Design.
+- **[decidido 16/11/2026 — em andamento] Design: skill Apple Design.** O Ronaldo decidiu incluir o
+  PrevAtendimento na exceção da skill Apple Design (*"vamos usar nesse e no PrevControl o Apple
+  Design"*). A skill está instalada em `.claude\skills\apple-design` (idêntica à do PrevSystem).
+  **Ponto de partida:** as 15 telas da Apple Design na rodada do PrevSystem, em
+  `E:\Projetos\SIAP\Laboratório de Design\entregas\prevsystem\` (mesmo escritório, mesma base). O visual
+  "na mão" de hoje (estilos inline) é **refeito com a Apple Design, a começar pelo Monitor** (tela mais
+  usada). Regras que não mudam: o Documento Mestre vence a skill; **não se inventa aparência fora da
+  skill**; o Ronaldo aprova pela **foto** (390/1440/320 px — Regra 54); texto com trava jurídica e regra
+  previdenciária não mudam por design. (Isto substitui o antigo "pende decisão do Ronaldo".)
 - **[⚠️ pende "sim" do Ronaldo — custa ~US$ 10/mês] Banco-rascunho:** cópia de teste do banco (branch
   Supabase) como o PrevSystem tem. Não criar sem o OK dele (regra de custo do CLAUDE global).
 
@@ -125,7 +129,8 @@ A decisão do Ronaldo é trazê-lo para o mesmo padrão. Situação de cada pila
    (System User) ficou de ser gerado. Baileys engavetado (deu ban). Detalhe na memória.
 3. **Parsers de PDF do INSS:** capacidade **futura** (não construir agora — não há cadastro para
    guardar). Specs na pasta global; ver memória `parsers-inss-planejado`.
-4. **Decisões do Ronaldo:** design (seção 5) e banco-rascunho (seção 5).
+4. **Decisão do Ronaldo:** banco-rascunho (seção 5). O design já foi decidido em 16/11/2026 (skill
+   Apple Design — seção 5, em andamento).
 
 ## 7. Como trabalhar com Ronaldo
 
