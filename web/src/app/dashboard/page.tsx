@@ -23,21 +23,21 @@ export default async function DashboardHome() {
   const primeiroNome = papel.nome?.trim().split(/\s+/)[0] ?? null
 
   return (
-    <div style={{ padding: '28px 32px', maxWidth: 1120, margin: '0 auto' }}>
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1A3C5A', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <LayoutDashboard size={22} style={{ color: '#16A34A' }} />
+    <main id="conteudo" className="conteudo" tabIndex={-1}>
+      <div className="cabeca">
+        <div className="cabeca-texto">
+          <h1 className="titulo" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <LayoutDashboard className="icone icone-g" style={{ color: 'var(--acao)' }} aria-hidden="true" focusable="false" />
             {primeiroNome ? `Olá, ${primeiroNome}.` : 'Painel'}
           </h1>
-          <SeloAtualizacao />
+          <p className="subtitulo">A situação do escritório, e o que precisa de decisão.</p>
+          <p className="texto-apoio" style={{ marginTop: 4 }}><SeloAtualizacao /></p>
         </div>
-        <p style={{ fontSize: 13.5, color: '#6B7280', marginTop: 4 }}>A situação do escritório, e o que precisa de decisão.</p>
       </div>
 
       {dados.erro && <BannerConfig erro={dados.erro} />}
 
       <PainelInicio dados={dados} nome={papel.nome} />
-    </div>
+    </main>
   )
 }
