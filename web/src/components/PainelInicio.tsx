@@ -124,7 +124,7 @@ export default function Painel({ dados, nome }: { dados: DadosInicio; nome: stri
                 }}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, color: '#1A3C5A', fontSize: 13.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontWeight: 600, color: '#1A3C5A', fontSize: 13.5, overflowWrap: 'anywhere' }}>
                     {a.cliente_nome ? formatarNome(a.cliente_nome) : 'Cliente'}
                     {a.departamento && <span style={{ color: '#9CA3AF', fontWeight: 400 }}> · {a.departamento}</span>}
                   </div>

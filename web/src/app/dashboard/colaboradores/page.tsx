@@ -203,7 +203,7 @@ export default async function ColaboradoresPage() {
                     {iniciais(c.atendente)}
                   </div>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, color: '#1A3C5A', fontSize: 14.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontWeight: 700, color: '#1A3C5A', fontSize: 14.5, overflowWrap: 'anywhere' }}>
                       {formatarNome(c.atendente)}
                     </div>
                     <div style={{ fontSize: 12, color: '#9CA3AF' }}>Atendente WhatsApp</div>

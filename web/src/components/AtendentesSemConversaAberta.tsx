@@ -138,16 +138,13 @@ export default function AtendentesSemConversaAberta({ lista }: { lista: Atendent
                 {iniciais(c.atendente)}
               </div>
               <div
-                title={formatarNome(c.atendente)}
                 style={{
                   flex: 1,
                   minWidth: 0,
                   fontSize: 13.5,
                   fontWeight: 600,
                   color: '#1A3C5A',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
+                  overflowWrap: 'anywhere',
                 }}
               >
                 {formatarNome(c.atendente)}

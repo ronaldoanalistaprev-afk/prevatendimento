@@ -111,9 +111,7 @@ export default function UsuarioLogado({
               fontSize: 13,
               fontWeight: 600,
               lineHeight: 1.25,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
+              overflowWrap: 'anywhere',
             }}
             title={email ?? undefined}
           >
