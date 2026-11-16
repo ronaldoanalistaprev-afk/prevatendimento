@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Pencil, Trash2, Check, X, Power, Loader2, KeyRound, Copy } from 'lucide-react'
+import { Pencil, Trash2, Check, X, Power, Loader2, KeyRound, Copy, ChevronDown } from 'lucide-react'
 import { useConfirmacao } from './Confirmacao'
 
 interface UsuarioLinha {
@@ -15,14 +15,13 @@ interface UsuarioLinha {
   vinculoNome: string | null
 }
 
-/** Cores dos papéis de fábrica; papéis criados pelo admin usam o cinza padrão. */
-const CORES: Record<string, { bg: string; fg: string }> = {
-  ADMIN: { bg: '#FEE2E2', fg: '#B91C1C' },
-  GESTOR: { bg: '#DBEAFE', fg: '#1D4ED8' },
-  SUPERVISOR: { bg: '#F3E8FF', fg: '#7E22CE' },
-  COLABORADOR: { bg: '#DCFCE7', fg: '#15803D' },
+/** Selo por papel: a cor sempre vem com o nome do papel (Regra 46). */
+const SELO: Record<string, string> = {
+  ADMIN: 'selo-perigo',
+  GESTOR: 'selo-acao',
+  SUPERVISOR: 'selo-neutro',
+  COLABORADOR: 'selo-sucesso',
 }
-const COR_PADRAO = { bg: '#F1F5F9', fg: '#475569' }
 
 export default function GerenciarAcessos({
   usuarios,
@@ -47,10 +46,7 @@ export default function GerenciarAcessos({
   const [copiado, setCopiado] = useState(false)
 
   async function gerarLinkSenha(u: UsuarioLinha) {
-    setGerandoId(u.id)
-    setErro(null)
-    setLinkReset(null)
-    setCopiado(false)
+    setGerandoId(u.id); setErro(null); setLinkReset(null); setCopiado(false)
     try {
       const res = await fetch('/api/usuarios/reset-link', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: u.id }) })
       const data = await res.json()
@@ -75,15 +71,11 @@ export default function GerenciarAcessos({
   }
 
   function abrirEdicao(u: UsuarioLinha) {
-    setEditId(u.id)
-    setRole(u.role)
-    setVinculo(u.at_colaborador_id ?? '')
-    setErro(null)
+    setEditId(u.id); setRole(u.role); setVinculo(u.at_colaborador_id ?? ''); setErro(null)
   }
 
   async function chamar(method: string, corpo: Record<string, unknown>) {
-    setOcupado(true)
-    setErro(null)
+    setOcupado(true); setErro(null)
     try {
       const res = await fetch('/api/usuarios', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) })
       const data = await res.json()
@@ -97,98 +89,71 @@ export default function GerenciarAcessos({
     }
   }
 
-  const selStyle: React.CSSProperties = { height: 34, padding: '0 8px', borderRadius: 8, border: '1px solid #DCE6EF', fontSize: 13, background: '#fff' }
-
   return (
-    <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #EEF2F7', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', overflow: 'hidden', marginTop: 20 }}>
+    <section className="cartao" style={{ marginTop: 20, overflow: 'hidden' }}>
       {modal}
-      {erro && <div style={{ background: '#FEF2F2', color: '#B91C1C', fontSize: 13, padding: '10px 20px' }}>{erro}</div>}
+      {erro && <div className="aviso aviso-perigo" style={{ margin: '12px 16px 0' }}>{erro}</div>}
       {linkReset && (
-        <div style={{ background: '#F0FDF4', borderBottom: '1px solid #BBF7D0', padding: '14px 20px' }}>
-          <div style={{ fontSize: 13.5, color: '#15803D', fontWeight: 700, marginBottom: 8 }}>
-            Link de senha para {linkReset.nome} — copie e envie para a pessoa (vale por 1 hora):
-          </div>
+        <div className="aviso aviso-info" style={{ margin: '12px 16px 0', flexDirection: 'column', alignItems: 'stretch', gap: 8 }}>
+          <div style={{ fontWeight: 650 }}>Link de senha para {linkReset.nome} — copie e envie para a pessoa (vale por 1 hora):</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <input
-              readOnly
-              value={linkReset.link}
-              onFocus={(e) => e.currentTarget.select()}
-              style={{ flex: 1, minWidth: 240, height: 36, padding: '0 12px', borderRadius: 8, border: '1px solid #BBF7D0', background: '#fff', fontSize: 12.5, color: '#374151' }}
-            />
-            <button onClick={copiar} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 36, padding: '0 14px', borderRadius: 8, border: 'none', background: '#16A34A', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-              <Copy size={14} /> {copiado ? 'Copiado!' : 'Copiar'}
-            </button>
-            <button onClick={() => setLinkReset(null)} style={{ height: 36, padding: '0 12px', borderRadius: 8, border: '1px solid #DCE6EF', background: '#fff', color: '#6B7280', fontSize: 13, cursor: 'pointer' }}>
-              Fechar
-            </button>
+            <input className="entrada" readOnly value={linkReset.link} onFocus={(e) => e.currentTarget.select()} style={{ flex: 1, minWidth: 240 }} />
+            <button className="botao botao-principal" onClick={copiar}><Copy className="icone icone-p" aria-hidden="true" focusable="false" /> {copiado ? 'Copiado!' : 'Copiar'}</button>
+            <button className="botao botao-secundario" onClick={() => setLinkReset(null)}>Fechar</button>
           </div>
         </div>
       )}
       {usuarios.length === 0 ? (
-        <div style={{ padding: '40px 20px', textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>Nenhum acesso cadastrado ainda.</div>
+        <div className="vazio"><p className="vazio-texto">Nenhum acesso cadastrado ainda.</p></div>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5, minWidth: 720 }}>
+        <div className="tabela-caixa" style={{ overflowX: 'auto' }}>
+          <table className="tabela" style={{ minWidth: 720 }}>
             <thead>
-              <tr style={{ background: '#F8FAFC', color: '#6B7280', textAlign: 'left' }}>
-                <th style={{ padding: '12px 20px', fontWeight: 600 }}>Nome</th>
-                <th style={{ padding: '12px 20px', fontWeight: 600 }}>E-mail</th>
-                <th style={{ padding: '12px 20px', fontWeight: 600 }}>Papel</th>
-                <th style={{ padding: '12px 20px', fontWeight: 600 }}>Atendente vinculado</th>
-                <th style={{ padding: '12px 20px', fontWeight: 600 }}>Status</th>
-                <th style={{ padding: '12px 20px', fontWeight: 600, textAlign: 'right' }}>Ações</th>
+              <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Papel</th>
+                <th>Atendente vinculado</th>
+                <th>Status</th>
+                <th className="acoes">Ações</th>
               </tr>
             </thead>
             <tbody>
               {usuarios.map((u) => {
-                const c = CORES[u.role] ?? COR_PADRAO
                 const rotulo = papeis.find((p) => p.codigo === u.role)?.nome ?? u.role
                 const editando = editId === u.id
                 const souEu = u.id === meuId
                 return (
-                  <tr key={u.id} style={{ borderTop: '1px solid #F1F5F9', background: editando ? '#F8FAFC' : '#fff' }}>
-                    <td style={{ padding: '12px 20px', fontWeight: 600, color: '#1A3C5A' }}>{u.nome}</td>
-                    <td style={{ padding: '12px 20px', color: '#374151' }}>{u.email}</td>
-                    <td style={{ padding: '12px 20px' }}>
+                  <tr key={u.id}>
+                    <td className="nome" style={{ color: 'var(--tinta)', overflowWrap: 'anywhere' }}>{u.nome}</td>
+                    <td style={{ color: 'var(--tinta-2)' }}>{u.email}</td>
+                    <td>
                       {editando ? (
-                        <select value={role} onChange={(e) => setRole(e.target.value)} style={selStyle}>
-                          {papeis.map((p) => (
-                            <option key={p.codigo} value={p.codigo}>
-                              {p.nome}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="caixa-select"><select className="entrada" value={role} onChange={(e) => setRole(e.target.value)} style={{ minHeight: 34 }}>{papeis.map((p) => (<option key={p.codigo} value={p.codigo}>{p.nome}</option>))}</select><ChevronDown className="icone" aria-hidden="true" focusable="false" /></div>
                       ) : (
-                        <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: c.bg, color: c.fg }}>{rotulo}</span>
+                        <span className={`selo ${SELO[u.role] ?? 'selo-neutro'}`}>{rotulo}</span>
                       )}
                     </td>
-                    <td style={{ padding: '12px 20px', color: '#374151', fontSize: 12.5 }}>
+                    <td style={{ color: 'var(--tinta-2)' }}>
                       {editando ? (
-                        <select value={vinculo} onChange={(e) => setVinculo(e.target.value)} style={selStyle}>
-                          <option value="">— não vincular —</option>
-                          {atendentes.map((a) => (
-                            <option key={a.id} value={a.id}>{a.nome}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        u.vinculoNome ?? <span style={{ color: '#C2410C' }}>— não vinculado —</span>
-                      )}
+                        <div className="caixa-select"><select className="entrada" value={vinculo} onChange={(e) => setVinculo(e.target.value)} style={{ minHeight: 34 }}><option value="">— não vincular —</option>{atendentes.map((a) => (<option key={a.id} value={a.id}>{a.nome}</option>))}</select><ChevronDown className="icone" aria-hidden="true" focusable="false" /></div>
+                      ) : (u.vinculoNome ?? <span style={{ color: 'var(--atencao)' }}>— não vinculado —</span>)}
                     </td>
-                    <td style={{ padding: '12px 20px', color: u.ativo ? '#15803D' : '#9CA3AF' }}>{u.ativo ? 'Ativo' : 'Inativo'}</td>
-                    <td style={{ padding: '12px 20px' }}>
-                      <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', alignItems: 'center' }}>
+                    <td style={{ color: u.ativo ? 'var(--sucesso)' : 'var(--tinta-3)' }}>{u.ativo ? 'Ativo' : 'Inativo'}</td>
+                    <td className="acoes">
+                      <div style={{ display: 'inline-flex', gap: 2, justifyContent: 'flex-end', alignItems: 'center' }}>
                         {editando ? (
                           <>
-                            <IconBtn icon={Check} title="Salvar alterações" cor="#15803D" borderCor="#BBF7D0" loading={ocupado} disabled={ocupado} onClick={() => chamar('PATCH', { id: u.id, role, at_colaborador_id: vinculo || null })} />
-                            <IconBtn icon={X} title="Cancelar" cor="#6B7280" disabled={ocupado} onClick={() => setEditId(null)} />
+                            <IconBtn icon={Check} title="Salvar alterações" loading={ocupado} disabled={ocupado} onClick={() => chamar('PATCH', { id: u.id, role, at_colaborador_id: vinculo || null })} />
+                            <IconBtn icon={X} title="Cancelar" disabled={ocupado} onClick={() => setEditId(null)} />
                           </>
                         ) : (
                           <>
-                            <IconBtn icon={Pencil} title="Editar papel e vínculo" cor="#1A3C5A" disabled={ocupado} onClick={() => abrirEdicao(u)} />
-                            <IconBtn icon={KeyRound} title="Redefinir senha — gera um link para a pessoa criar uma nova senha" cor="#4B7BA6" loading={gerandoId === u.id} disabled={ocupado || gerandoId === u.id} onClick={() => gerarLinkSenha(u)} />
-                            <IconBtn icon={Power} title={u.ativo ? 'Desativar acesso' : 'Ativar acesso'} cor={u.ativo ? '#B45309' : '#15803D'} disabled={ocupado} onClick={() => chamar('PATCH', { id: u.id, ativo: !u.ativo })} />
+                            <IconBtn icon={Pencil} title="Editar papel e vínculo" disabled={ocupado} onClick={() => abrirEdicao(u)} />
+                            <IconBtn icon={KeyRound} title="Redefinir senha — gera um link para a pessoa criar uma nova senha" loading={gerandoId === u.id} disabled={ocupado || gerandoId === u.id} onClick={() => gerarLinkSenha(u)} />
+                            <IconBtn icon={Power} title={u.ativo ? 'Desativar acesso' : 'Ativar acesso'} classe={u.ativo ? 'inativar' : 'ativar'} disabled={ocupado} onClick={() => chamar('PATCH', { id: u.id, ativo: !u.ativo })} />
                             {!souEu && (
-                              <IconBtn icon={Trash2} title="Excluir acesso" cor="#B91C1C" borderCor="#FECACA" disabled={ocupado} onClick={async () => { if (await confirmar({ titulo: 'Excluir acesso', mensagem: `O acesso de ${u.nome} será excluído e a pessoa perde o login no sistema. Isso não pode ser desfeito.`, confirmar: 'Excluir acesso', perigo: true })) chamar('DELETE', { id: u.id }) }} />
+                              <IconBtn icon={Trash2} title="Excluir acesso" classe="inativar" disabled={ocupado} onClick={async () => { if (await confirmar({ titulo: 'Excluir acesso', mensagem: `O acesso de ${u.nome} será excluído e a pessoa perde o login no sistema. Isso não pode ser desfeito.`, confirmar: 'Excluir acesso', perigo: true })) chamar('DELETE', { id: u.id }) }} />
                             )}
                           </>
                         )}
@@ -201,50 +166,22 @@ export default function GerenciarAcessos({
           </table>
         </div>
       )}
-    </div>
+    </section>
   )
 }
 
-/** Botão de ação compacto (só ícone, com dica ao passar o mouse). Deixa a coluna alinhada. */
-function IconBtn({
-  icon: Icon,
-  title,
-  cor,
-  borderCor = '#DCE6EF',
-  onClick,
-  disabled,
-  loading,
-}: {
-  icon: React.ComponentType<{ size?: number; className?: string }>
+/** Botão de ação só com ícone (dica ao passar o mouse e nome para o leitor de tela). */
+function IconBtn({ icon: Icon, title, onClick, disabled, loading, classe }: {
+  icon: React.ComponentType<{ className?: string }>
   title: string
-  cor: string
-  borderCor?: string
   onClick: () => void
   disabled?: boolean
   loading?: boolean
+  classe?: string
 }) {
   return (
-    <button
-      title={title}
-      aria-label={title}
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        width: 34,
-        height: 34,
-        borderRadius: 8,
-        border: `1px solid ${borderCor}`,
-        background: '#fff',
-        color: cor,
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: disabled ? 'wait' : 'pointer',
-        flexShrink: 0,
-        transition: 'background 0.12s',
-      }}
-    >
-      {loading ? <Loader2 size={15} className="animate-spin" /> : <Icon size={15} />}
+    <button type="button" className={`botao-icone ${classe ?? ''}`} title={title} aria-label={title} onClick={onClick} disabled={disabled}>
+      {loading ? <Loader2 className="icone icone-p animate-spin" /> : <Icon className="icone icone-p" />}
     </button>
   )
 }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { UserPlus, Loader2, Eye, EyeOff } from 'lucide-react'
+import { UserPlus, Loader2, Eye, EyeOff, ChevronDown, Check } from 'lucide-react'
 
 export interface PapelOpcao {
   codigo: string
@@ -44,11 +44,7 @@ export default function NovoColaborador({
       const data = await res.json()
       if (!res.ok) throw new Error(data?.erro ?? 'Falha ao cadastrar')
       setMsg({ tipo: 'ok', texto: `${nome} cadastrado com sucesso.` })
-      setNome('')
-      setEmail('')
-      setSenha('')
-      setRole('COLABORADOR')
-      setAtColaboradorId('')
+      setNome(''); setEmail(''); setSenha(''); setRole('COLABORADOR'); setAtColaboradorId('')
       router.refresh()
     } catch (err) {
       setMsg({ tipo: 'erro', texto: (err as Error).message })
@@ -57,170 +53,79 @@ export default function NovoColaborador({
     }
   }
 
-  const inputStyle: React.CSSProperties = {
-    height: 44,
-    padding: '0 14px',
-    borderRadius: 12,
-    border: '1px solid #DCE6EF',
-    outline: 'none',
-    fontSize: 14,
-    background: '#fff',
-    width: '100%',
-  }
-
   if (!aberto) {
     return (
-      <button
-        onClick={() => setAberto(true)}
-        disabled={desabilitado}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 8,
-          height: 44,
-          padding: '0 18px',
-          borderRadius: 12,
-          border: 'none',
-          background: desabilitado ? '#9CA3AF' : 'linear-gradient(135deg, #1A3C5A, #16A34A)',
-          color: '#fff',
-          fontWeight: 700,
-          fontSize: 14,
-          cursor: desabilitado ? 'not-allowed' : 'pointer',
-        }}
-      >
-        <UserPlus size={18} /> Cadastrar colaborador
+      <button onClick={() => setAberto(true)} disabled={desabilitado} className="botao botao-principal" aria-disabled={desabilitado}>
+        <UserPlus className="icone icone-p" aria-hidden="true" focusable="false" /> Cadastrar colaborador
       </button>
     )
   }
 
+  const soAsSuas = papeis.find((p) => p.codigo === role)?.soAsSuas
+
   return (
-    <form
-      onSubmit={salvar}
-      style={{
-        background: '#fff',
-        borderRadius: 16,
-        border: '1px solid #EEF2F7',
-        boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
-        padding: 20,
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-        gap: 14,
-      }}
-    >
-      <div style={{ gridColumn: '1 / -1', fontWeight: 700, color: '#1A3C5A', fontSize: 15 }}>
-        Cadastrar colaborador
-      </div>
-
-      <input style={inputStyle} placeholder="Nome completo" value={nome} onChange={(e) => setNome(e.target.value)} required />
-      <input style={inputStyle} type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} required />
-      <div style={{ position: 'relative' }}>
-        <input
-          style={{ ...inputStyle, paddingRight: 44, width: '100%' }}
-          type={mostrarSenha ? 'text' : 'password'}
-          placeholder="Senha (mín. 6)"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-          required
-        />
-        <button
-          type="button"
-          onClick={() => setMostrarSenha((v) => !v)}
-          aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
-          style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: '#6B7280', cursor: 'pointer', display: 'flex' }}
-        >
-          {mostrarSenha ? <EyeOff size={18} /> : <Eye size={18} />}
-        </button>
-      </div>
-      <select style={inputStyle} value={role} onChange={(e) => setRole(e.target.value)}>
-        {papeis.map((p) => (
-          <option key={p.codigo} value={p.codigo}>
-            {p.nome}
-          </option>
-        ))}
-      </select>
-
-      {/* Vínculo com o atendente do Multi360 (essencial para o Colaborador ver só as dele) */}
-      <div style={{ gridColumn: '1 / -1' }}>
-        <label style={{ fontSize: 12.5, color: '#6B7280', display: 'block', marginBottom: 4 }}>
-          Atendente no Multi360 {papeis.find((p) => p.codigo === role)?.soAsSuas ? '(recomendado)' : '(opcional)'}
+    <form onSubmit={salvar} className="cartao" style={{ padding: 20 }}>
+      <div className="cartao-titulo" style={{ marginBottom: 14 }}>Cadastrar colaborador</div>
+      <div className="grade-campos">
+        <label className="campo">
+          <span className="rotulo">Nome completo</span>
+          <input className="entrada" value={nome} onChange={(e) => setNome(e.target.value)} required />
         </label>
-        <select
-          style={inputStyle}
-          value={atColaboradorId}
-          onChange={(e) => {
-            const id = e.target.value
-            setAtColaboradorId(id)
-            // preenche o nome sozinho com o do atendente escolhido (se ainda vazio)
-            const at = atendentes.find((a) => a.id === id)
-            if (at && !nome.trim()) setNome(at.nome)
-          }}
-        >
-          <option value="">— não vincular —</option>
-          {atendentes.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.nome}
-            </option>
-          ))}
-        </select>
-      </div>
+        <label className="campo">
+          <span className="rotulo">E-mail</span>
+          <input className="entrada" type="email" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        </label>
+        <label className="campo">
+          <span className="rotulo">Senha <span style={{ color: 'var(--tinta-3)', fontWeight: 400 }}>(mín. 6)</span></span>
+          <div className="senha-caixa">
+            <input className="entrada" type={mostrarSenha ? 'text' : 'password'} value={senha} onChange={(e) => setSenha(e.target.value)} required />
+            <button type="button" className="botao-icone" onClick={() => setMostrarSenha((v) => !v)} aria-label={mostrarSenha ? 'Ocultar a senha' : 'Mostrar a senha'} title={mostrarSenha ? 'Ocultar a senha' : 'Mostrar a senha'}>
+              {mostrarSenha ? <EyeOff className="icone icone-p" aria-hidden="true" focusable="false" /> : <Eye className="icone icone-p" aria-hidden="true" focusable="false" />}
+            </button>
+          </div>
+        </label>
+        <label className="campo">
+          <span className="rotulo">Papel</span>
+          <div className="caixa-select">
+            <select className="entrada" value={role} onChange={(e) => setRole(e.target.value)}>
+              {papeis.map((p) => (<option key={p.codigo} value={p.codigo}>{p.nome}</option>))}
+            </select>
+            <ChevronDown className="icone" aria-hidden="true" focusable="false" />
+          </div>
+        </label>
+        <label className="campo inteiro">
+          <span className="rotulo">Atendente no Multi360 <span style={{ color: 'var(--tinta-3)', fontWeight: 400 }}>{soAsSuas ? '(recomendado)' : '(opcional)'}</span></span>
+          <div className="caixa-select">
+            <select
+              className="entrada"
+              value={atColaboradorId}
+              onChange={(e) => {
+                const id = e.target.value
+                setAtColaboradorId(id)
+                const at = atendentes.find((a) => a.id === id)
+                if (at && !nome.trim()) setNome(at.nome)
+              }}
+            >
+              <option value="">— não vincular —</option>
+              {atendentes.map((a) => (<option key={a.id} value={a.id}>{a.nome}</option>))}
+            </select>
+            <ChevronDown className="icone" aria-hidden="true" focusable="false" />
+          </div>
+        </label>
 
-      {msg && (
-        <div
-          style={{
-            gridColumn: '1 / -1',
-            fontSize: 13,
-            padding: '8px 12px',
-            borderRadius: 10,
-            background: msg.tipo === 'ok' ? '#DCFCE7' : '#FEF2F2',
-            color: msg.tipo === 'ok' ? '#15803D' : '#B91C1C',
-          }}
-        >
-          {msg.texto}
+        {msg && (
+          <div className={`aviso ${msg.tipo === 'ok' ? 'aviso-info' : 'aviso-perigo'} inteiro`} style={{ gridColumn: '1 / -1' }}>
+            {msg.tipo === 'ok' && <Check className="icone" aria-hidden="true" focusable="false" />}
+            <div>{msg.texto}</div>
+          </div>
+        )}
+
+        <div className="inteiro" style={{ gridColumn: '1 / -1', display: 'flex', gap: 10 }}>
+          <button type="submit" disabled={salvando} className="botao botao-principal">
+            {salvando ? <Loader2 className="icone icone-p animate-spin" aria-hidden="true" focusable="false" /> : <Check className="icone icone-p" aria-hidden="true" focusable="false" />} Salvar colaborador
+          </button>
+          <button type="button" className="botao botao-secundario" onClick={() => { setAberto(false); setMsg(null) }}>Cancelar</button>
         </div>
-      )}
-
-      <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 10 }}>
-        <button
-          type="submit"
-          disabled={salvando}
-          style={{
-            height: 44,
-            padding: '0 20px',
-            borderRadius: 12,
-            border: 'none',
-            background: salvando ? '#6B7280' : 'linear-gradient(135deg, #1A3C5A, #16A34A)',
-            color: '#fff',
-            fontWeight: 700,
-            fontSize: 14,
-            cursor: salvando ? 'not-allowed' : 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
-          }}
-        >
-          {salvando ? <Loader2 size={16} className="animate-spin" /> : null}
-          Salvar
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setAberto(false)
-            setMsg(null)
-          }}
-          style={{
-            height: 44,
-            padding: '0 20px',
-            borderRadius: 12,
-            border: '1px solid #DCE6EF',
-            background: '#fff',
-            color: '#6B7280',
-            fontWeight: 600,
-            fontSize: 14,
-            cursor: 'pointer',
-          }}
-        >
-          Cancelar
-        </button>
       </div>
     </form>
   )
