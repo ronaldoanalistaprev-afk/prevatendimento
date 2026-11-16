@@ -26,28 +26,18 @@ export default function FiltroOrdem() {
 
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-      <span style={{ fontSize: 11.5, color: '#9CA3AF', fontWeight: 600 }}>Ordem</span>
-      <span style={{ display: 'inline-flex', border: '1px solid #DCE6EF', borderRadius: 999, overflow: 'hidden' }}>
+      <span className="mon-rot">Ordem</span>
+      <div className="abas">
         {OPCOES.map((o) => {
           const sel = atual === o.chave
           const Icone = o.icone
           return (
-            <button
-              key={o.chave}
-              onClick={() => muda(o.chave)}
-              title={o.label}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 5,
-                fontSize: 12, fontWeight: 600, padding: '6px 12px', border: 'none',
-                background: sel ? '#1A3C5A' : '#fff', color: sel ? '#fff' : '#475569',
-                cursor: 'pointer',
-              }}
-            >
-              <Icone size={14} /> {o.label}
+            <button key={o.chave} className="aba" aria-selected={sel} onClick={() => muda(o.chave)} title={o.label}>
+              <Icone className="icone icone-p" aria-hidden="true" focusable="false" style={{ color: 'inherit' }} /> {o.label}
             </button>
           )
         })}
-      </span>
+      </div>
     </span>
   )
 }

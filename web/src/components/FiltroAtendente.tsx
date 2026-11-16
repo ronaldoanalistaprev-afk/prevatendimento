@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
+import { ChevronDown } from 'lucide-react'
 
 /** Seletor de atendente que preserva os demais filtros da URL.
  *  Separa quem tem conversa aberta de quem não tem. */
@@ -26,42 +27,21 @@ export default function FiltroAtendente({
   }
 
   return (
-    <select
-      value={atual}
-      onChange={(e) => muda(e.target.value)}
-      style={{
-        fontSize: 12.5,
-        fontWeight: atual ? 700 : 600,
-        padding: '6px 12px',
-        borderRadius: 999,
-        // Selecionado = azul CLARO com texto escuro (antes era azul-escuro, que deixava
-        // a lista de opções ilegível — azul sobre azul — no Windows).
-        border: atual ? '1.5px solid #1A3C5A' : '1px solid #DCE6EF',
-        background: atual ? '#EAF1F9' : '#fff',
-        color: atual ? '#1A3C5A' : '#475569',
-        cursor: 'pointer',
-        outline: 'none',
-      }}
-    >
-      <option value="" style={{ color: '#111', background: '#fff' }}>Todos os atendentes</option>
-      {comConversa.length > 0 && (
-        <optgroup label="Com conversa aberta">
-          {comConversa.map((a) => (
-            <option key={a} value={a} style={{ color: '#111', background: '#fff' }}>
-              {a}
-            </option>
-          ))}
-        </optgroup>
-      )}
-      {semConversa.length > 0 && (
-        <optgroup label="Sem conversa aberta">
-          {semConversa.map((a) => (
-            <option key={a} value={a} style={{ color: '#111', background: '#fff' }}>
-              {a}
-            </option>
-          ))}
-        </optgroup>
-      )}
-    </select>
+    <div className="caixa-select" style={{ minWidth: 180 }}>
+      <select className="entrada" value={atual} onChange={(e) => muda(e.target.value)} aria-label="Filtrar por atendente" style={{ minHeight: 34, fontSize: 14 }}>
+        <option value="">Todos os atendentes</option>
+        {comConversa.length > 0 && (
+          <optgroup label="Com conversa aberta">
+            {comConversa.map((a) => (<option key={a} value={a}>{a}</option>))}
+          </optgroup>
+        )}
+        {semConversa.length > 0 && (
+          <optgroup label="Sem conversa aberta">
+            {semConversa.map((a) => (<option key={a} value={a}>{a}</option>))}
+          </optgroup>
+        )}
+      </select>
+      <ChevronDown className="icone" aria-hidden="true" focusable="false" />
+    </div>
   )
 }

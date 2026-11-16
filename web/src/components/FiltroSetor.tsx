@@ -1,9 +1,10 @@
 'use client'
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
+import { ChevronDown } from 'lucide-react'
 
 /** Seletor de setor/departamento — substitui a fileira de 11 chips. */
-export default function FiltroSetor({ departamentos = [], cores = {} }: { departamentos?: string[]; cores?: Record<string, string> }) {
+export default function FiltroSetor({ departamentos = [] }: { departamentos?: string[]; cores?: Record<string, string> }) {
   const router = useRouter()
   const sp = useSearchParams()
   const pathname = usePathname()
@@ -18,37 +19,13 @@ export default function FiltroSetor({ departamentos = [], cores = {} }: { depart
     router.push(`${pathname}${s ? '?' + s : ''}`)
   }
 
-  // Ativo = azul-marinho (padrão dos filtros). A cor do setor fica só num ponto,
-  // para não confundir com alerta (ex.: Judicial é vermelho na paleta).
-  const corSetor = atual ? cores[atual] ?? '#94A3B8' : ''
-
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-      {atual && <span style={{ width: 9, height: 9, borderRadius: '50%', background: corSetor, flexShrink: 0 }} />}
-      <select
-        value={atual}
-        onChange={(e) => muda(e.target.value)}
-        style={{
-          fontSize: 12.5,
-          fontWeight: atual ? 700 : 600,
-          padding: '6px 12px',
-          borderRadius: 999,
-          // Selecionado = azul CLARO com texto escuro (legível), não azul-escuro.
-          border: atual ? '1.5px solid #1A3C5A' : '1px solid #DCE6EF',
-          background: atual ? '#EAF1F9' : '#fff',
-          color: atual ? '#1A3C5A' : '#475569',
-          cursor: 'pointer',
-          outline: 'none',
-          maxWidth: 240,
-        }}
-      >
-        <option value="" style={{ color: '#111', background: '#fff' }}>Todos os setores</option>
-        {departamentos.map((d) => (
-          <option key={d} value={d} style={{ color: '#111', background: '#fff' }}>
-            {d}
-          </option>
-        ))}
+    <div className="caixa-select" style={{ minWidth: 170 }}>
+      <select className="entrada" value={atual} onChange={(e) => muda(e.target.value)} aria-label="Filtrar por setor" style={{ minHeight: 34, fontSize: 14 }}>
+        <option value="">Todos os setores</option>
+        {departamentos.map((d) => (<option key={d} value={d}>{d}</option>))}
       </select>
-    </span>
+      <ChevronDown className="icone" aria-hidden="true" focusable="false" />
+    </div>
   )
 }

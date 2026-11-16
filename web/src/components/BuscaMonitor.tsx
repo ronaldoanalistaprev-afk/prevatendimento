@@ -24,49 +24,33 @@ export default function BuscaMonitor() {
 
   return (
     <form
-      onSubmit={(e) => {
-        e.preventDefault()
-        buscar(texto)
-      }}
-      style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, maxWidth: 380 }}
+      onSubmit={(e) => { e.preventDefault(); buscar(texto) }}
+      style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '1 1 240px', minWidth: 0, maxWidth: 420 }}
     >
-      <div style={{ position: 'relative', flex: 1 }}>
-        <Search size={15} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
+      <div className="caixa-icone" style={{ flex: 1, minWidth: 0 }}>
+        <Search className="icone" aria-hidden="true" focusable="false" />
         <input
+          className="entrada"
+          type="search"
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
-          placeholder="Buscar por nome ou telefone…"
-          style={{
-            width: '100%',
-            height: 38,
-            padding: '0 32px 0 32px',
-            borderRadius: 999,
-            border: '1px solid #DCE6EF',
-            outline: 'none',
-            fontSize: 13.5,
-            background: '#fff',
-          }}
+          placeholder="Buscar por nome ou telefone"
+          aria-label="Buscar por nome ou telefone"
+          style={{ paddingRight: temBusca ? 40 : undefined }}
         />
         {temBusca && (
           <button
             type="button"
-            onClick={() => {
-              setTexto('')
-              buscar('')
-            }}
-            title="Limpar"
-            style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', cursor: 'pointer', color: '#9CA3AF', display: 'flex' }}
+            onClick={() => { setTexto(''); buscar('') }}
+            title="Limpar a busca"
+            aria-label="Limpar a busca"
+            style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--tinta-3)', display: 'flex' }}
           >
-            <X size={15} />
+            <X className="icone icone-p" aria-hidden="true" focusable="false" />
           </button>
         )}
       </div>
-      <button
-        type="submit"
-        style={{ height: 38, padding: '0 16px', borderRadius: 999, border: 'none', background: '#1A3C5A', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
-      >
-        Buscar
-      </button>
+      <button type="submit" className="botao botao-secundario">Buscar</button>
     </form>
   )
 }

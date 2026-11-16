@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
+import { ChevronDown } from 'lucide-react'
 
 /** Seletor de competência (mês/ano) no padrão SIAP: MM/AAAA (ex.: 07/2026). Últimos 18 meses. */
 export default function FiltroCompetencia() {
@@ -33,27 +34,12 @@ export default function FiltroCompetencia() {
   }
 
   return (
-    <select
-      value={atual}
-      onChange={(e) => muda(e.target.value)}
-      style={{
-        fontSize: 12.5,
-        fontWeight: 600,
-        padding: '6px 12px',
-        borderRadius: 999,
-        border: '1px solid #DCE6EF',
-        background: atual ? '#1A3C5A' : '#fff',
-        color: atual ? '#fff' : '#475569',
-        cursor: 'pointer',
-        outline: 'none',
-      }}
-    >
-      <option value="">Qualquer mês</option>
-      {opcoes.map((o) => (
-        <option key={o.valor} value={o.valor} style={{ color: '#111' }}>
-          {o.rotulo}
-        </option>
-      ))}
-    </select>
+    <div className="caixa-select" style={{ minWidth: 130 }}>
+      <select className="entrada" value={atual} onChange={(e) => muda(e.target.value)} aria-label="Filtrar por mês (competência)" style={{ minHeight: 34, fontSize: 14 }}>
+        <option value="">Qualquer mês</option>
+        {opcoes.map((o) => (<option key={o.valor} value={o.valor}>{o.rotulo}</option>))}
+      </select>
+      <ChevronDown className="icone" aria-hidden="true" focusable="false" />
+    </div>
   )
 }
