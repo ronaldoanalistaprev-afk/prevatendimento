@@ -19,6 +19,7 @@ const {
 } = require('@whiskeysockets/baileys')
 const { Boom } = require('@hapi/boom')
 const qrcode = require('qrcode-terminal')
+const QRCode = require('qrcode')
 const pino = require('pino')
 const express = require('express')
 
@@ -29,6 +30,7 @@ const PORT = process.env.PORT || 8088
 const logger = pino({ level: 'warn' })
 let sock = null
 let numeroConectado = null
+let ultimoQR = null // último QR gerado (para mostrar numa página do navegador)
 
 function soDigitos(v) {
   return String(v || '').replace(/\D/g, '')
@@ -139,11 +141,13 @@ async function iniciar() {
     const { connection, lastDisconnect, qr } = update
 
     if (qr) {
-      console.log('\n📲  Escaneie o QR Code abaixo no WhatsApp (Aparelhos conectados):\n')
+      ultimoQR = qr
+      console.log('\n📲  Escaneie o QR Code (no navegador: http://localhost:' + PORT + '/qr) ou abaixo:\n')
       qrcode.generate(qr, { small: true })
     }
 
     if (connection === 'open') {
+      ultimoQR = null
       numeroConectado = soDigitos(sock.user?.id?.split(':')[0])
       console.log(`\n✅  Conectado como ${numeroConectado}. Recebendo mensagens...\n`)
     }
@@ -192,6 +196,41 @@ app.use(express.json())
 
 app.get('/health', (_req, res) => {
   res.json({ ok: true, conectado: Boolean(numeroConectado), numero: numeroConectado })
+})
+
+// Status + QR (como imagem data-URL) para o SISTEMA mostrar dentro da tela do Laboratório.
+app.get('/status', async (_req, res) => {
+  let qr = null
+  if (!numeroConectado && ultimoQR) {
+    try { qr = await QRCode.toDataURL(ultimoQR, { width: 300, margin: 1 }) } catch {}
+  }
+  res.json({ conectado: Boolean(numeroConectado), numero: numeroConectado, qr })
+})
+
+// Página amigável do QR: abra http://localhost:8088/qr no navegador e escaneie.
+app.get('/qr', async (_req, res) => {
+  const pagina = (corpo, refresh) =>
+    `<!doctype html><html lang="pt-br"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${refresh ? `<meta http-equiv="refresh" content="${refresh}">` : ''}<title>Conectar WhatsApp</title></head><body style="font-family:system-ui,Arial,sans-serif;text-align:center;padding:32px;color:#1A3C5A">${corpo}</body></html>`
+  if (numeroConectado) {
+    return res.send(pagina(`<h2 style="color:#15803D">✅ WhatsApp conectado</h2><p>Número: <b>${numeroConectado}</b>. Já pode fechar esta página.</p>`))
+  }
+  if (!ultimoQR) {
+    return res.send(pagina(`<p>Preparando o QR Code… aguarde alguns segundos.</p>`, 3))
+  }
+  try {
+    const img = await QRCode.toDataURL(ultimoQR, { width: 320, margin: 1 })
+    res.send(
+      pagina(
+        `<h2>Conecte o número de teste</h2>
+         <p>No celular: <b>WhatsApp → Aparelhos conectados → Conectar um aparelho</b> e aponte a câmera para o código.</p>
+         <img src="${img}" width="320" height="320" alt="QR Code" style="border:1px solid #eee;border-radius:14px"/>
+         <p style="color:#888;font-size:13px">O código se renova sozinho. Esta página atualiza a cada 20s.</p>`,
+        20
+      )
+    )
+  } catch (e) {
+    res.status(500).send('Erro ao gerar o QR: ' + e.message)
+  }
 })
 
 app.post('/send', async (req, res) => {

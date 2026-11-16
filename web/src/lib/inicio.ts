@@ -32,8 +32,8 @@ export interface DadosInicio {
   paraResolverAgora: number
   /** Sem resposta há mais de 60 dias. */
   filaAntiga: number
-  /** Cliente na fila que ninguém pegou ainda. */
-  aguardando1oAtendimento: number
+  /** Abertas em que o cliente falou por último — o escritório deve resposta. */
+  escritorioPrecisaResponder: number
   conversasAbertas: number
   /** Os que esperam há mais tempo (amostra da Auditoria). */
   maisAntigos: AuditoriaItem[]
@@ -43,7 +43,7 @@ export interface DadosInicio {
 }
 
 const VAZIO: DadosInicio = {
-  semResposta24h: 0, paraResolverAgora: 0, filaAntiga: 0, aguardando1oAtendimento: 0,
+  semResposta24h: 0, paraResolverAgora: 0, filaAntiga: 0, escritorioPrecisaResponder: 0,
   conversasAbertas: 0, maisAntigos: [], meses: [],
   uso: { pessoasComAcesso: 0, temSupervisorOuGestor: false, cobrancasCriadas: 0, cobrancasResolvidas: 0 },
   erro: null,
@@ -61,7 +61,7 @@ export async function getDadosInicio(): Promise<DadosInicio> {
     const contar = (q: any) => q.select('id', { count: 'exact', head: true })
     /* eslint-enable @typescript-eslint/no-explicit-any */
 
-    const [abertasRes, sem24Res, antigaRes, pendRes, listaRes, mesesRes, usuariosRes, cobrAbertasRes, cobrResolvRes] =
+    const [abertasRes, sem24Res, antigaRes, escritorioRes, listaRes, mesesRes, usuariosRes, cobrAbertasRes, cobrResolvRes] =
       await Promise.all([
         contar(supabase.from('at_protocolos')).in('status_multi360', STATUS_ABERTAS),
         contar(supabase.from('at_protocolos'))
@@ -72,7 +72,7 @@ export async function getDadosInicio(): Promise<DadosInicio> {
           .in('status_multi360', STATUS_ABERTAS)
           .eq('ultima_mensagem_direcao', 'cliente')
           .lt('ultima_mensagem_em', ha60d),
-        contar(supabase.from('at_protocolos')).eq('status_multi360', 'AGUARDANDO'),
+        contar(supabase.from('at_protocolos')).in('status_multi360', STATUS_ABERTAS).eq('ultima_mensagem_direcao', 'cliente'),
         supabase
           .from('v_at_auditoria')
           .select('*')
@@ -101,7 +101,7 @@ export async function getDadosInicio(): Promise<DadosInicio> {
       semResposta24h,
       paraResolverAgora: Math.max(0, semResposta24h - filaAntiga),
       filaAntiga,
-      aguardando1oAtendimento: pendRes.count ?? 0,
+      escritorioPrecisaResponder: escritorioRes.count ?? 0,
       maisAntigos: (listaRes.data ?? []) as AuditoriaItem[],
       // do mais antigo para o mais novo (o gráfico lê da esquerda p/ direita)
       meses: (((mesesRes.data ?? []) as MesMetrica[]) ?? []).slice().reverse(),

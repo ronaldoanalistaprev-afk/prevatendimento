@@ -301,10 +301,10 @@ function urlRelatorio(status, offset) {
   return `/relatorios/atendimentos?${p.toString()}`
 }
 
-async function listarRelatorio(status) {
+async function listarRelatorio(status, maxPaginas = Infinity) {
   const todos = []
   let offset = 0
-  for (let i = 0; i < 2000; i++) {
+  for (let i = 0; i < 2000 && i < maxPaginas; i++) {
     const arr = await api(urlRelatorio(status, offset))
     const regs = Array.isArray(arr) ? arr : arr?.registros ?? []
     if (!regs.length) break
@@ -448,6 +448,32 @@ async function syncFinalizados({ mensagens = false, limiteMsgs = Infinity } = {}
   console.log('📚  importação de finalizadas concluída.')
 }
 
+// (C) Fecha o furo dos 15 min: uma conversa que NASCEU e foi FINALIZADA dentro
+// da mesma janela nunca aparece nas abas de abertas — o loop normal não a veria.
+// Aqui pegamos as finalizadas mais RECENTES (topo do relatório, ordenado por data
+// de criação desc) e gravamos os metadados. Assim as conversas "abriu e fechou
+// rápido" também entram. Leve: só as primeiras páginas, sem baixar mensagens.
+async function syncFinalizadasRecentes(paginas = 3) {
+  let brutos = []
+  try {
+    brutos = await listarRelatorio('Finalizado', paginas)
+  } catch (e) {
+    console.warn(`   ⚠️  finalizadas recentes: não consegui ler o relatório (${e.message}).`)
+    return 0
+  }
+  let n = 0
+  for (const r of brutos) {
+    const reg = normalizarRelatorio(r)
+    const clienteId = await upsertClienteFin(reg)
+    if (!clienteId) continue
+    const responsavelId = await upsertColaborador(reg.atendenteNome)
+    const proto = await upsertProtocolo(reg, clienteId, responsavelId)
+    if (proto) n++
+  }
+  if (n) console.log(`   📌 finalizadas recentes conferidas: ${n} (fecha o furo dos 15 min).`)
+  return n
+}
+
 // ── Uma rodada de sincronização ─────────────────────────────────────────────
 /**
  * Recalcula o tempo de resposta mês a mês e grava a foto do dia (linha de base).
@@ -480,7 +506,7 @@ async function reconciliarFinalizadas(idsAbertos) {
     .from('at_protocolos')
     .select('id, numero_protocolo, ultima_mensagem_em, finalizado_em')
     .eq('empresa_id', empresaId)
-    .in('status_multi360', ['ATIVO', 'AGUARDANDO'])
+    .in('status_multi360', ['ATIVO', 'AGUARDANDO', 'POTENCIAL'])
   if (error) {
     console.error('   ⚠️  reconciliação: erro ao ler abertas do banco:', error.message)
     return 0
@@ -507,14 +533,46 @@ async function reconciliarFinalizadas(idsAbertos) {
   return n
 }
 
+// Normaliza um registro da aba "Potenciais". Potenciais são DUAS situações:
+// (1) primeiro contato novo ainda não distribuído; (2) cliente já existente cuja
+// conversa foi ENCERRADA e que VOLTOU a falar (reengajamento). A dataCriacao vem
+// como o momento do RETORNO (mesmo que o protocolo seja antigo) — por isso o Marco
+// Zero detecta o retorno. ATENÇÃO: o cliente real está em telefoneUsuario
+// (telefoneCliente é a linha do escritório). Não tem status/departamento/atendente.
+function normalizarPotencial(r) {
+  return {
+    id: r.id,
+    status: 'POTENCIAL',
+    contatoTelefone: r.telefoneUsuario,
+    nome: (r.usuario || '').trim() || null,
+    departamentoNome: null,
+    atendenteNome: null,
+    canal: r.telefoneCliente || null,
+    possuiAnexo: false,
+    dataCriacao: r.dataCriacao,
+    dataUltimaMensagem: r.dataCriacao,
+    tags: [],
+    _previa: r.ultimaMensagemTexto || null,
+    _direcao: r.ultimaMensagemRemetente === 'USUARIO' ? 'cliente' : 'colaborador',
+  }
+}
+
 async function sync() {
   console.log(`\n🔄  ${new Date().toLocaleString('pt-BR')} — sincronizando...`)
   const ativos = await listar('ativos')
   const pendentes = await listar('pendentes')
+  let potenciais = []
+  let potenciaisOk = true
+  try {
+    potenciais = await listar('potenciais')
+  } catch (e) {
+    potenciaisOk = false
+    console.warn(`   ⚠️  não consegui ler a aba Potenciais: ${e.message}`)
+  }
   const mapa = new Map()
   for (const r of [...ativos, ...pendentes]) mapa.set(String(r.id), r)
   const registros = [...mapa.values()]
-  console.log(`   ${registros.length} conversas em aberto (${ativos.length} ativas, ${pendentes.length} pendentes)`)
+  console.log(`   ${registros.length} conversas em aberto (${ativos.length} ativas, ${pendentes.length} pendentes, ${potenciais.length} potenciais)`)
 
   let comNovas = 0
   let semTelefone = 0
@@ -545,21 +603,42 @@ async function sync() {
       await syncMensagens(proto.id, String(reg.id))
     }
   }
+  // Potenciais: guarda como protocolo status POTENCIAL (conta como aberto). Grava a
+  // prévia e a direção real (contato novo OU cliente encerrado que voltou a falar).
+  let potNovos = 0
+  for (const r of potenciais) {
+    const reg = normalizarPotencial(r)
+    const clienteId = await upsertCliente(reg)
+    if (!clienteId) { semTelefone++; continue }
+    const proto = await upsertProtocolo(reg, clienteId, null)
+    if (!proto) continue
+    if (reg._previa) {
+      await db.from('at_mensagens').upsert(
+        { empresa_id: empresaId, protocolo_id: proto.id, id_multi360: `pot-${reg.id}`, remetente_tipo: reg._direcao, texto: reg._previa, enviado_em: dataDe(reg.dataCriacao), ordem: Number(reg.id) || null },
+        { onConflict: 'protocolo_id,id_multi360', ignoreDuplicates: true }
+      )
+    }
+    await db.from('at_protocolos').update({ ultima_mensagem_direcao: reg._direcao, ultima_mensagem_em: dataDe(reg.dataCriacao) }).eq('id', proto.id)
+    potNovos++
+  }
+  if (potNovos) console.log(`   ${potNovos} potencial(is) capturado(s).`)
   if (semTelefone) console.log(`   (${semTelefone} conversas sem telefone identificável — ignoradas)`)
   await resolverCobrancasRespondidas()
 
   // Reconcilia: o que saiu de TODAS as filas de abertas (Ativos + Pendentes +
   // Potenciais) foi encerrado na Multi360 → marca como FINALIZADO no nosso banco.
-  // Só roda quando conseguimos ler as três filas — senão, adia (nunca encerra às cegas).
-  try {
-    const potenciais = await listar('potenciais')
+  // Só roda quando conseguimos ler a aba Potenciais — senão, adia (nunca encerra às cegas).
+  if (potenciaisOk) {
     const idsAbertos = new Set(
       [...ativos, ...pendentes, ...potenciais].map((r) => String(r.id))
     )
     await reconciliarFinalizadas(idsAbertos)
-  } catch (e) {
-    console.warn(`   ⚠️  reconciliação adiada nesta rodada (não li todas as filas de abertas): ${e.message}`)
+  } else {
+    console.warn('   ⚠️  reconciliação adiada nesta rodada (não li a aba Potenciais).')
   }
+
+  // (C) Pega as finalizadas recentes (fecha o furo dos 15 min).
+  await syncFinalizadasRecentes()
 
   await atualizarMetricas()
   await db.from('at_extracao_log').insert({

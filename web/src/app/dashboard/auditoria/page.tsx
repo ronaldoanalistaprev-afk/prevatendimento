@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { getAuditoria, MARCOS_AUDITORIA, DEPARTAMENTOS_MULTI360 } from '@/lib/dados'
+import { getAuditoria, MARCOS_AUDITORIA, getDepartamentosAbertos } from '@/lib/dados'
 import { getPainelGestor } from '@/lib/gestao'
 import FiltroSetor from '@/components/FiltroSetor'
 import FiltroAtendente from '@/components/FiltroAtendente'
@@ -49,9 +49,10 @@ export default async function AuditoriaPage({ searchParams }: { searchParams: Pr
       </div>
     )
   }
-  const [{ recentes, antigos, backlogCount, totalCount, faixas, estado }, painel] = await Promise.all([
+  const [{ recentes, antigos, backlogCount, totalCount, faixas, estado }, painel, departamentos] = await Promise.all([
     getAuditoria(marco, dep, atendente, ordem),
     getPainelGestor(),
+    getDepartamentosAbertos(),
   ])
   // A lista mostra os recentes (padrão) ou a fila antiga (+60 dias), conforme o cartão clicado.
   const lista = verAntigos ? antigos : recentes
@@ -143,7 +144,7 @@ export default async function AuditoriaPage({ searchParams }: { searchParams: Pr
           })}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', borderTop: '1px solid #F1F5F9', paddingTop: 10 }}>
-          <FiltroSetor departamentos={DEPARTAMENTOS_MULTI360} cores={CoresDep} />
+          <FiltroSetor departamentos={departamentos} cores={CoresDep} />
           <FiltroAtendente comConversa={atendentesComConversa} semConversa={atendentesSemConversa} />
           <FiltroOrdem />
           {temFiltro && (

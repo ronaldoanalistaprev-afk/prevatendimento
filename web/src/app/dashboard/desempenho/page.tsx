@@ -27,7 +27,7 @@ export default async function DesempenhoPage() {
   // Cartões clicáveis: cada número leva para a tela que resolve aquilo.
   const cards: { label: string; valor: number; icone: typeof Users; cor: string; href?: string }[] = [
     { label: 'Conversas abertas', valor: resumo.conversasAbertas, icone: Users, cor: '#1A3C5A', href: '/dashboard/monitor' },
-    { label: 'Sem resposta', valor: resumo.esperando, icone: AlarmClock, cor: '#C2410C', href: '/dashboard/monitor?so=esperando' },
+    { label: 'Sem resposta', valor: resumo.esperando, icone: AlarmClock, cor: '#C2410C', href: '/dashboard/monitor?so=esperando&periodo=tudo' },
     { label: 'Sem resposta há +24h', valor: resumo.esperando24, icone: Clock, cor: '#B91C1C', href: '/dashboard/auditoria' },
     { label: 'Finalizadas', valor: resumo.finalizadas, icone: CheckCircle2, cor: '#15803D', href: '/dashboard/monitor?situacao=finalizadas&periodo=tudo' },
     { label: 'Cobranças a resolver', valor: resumo.cobrancasAbertas, icone: BellRing, cor: '#B45309', href: '/dashboard/cobrancas' },

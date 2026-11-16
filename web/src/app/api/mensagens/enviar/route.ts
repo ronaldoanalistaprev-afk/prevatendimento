@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { registrarEvento } from '@/lib/eventos'
+import { cloudConfigurado, enviarTextoCloud } from '@/lib/cloudwhatsapp'
 
 /**
  * Envio de resposta pelo colaborador.
@@ -64,10 +65,16 @@ export async function POST(req: Request) {
   const destino = idents?.[0]?.valor ?? null
   const jid = (conversa.wa_jid as string | null) ?? null
 
-  // Tenta entregar ao WhatsApp (jid completo tem prioridade; funciona p/ @lid)
+  // Entrega ao WhatsApp. Prioridade: Cloud API oficial (se configurada); senão, Baileys (reserva).
   let externalStatus: 'sent' | 'failed' = 'failed'
   let externalId: string | null = null
-  if (process.env.WHATSAPP_SERVICE_URL && (jid || destino)) {
+  if (cloudConfigurado() && destino) {
+    const env = await enviarTextoCloud(destino, conteudo)
+    if (env.ok) {
+      externalStatus = 'sent'
+      externalId = env.id ?? null
+    }
+  } else if (process.env.WHATSAPP_SERVICE_URL && (jid || destino)) {
     try {
       const resp = await fetch(`${process.env.WHATSAPP_SERVICE_URL}/send`, {
         method: 'POST',

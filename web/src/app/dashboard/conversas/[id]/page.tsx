@@ -1,6 +1,8 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { getConversa } from '@/lib/dados'
+import { getPapelAtual } from '@/lib/papel'
 import { formatarCpf, formatarTelefone, rotuloWhatsapp, tempoDecorrido, rotuloEstagio, coresEstagio } from '@/lib/utils'
 import ChatBox from '@/components/ChatBox'
 
@@ -11,6 +13,8 @@ export default async function ConversaDetailPage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  const papel = await getPapelAtual()
+  if (papel.role !== 'ADMIN') redirect('/dashboard/monitor')
   const { id } = await params
   const { conversa, pessoa, identificadores, mensagens } = await getConversa(id)
 

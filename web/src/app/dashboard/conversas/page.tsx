@@ -1,6 +1,9 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { getConversas } from '@/lib/dados'
+import { getPapelAtual } from '@/lib/papel'
 import BannerConfig from '@/components/BannerConfig'
+import PainelWhatsApp from '@/components/PainelWhatsApp'
 import { coresUrgencia, coresEstagio, rotuloEstagio, statusConversa, formatarDataHora, tempoDecorrido } from '@/lib/utils'
 import { MessagesSquare, MessageSquarePlus } from 'lucide-react'
 import AutoRefresh from '@/components/AutoRefresh'
@@ -8,13 +11,15 @@ import AutoRefresh from '@/components/AutoRefresh'
 export const dynamic = 'force-dynamic'
 
 export default async function ConversasPage() {
+  const papel = await getPapelAtual()
+  if (papel.role !== 'ADMIN') redirect('/dashboard/monitor')
   const { itens, estado } = await getConversas()
 
   return (
     <div style={{ padding: '28px 32px', maxWidth: 1100, margin: '0 auto' }}>
       <div style={{ marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1A3C5A' }}>Conversas</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1A3C5A' }}>Laboratório WhatsApp</h1>
           <AutoRefresh />
           <Link
             href="/dashboard/conversas/nova"
@@ -37,9 +42,11 @@ export default async function ConversasPage() {
           </Link>
         </div>
         <p style={{ fontSize: 14, color: '#6B7280', marginTop: 4 }}>
-          Todas as conversas, com status e tempo sem resposta.
+          Teste do nosso WhatsApp próprio (número de teste, separado do Multi360). Só o administrador vê.
         </p>
       </div>
+
+      <PainelWhatsApp />
 
       {(!estado.configurado || estado.erro) && <BannerConfig erro={estado.erro} />}
 

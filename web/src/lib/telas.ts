@@ -10,12 +10,15 @@ export interface TelaConfig {
 export const TELAS: TelaConfig[] = [
   { chave: 'inicio', label: 'Início', descricao: 'O painel: a situação do escritório e o que precisa de decisão' },
   { chave: 'monitor', label: 'Monitor', descricao: 'As conversas do Multi360' },
+  { chave: 'acoes', label: 'Ações necessárias', descricao: 'Situações que o sistema detecta para a equipe corrigir' },
+  { chave: 'marcozero', label: 'Marco Zero', descricao: 'A recuperação do backlog em lotes' },
   { chave: 'cobrancas', label: 'Cobranças', descricao: 'Painel de cobrança / minhas cobranças' },
   { chave: 'modelos', label: 'Modelos de cobrança', descricao: 'Os textos prontos usados na hora de cobrar' },
   { chave: 'auditoria', label: 'Auditoria', descricao: 'Quem ficou sem resposta' },
   { chave: 'desempenho', label: 'Desempenho', descricao: 'Métricas da equipe' },
   { chave: 'colaboradores', label: 'Colaboradores', descricao: 'Equipe e acessos' },
   { chave: 'configuracoes', label: 'Configurações', descricao: 'Sistema, permissões e catálogo' },
+  { chave: 'laboratorio', label: 'Laboratório WhatsApp', descricao: 'Teste do WhatsApp próprio (Baileys) — só o administrador' },
 ]
 
 // Papéis configuráveis de fábrica (o ADMIN sempre vê tudo e não entra na matriz).
@@ -34,10 +37,14 @@ export const PERMISSOES_PADRAO: Record<string, string[]> = {
   // não em média da equipe). A página redireciona quem não enxerga tudo.
   inicio: ['SUPERVISOR', 'GESTOR'],
   monitor: ['COLABORADOR', 'SUPERVISOR', 'GESTOR'],
+  acoes: ['COLABORADOR', 'SUPERVISOR', 'GESTOR'],
+  marcozero: ['SUPERVISOR', 'GESTOR'],
   cobrancas: ['COLABORADOR', 'SUPERVISOR', 'GESTOR'],
   modelos: ['SUPERVISOR', 'GESTOR'],
   auditoria: ['SUPERVISOR', 'GESTOR'],
   desempenho: ['SUPERVISOR', 'GESTOR'],
   colaboradores: ['GESTOR'],
   configuracoes: ['GESTOR'],
+  // Vazio = ninguém por papel; só o ADMIN (que sempre passa) enxerga. É o laboratório do construtor.
+  laboratorio: [],
 }

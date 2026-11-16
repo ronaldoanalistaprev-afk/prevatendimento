@@ -31,21 +31,23 @@ export default function FiltroAtendente({
       onChange={(e) => muda(e.target.value)}
       style={{
         fontSize: 12.5,
-        fontWeight: 600,
+        fontWeight: atual ? 700 : 600,
         padding: '6px 12px',
         borderRadius: 999,
-        border: '1px solid #DCE6EF',
-        background: atual ? '#1A3C5A' : '#fff',
-        color: atual ? '#fff' : '#475569',
+        // Selecionado = azul CLARO com texto escuro (antes era azul-escuro, que deixava
+        // a lista de opções ilegível — azul sobre azul — no Windows).
+        border: atual ? '1.5px solid #1A3C5A' : '1px solid #DCE6EF',
+        background: atual ? '#EAF1F9' : '#fff',
+        color: atual ? '#1A3C5A' : '#475569',
         cursor: 'pointer',
         outline: 'none',
       }}
     >
-      <option value="">Todos os atendentes</option>
+      <option value="" style={{ color: '#111', background: '#fff' }}>Todos os atendentes</option>
       {comConversa.length > 0 && (
         <optgroup label="Com conversa aberta">
           {comConversa.map((a) => (
-            <option key={a} value={a} style={{ color: '#111' }}>
+            <option key={a} value={a} style={{ color: '#111', background: '#fff' }}>
               {a}
             </option>
           ))}
@@ -54,7 +56,7 @@ export default function FiltroAtendente({
       {semConversa.length > 0 && (
         <optgroup label="Sem conversa aberta">
           {semConversa.map((a) => (
-            <option key={a} value={a} style={{ color: '#111' }}>
+            <option key={a} value={a} style={{ color: '#111', background: '#fff' }}>
               {a}
             </option>
           ))}

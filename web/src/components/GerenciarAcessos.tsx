@@ -96,7 +96,6 @@ export default function GerenciarAcessos({
   }
 
   const selStyle: React.CSSProperties = { height: 34, padding: '0 8px', borderRadius: 8, border: '1px solid #DCE6EF', fontSize: 13, background: '#fff' }
-  const btn = (bg: string): React.CSSProperties => ({ display: 'inline-flex', alignItems: 'center', gap: 5, height: 32, padding: '0 10px', borderRadius: 8, border: 'none', background: bg, color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: ocupado ? 'wait' : 'pointer' })
 
   return (
     <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #EEF2F7', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', overflow: 'hidden', marginTop: 20 }}>
@@ -174,31 +173,19 @@ export default function GerenciarAcessos({
                     </td>
                     <td style={{ padding: '12px 20px', color: u.ativo ? '#15803D' : '#9CA3AF' }}>{u.ativo ? 'Ativo' : 'Inativo'}</td>
                     <td style={{ padding: '12px 20px' }}>
-                      <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', alignItems: 'center' }}>
                         {editando ? (
                           <>
-                            <button disabled={ocupado} onClick={() => chamar('PATCH', { id: u.id, role, at_colaborador_id: vinculo || null })} style={btn('#16A34A')}>
-                              {ocupado ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Salvar
-                            </button>
-                            <button disabled={ocupado} onClick={() => setEditId(null)} style={{ ...btn('#fff'), color: '#6B7280', border: '1px solid #DCE6EF' }}>
-                              <X size={14} /> Cancelar
-                            </button>
+                            <IconBtn icon={Check} title="Salvar alterações" cor="#15803D" borderCor="#BBF7D0" loading={ocupado} disabled={ocupado} onClick={() => chamar('PATCH', { id: u.id, role, at_colaborador_id: vinculo || null })} />
+                            <IconBtn icon={X} title="Cancelar" cor="#6B7280" disabled={ocupado} onClick={() => setEditId(null)} />
                           </>
                         ) : (
                           <>
-                            <button disabled={ocupado} onClick={() => abrirEdicao(u)} style={{ ...btn('#fff'), color: '#1A3C5A', border: '1px solid #DCE6EF' }}>
-                              <Pencil size={14} /> Editar
-                            </button>
-                            <button disabled={ocupado || gerandoId === u.id} onClick={() => gerarLinkSenha(u)} style={{ ...btn('#fff'), color: '#4B7BA6', border: '1px solid #DCE6EF' }} title="Gerar um link para a pessoa criar uma nova senha">
-                              {gerandoId === u.id ? <Loader2 size={14} className="animate-spin" /> : <KeyRound size={14} />} Redefinir senha
-                            </button>
-                            <button disabled={ocupado} onClick={() => chamar('PATCH', { id: u.id, ativo: !u.ativo })} style={{ ...btn('#fff'), color: u.ativo ? '#B45309' : '#15803D', border: '1px solid #DCE6EF' }}>
-                              <Power size={14} /> {u.ativo ? 'Desativar' : 'Ativar'}
-                            </button>
+                            <IconBtn icon={Pencil} title="Editar papel e vínculo" cor="#1A3C5A" disabled={ocupado} onClick={() => abrirEdicao(u)} />
+                            <IconBtn icon={KeyRound} title="Redefinir senha — gera um link para a pessoa criar uma nova senha" cor="#4B7BA6" loading={gerandoId === u.id} disabled={ocupado || gerandoId === u.id} onClick={() => gerarLinkSenha(u)} />
+                            <IconBtn icon={Power} title={u.ativo ? 'Desativar acesso' : 'Ativar acesso'} cor={u.ativo ? '#B45309' : '#15803D'} disabled={ocupado} onClick={() => chamar('PATCH', { id: u.id, ativo: !u.ativo })} />
                             {!souEu && (
-                              <button disabled={ocupado} onClick={() => { if (confirm(`Excluir o acesso de ${u.nome}?`)) chamar('DELETE', { id: u.id }) }} style={{ ...btn('#fff'), color: '#B91C1C', border: '1px solid #FECACA' }}>
-                                <Trash2 size={14} /> Excluir
-                              </button>
+                              <IconBtn icon={Trash2} title="Excluir acesso" cor="#B91C1C" borderCor="#FECACA" disabled={ocupado} onClick={() => { if (confirm(`Excluir o acesso de ${u.nome}?`)) chamar('DELETE', { id: u.id }) }} />
                             )}
                           </>
                         )}
@@ -212,5 +199,49 @@ export default function GerenciarAcessos({
         </div>
       )}
     </div>
+  )
+}
+
+/** Botão de ação compacto (só ícone, com dica ao passar o mouse). Deixa a coluna alinhada. */
+function IconBtn({
+  icon: Icon,
+  title,
+  cor,
+  borderCor = '#DCE6EF',
+  onClick,
+  disabled,
+  loading,
+}: {
+  icon: React.ComponentType<{ size?: number; className?: string }>
+  title: string
+  cor: string
+  borderCor?: string
+  onClick: () => void
+  disabled?: boolean
+  loading?: boolean
+}) {
+  return (
+    <button
+      title={title}
+      aria-label={title}
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        width: 34,
+        height: 34,
+        borderRadius: 8,
+        border: `1px solid ${borderCor}`,
+        background: '#fff',
+        color: cor,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: disabled ? 'wait' : 'pointer',
+        flexShrink: 0,
+        transition: 'background 0.12s',
+      }}
+    >
+      {loading ? <Loader2 size={15} className="animate-spin" /> : <Icon size={15} />}
+    </button>
   )
 }

@@ -8,12 +8,25 @@ import {
   type FiltroStatus,
 } from '@/lib/cobrancas'
 import { getPapelAtual } from '@/lib/papel'
+import { getModelosCobranca } from '@/lib/modelos'
+import { createClient } from '@/lib/supabase/server'
 import { formatarTelefone, formatarDataHora, formatarNome, formatarDuracao } from '@/lib/utils'
 import AcoesCobranca from '@/components/AcoesCobranca'
+import NovaCobranca from '@/components/NovaCobranca'
 import SeloAtualizacao from '@/components/SeloAtualizacao'
 import { BellRing, AlarmClock, Check, X, Clock, TrendingUp } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
+
+async function getAtendentes(): Promise<{ id: string; nome: string }[]> {
+  try {
+    const supabase = await createClient()
+    const { data } = await supabase.from('at_colaboradores').select('id, nome').order('nome')
+    return (data ?? []) as { id: string; nome: string }[]
+  } catch {
+    return []
+  }
+}
 
 const SITUACOES: { chave: FiltroStatus; label: string }[] = [
   { chave: 'ABERTA', label: 'A resolver' },
@@ -54,9 +67,11 @@ export default async function CobrancasPage({
   const supervisiona = papel.cobrar
   const souAtendente = !papel.cobrar
 
-  const [cobrancas, metricas] = await Promise.all([
+  const [cobrancas, metricas, atendentes, modelos] = await Promise.all([
     supervisiona ? getCobrancas(situacao) : getMinhasCobrancas(papel.atColaboradorId, situacao),
     supervisiona ? getMetricasCobrancas(dias) : Promise.resolve(null),
+    supervisiona ? getAtendentes() : Promise.resolve([] as { id: string; nome: string }[]),
+    supervisiona ? getModelosCobranca() : Promise.resolve([]),
   ])
 
   const titulo = souAtendente ? 'Minhas cobranças' : 'Painel de Cobrança'
@@ -93,6 +108,15 @@ export default async function CobrancasPage({
         </div>
         <p style={{ fontSize: 14, color: '#6B7280', marginTop: 4 }}>{subtitulo}</p>
       </div>
+
+      {supervisiona && (
+        <div style={{ marginBottom: 18 }}>
+          <NovaCobranca
+            atendentes={atendentes}
+            modelos={modelos.map((m) => ({ id: m.id, titulo: m.titulo, texto: m.texto, prazo_dias: m.prazo_dias }))}
+          />
+        </div>
+      )}
 
       {/* ===== Métricas (só para quem cobra) ===== */}
       {supervisiona && metricas && (

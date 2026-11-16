@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { bancoConfigurado } from '@/lib/dados'
 
-const ABERTAS = new Set(['ATIVO', 'AGUARDANDO'])
+// POTENCIAL (aba "Potenciais" do Multi360) também é conversa em aberto — conta como aberta.
+const ABERTAS = new Set(['ATIVO', 'AGUARDANDO', 'POTENCIAL'])
 
 export interface LinhaRanking {
   atendente: string

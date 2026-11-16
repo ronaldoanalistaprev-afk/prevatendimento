@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getPapeis, poderesDo } from '@/lib/poderes'
+import { STATUS_ABERTAS } from '@/lib/dados'
 
 /**
  * Cobranças do supervisor.
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ erro: 'seu papel não permite cobrar' }, { status: 403 })
   }
 
-  let body: { protocolo_id?: string; mensagem?: string; prazo?: string; modelo_id?: string }
+  let body: { protocolo_id?: string; colaborador_id?: string; colaborador_nome?: string; cliente_id?: string; mensagem?: string; prazo?: string; modelo_id?: string }
   try {
     body = await req.json()
   } catch {
@@ -44,28 +45,61 @@ export async function POST(req: Request) {
 
   const protocoloId = (body.protocolo_id ?? '').trim()
   const mensagem = (body.mensagem ?? '').trim()
-  if (!protocoloId || !mensagem) {
-    return NextResponse.json({ erro: 'protocolo e mensagem são obrigatórios' }, { status: 400 })
+  if (!mensagem) return NextResponse.json({ erro: 'a mensagem é obrigatória' }, { status: 400 })
+
+  // Dois modos: (A) a partir de uma CONVERSA (BotaoCobrar) — deriva cliente+atendente do
+  // protocolo; (B) DIRETO da página — informa o colaborador e, opcionalmente, o cliente
+  // (que liga ao atendimento aberto mais recente dele, p/ contexto + fecha-sozinho).
+  let empresa_id: string | null = null
+  let cliente_id: string | null = null
+  let colaborador_id: string | null = null
+  let colaborador_nome: string | null = null
+  let protocolo_id: string | null = null
+
+  if (protocoloId) {
+    const { data: proto } = await supabase
+      .from('at_protocolos')
+      .select('id, empresa_id, cliente_id, responsavel_id, atendente_nome')
+      .eq('id', protocoloId)
+      .maybeSingle()
+    if (!proto) return NextResponse.json({ erro: 'protocolo não encontrado' }, { status: 404 })
+    const p = proto as { empresa_id?: string; cliente_id?: string; responsavel_id?: string; atendente_nome?: string }
+    protocolo_id = protocoloId
+    empresa_id = p.empresa_id ?? null
+    cliente_id = p.cliente_id ?? null
+    colaborador_id = p.responsavel_id ?? null
+    colaborador_nome = p.atendente_nome ?? null
+  } else {
+    colaborador_id = (body.colaborador_id ?? '').trim() || null
+    if (!colaborador_id) return NextResponse.json({ erro: 'informe o colaborador' }, { status: 400 })
+    const { data: col } = await supabase.from('at_colaboradores').select('nome').eq('id', colaborador_id).maybeSingle()
+    colaborador_nome = (col as { nome?: string } | null)?.nome ?? (body.colaborador_nome ?? null)
+    const cliDireto = (body.cliente_id ?? '').trim()
+    if (cliDireto) {
+      cliente_id = cliDireto
+      const { data: proto } = await supabase
+        .from('at_protocolos')
+        .select('id, empresa_id')
+        .eq('cliente_id', cliDireto)
+        .in('status_multi360', STATUS_ABERTAS)
+        .order('ultima_mensagem_em', { ascending: false, nullsFirst: false })
+        .limit(1)
+        .maybeSingle()
+      if (proto) {
+        protocolo_id = (proto as { id: string }).id
+        empresa_id = (proto as { empresa_id?: string }).empresa_id ?? null
+      }
+    }
   }
-
-  // busca o protocolo p/ pegar cliente + colaborador (atendente)
-  const { data: proto } = await supabase
-    .from('at_protocolos')
-    .select('id, empresa_id, cliente_id, responsavel_id, atendente_nome')
-    .eq('id', protocoloId)
-    .maybeSingle()
-  if (!proto) return NextResponse.json({ erro: 'protocolo não encontrado' }, { status: 404 })
-
-  const p = proto as { empresa_id?: string; cliente_id?: string; responsavel_id?: string; atendente_nome?: string }
 
   const { data: nova, error } = await supabase
     .from('at_cobrancas')
     .insert({
-      empresa_id: p.empresa_id ?? null,
-      protocolo_id: protocoloId,
-      cliente_id: p.cliente_id ?? null,
-      colaborador_id: p.responsavel_id ?? null,
-      colaborador_nome: p.atendente_nome ?? null,
+      empresa_id,
+      protocolo_id,
+      cliente_id,
+      colaborador_id,
+      colaborador_nome,
       criado_por: user.id,
       criado_por_nome: perfil?.nome ?? null,
       mensagem,

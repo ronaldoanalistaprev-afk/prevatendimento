@@ -30,20 +30,21 @@ export default function FiltroSetor({ departamentos = [], cores = {} }: { depart
         onChange={(e) => muda(e.target.value)}
         style={{
           fontSize: 12.5,
-          fontWeight: 600,
+          fontWeight: atual ? 700 : 600,
           padding: '6px 12px',
           borderRadius: 999,
-          border: '1px solid #DCE6EF',
-          background: atual ? '#1A3C5A' : '#fff',
-          color: atual ? '#fff' : '#475569',
+          // Selecionado = azul CLARO com texto escuro (legível), não azul-escuro.
+          border: atual ? '1.5px solid #1A3C5A' : '1px solid #DCE6EF',
+          background: atual ? '#EAF1F9' : '#fff',
+          color: atual ? '#1A3C5A' : '#475569',
           cursor: 'pointer',
           outline: 'none',
           maxWidth: 240,
         }}
       >
-        <option value="">Todos os setores</option>
+        <option value="" style={{ color: '#111', background: '#fff' }}>Todos os setores</option>
         {departamentos.map((d) => (
-          <option key={d} value={d} style={{ color: '#111' }}>
+          <option key={d} value={d} style={{ color: '#111', background: '#fff' }}>
             {d}
           </option>
         ))}

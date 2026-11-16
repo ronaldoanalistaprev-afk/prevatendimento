@@ -95,10 +95,10 @@ export default function Painel({ dados, nome }: { dados: DadosInicio; nome: stri
         <CartaoAcao
           icone={Clock}
           cor="#B45309"
-          valor={dados.aguardando1oAtendimento}
-          titulo="Aguardando 1º atendimento"
-          texto="cliente na fila que ninguém pegou"
-          href="/dashboard/monitor?so=pendentes"
+          valor={dados.escritorioPrecisaResponder}
+          titulo="Escritório precisa responder"
+          texto="todas em que o cliente falou por último"
+          href="/dashboard/monitor?so=esperando&periodo=tudo"
         />
         <CartaoAcao
           icone={Archive}

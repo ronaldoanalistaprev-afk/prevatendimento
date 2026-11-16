@@ -4,20 +4,20 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { ArrowDownWideNarrow, ArrowUpNarrowWide } from 'lucide-react'
 
 const OPCOES = [
-  { chave: 'antiga', label: 'Mais antiga primeiro', icone: ArrowUpNarrowWide },
   { chave: 'recente', label: 'Mais recente primeiro', icone: ArrowDownWideNarrow },
+  { chave: 'antiga', label: 'Mais antiga primeiro', icone: ArrowUpNarrowWide },
 ]
 
-/** Escolhe a ordem da lista. Padrão: mais antiga primeiro. Preserva os demais filtros. */
+/** Escolhe a ordem da lista. Padrão: mais RECENTE primeiro. Preserva os demais filtros. */
 export default function FiltroOrdem() {
   const router = useRouter()
   const sp = useSearchParams()
   const pathname = usePathname()
-  const atual = sp.get('ordem') === 'recente' ? 'recente' : 'antiga'
+  const atual = sp.get('ordem') === 'antiga' ? 'antiga' : 'recente'
 
   function muda(v: string) {
     const p = new URLSearchParams(sp.toString())
-    if (v === 'recente') p.set('ordem', 'recente')
+    if (v === 'antiga') p.set('ordem', 'antiga')
     else p.delete('ordem')
     p.delete('pagina')
     const s = p.toString()

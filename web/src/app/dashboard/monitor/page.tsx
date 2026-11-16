@@ -10,6 +10,7 @@ import FiltroCompetencia from '@/components/FiltroCompetencia'
 import FiltroSetor from '@/components/FiltroSetor'
 import FiltroOrdem from '@/components/FiltroOrdem'
 import BuscaMonitor from '@/components/BuscaMonitor'
+import LembrarPeriodo from '@/components/LembrarPeriodo'
 import { getPapelAtual } from '@/lib/papel'
 
 export const dynamic = 'force-dynamic'
@@ -38,7 +39,7 @@ const SITUACOES = [
 
 export default async function MonitorPage({ searchParams }: { searchParams: Promise<{ dep?: string; periodo?: string; atendente?: string; situacao?: string; pagina?: string; busca?: string; competencia?: string; so?: string; ordem?: string }> }) {
   const { dep, periodo: periodoRaw, atendente, situacao: situacaoRaw, pagina: paginaRaw, busca, competencia, so, ordem } = await searchParams
-  const periodo = competencia ? 'tudo' : periodoRaw || '30'
+  const periodo = competencia ? 'tudo' : periodoRaw || 'hoje'
   const situacao = situacaoRaw || 'abertas'
   const paginaPedida = Math.max(1, Number(paginaRaw) || 1)
 
@@ -50,13 +51,13 @@ export default async function MonitorPage({ searchParams }: { searchParams: Prom
   const { itens, resumo, departamentos, atendentesComConversa, atendentesSemConversa, pagina, totalPaginas, estado } = await getMonitorProtocolos(dep, periodo, atendenteEfetivo, situacao, busca, competencia, paginaPedida, so, ordem)
   const temAtendentes = atendentesComConversa.length + atendentesSemConversa.length > 0
   // Algum filtro fora do padrão? (habilita o "Limpar filtros")
-  const temFiltro = Boolean(dep || busca || competencia || atendente || so || situacao !== 'abertas' || periodo !== '30')
+  const temFiltro = Boolean(dep || busca || competencia || atendente || so || situacao !== 'abertas' || periodo !== 'hoje')
   // Atalho dos cartões (liga/desliga "só sem resposta" / "só aguardando 1º atendimento")
   const soHref = (v: string) => {
     const p = new URLSearchParams()
     if (dep) p.set('dep', dep)
     if (competencia) p.set('competencia', competencia)
-    else if (periodo !== '30') p.set('periodo', periodo)
+    else if (periodo !== 'hoje') p.set('periodo', periodo)
     if (atendente) p.set('atendente', atendente)
     if (busca) p.set('busca', busca)
     if (ordem) p.set('ordem', ordem)
@@ -70,7 +71,7 @@ export default async function MonitorPage({ searchParams }: { searchParams: Prom
   const paginaHref = (n: number) => {
     const p = new URLSearchParams()
     if (dep) p.set('dep', dep)
-    if (!competencia && periodo !== '30') p.set('periodo', periodo)
+    if (!competencia && periodo !== 'hoje') p.set('periodo', periodo)
     if (competencia) p.set('competencia', competencia)
     if (situacao !== 'abertas') p.set('situacao', situacao)
     if (atendente) p.set('atendente', atendente)
@@ -87,12 +88,13 @@ export default async function MonitorPage({ searchParams }: { searchParams: Prom
     const pe = 'periodo' in over ? over.periodo : periodo
     const si = 'situacao' in over ? over.situacao : situacao
     if (d) p.set('dep', d)
-    // ao clicar num período, a competência é substituída
+    // ao clicar num período, grava SEMPRE explícito (inclusive "hoje") e substitui a competência.
+    // (o "hoje" explícito é o que permite ao sistema lembrar a escolha na sessão — ver LembrarPeriodo)
     if ('periodo' in over) {
-      if (pe && pe !== '30') p.set('periodo', pe)
+      if (pe) p.set('periodo', pe)
     } else {
       if (competencia) p.set('competencia', competencia)
-      else if (pe && pe !== '30') p.set('periodo', pe)
+      else if (pe && pe !== 'hoje') p.set('periodo', pe)
     }
     if (si && si !== 'abertas') p.set('situacao', si)
     if (atendente) p.set('atendente', atendente)
@@ -109,12 +111,13 @@ export default async function MonitorPage({ searchParams }: { searchParams: Prom
     ? [{ label: 'Conversas finalizadas', valor: resumo.total, icone: Users, cor: '#1A3C5A', dica: 'Conversas já encerradas no Multi360.' }]
     : [
         { label: 'Conversas', valor: resumo.total, icone: Users, cor: '#1A3C5A', dica: 'Total de conversas neste filtro.' },
-        { label: 'Sem resposta', valor: resumo.esperando, icone: AlarmClock, cor: '#C2410C', href: soHref('esperando'), dica: 'O cliente falou por último e ninguém respondeu. Clique para ver só estas.' },
-        { label: 'Aguardando 1º atendimento', valor: resumo.pendentes, icone: Clock, cor: '#B45309', href: soHref('pendentes'), dica: 'Cliente na fila que ainda não foi atendido por ninguém. Clique para ver só estas.' },
+        { label: 'Escritório precisa responder', valor: resumo.esperando, icone: AlarmClock, cor: '#C2410C', href: soHref('esperando'), dica: 'O cliente falou por último — a bola está com o escritório. Clique para ver só estas.' },
+        { label: 'Aguardando o cliente', valor: resumo.aguardandoCliente, icone: Clock, cor: '#2563EB', href: soHref('aguardacliente'), dica: 'A equipe respondeu por último — a bola está com o cliente. Clique para ver só estas.' },
       ]
 
   return (
     <div style={{ padding: '28px 32px', maxWidth: 1180, margin: '0 auto' }}>
+      <LembrarPeriodo />
       <div style={{ marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1A3C5A', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -134,7 +137,7 @@ export default async function MonitorPage({ searchParams }: { searchParams: Prom
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 18 }}>
         {cards.map((c) => {
           const Icone = c.icone
-          const ativo = Boolean(c.href && ((so === 'esperando' && c.label === 'Sem resposta') || (so === 'pendentes' && c.label === 'Aguardando 1º atendimento')))
+          const ativo = Boolean(c.href && ((so === 'esperando' && c.label === 'Escritório precisa responder') || (so === 'aguardacliente' && c.label === 'Aguardando o cliente')))
           const conteudo = (
             <>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

@@ -208,28 +208,60 @@ export interface ProtocoloMonitor {
 
 export interface MonitorResumo {
   total: number
-  esperando: number
-  pendentes: number
+  esperando: number         // cliente falou por último → escritório precisa responder
+  aguardandoCliente: number // equipe falou por último → aguardando o cliente
   atualizadoEm: string | null
 }
 
 // Grupos de situação: por padrão o Monitor mostra só as ABERTAS (dia a dia);
 // o gestor pode alternar para Finalizadas ou Todas.
-export const STATUS_ABERTAS = ['ATIVO', 'AGUARDANDO']
+// POTENCIAL = aba "Potenciais" do Multi360 (primeiro contato ainda não distribuído);
+// no Multi360 é uma conversa EM ABERTO, e o leitor já a traz como tal — conta como aberta.
+export const STATUS_ABERTAS = ['ATIVO', 'AGUARDANDO', 'POTENCIAL']
 const MONITOR_POR_PAGINA = 50
 // Departamentos do Multi360 (lista fixa — evita varrer a tabela toda só p/ o filtro).
+// Reserva (usada só se a lista dinâmica vier vazia). A lista real dos filtros é
+// derivada ao vivo das conversas abertas — ver getDepartamentosAbertos() e getMonitorProtocolos.
 export const DEPARTAMENTOS_MULTI360 = [
-  'Análise Inicial de Direitos - Benefícios',
-  'Análise Inicial de Direitos - Restituição',
   'Benefícios',
-  'Contratos e Procurações',
-  'Financeiro',
   'Gestão com o cliente',
-  'Judicial',
-  'Recepção',
-  'Reclamação',
+  'Financeiro',
   'Restituição',
 ]
+
+/** Departamentos que existem HOJE nas conversas abertas (lista dinâmica p/ filtros). */
+export async function getDepartamentosAbertos(): Promise<string[]> {
+  if (!bancoConfigurado()) return []
+  try {
+    const supabase = await createClient()
+    const { data } = await supabase
+      .from('at_protocolos')
+      .select('departamento')
+      .in('status_multi360', STATUS_ABERTAS)
+      .not('departamento', 'is', null)
+      .limit(3000)
+    const lista = [...new Set(((data ?? []) as { departamento: string }[]).map((r) => r.departamento).filter(Boolean))]
+    return lista.length ? lista.sort((a, b) => a.localeCompare(b, 'pt-BR')) : DEPARTAMENTOS_MULTI360
+  } catch {
+    return DEPARTAMENTOS_MULTI360
+  }
+}
+
+/** Contagem de conversas abertas (ativas) e finalizadas (inativas), para os badges do menu.
+ *  Respeita o papel: o colaborador conta só as dele (RLS). */
+export async function contarConversas(): Promise<{ abertas: number; finalizadas: number }> {
+  if (!bancoConfigurado()) return { abertas: 0, finalizadas: 0 }
+  try {
+    const supabase = await createClient()
+    const [ab, fin] = await Promise.all([
+      supabase.from('at_protocolos').select('id', { count: 'exact', head: true }).in('status_multi360', STATUS_ABERTAS),
+      supabase.from('at_protocolos').select('id', { count: 'exact', head: true }).eq('status_multi360', 'FINALIZADO'),
+    ])
+    return { abertas: ab.count ?? 0, finalizadas: fin.count ?? 0 }
+  } catch {
+    return { abertas: 0, finalizadas: 0 }
+  }
+}
 
 export async function getMonitorProtocolos(dep?: string, periodo?: string, atendente?: string, situacao?: string, busca?: string, competencia?: string, pagina = 1, so?: string, ordem?: string): Promise<{
   itens: ProtocoloMonitor[]
@@ -242,7 +274,7 @@ export async function getMonitorProtocolos(dep?: string, periodo?: string, atend
   totalPaginas: number
   estado: EstadoBanco
 }> {
-  const vazio = { itens: [], resumo: { total: 0, esperando: 0, pendentes: 0, atualizadoEm: null }, departamentos: [], atendentes: [], atendentesComConversa: [], atendentesSemConversa: [], pagina: 1, totalPaginas: 1, estado: { configurado: false, erro: null } }
+  const vazio = { itens: [], resumo: { total: 0, esperando: 0, aguardandoCliente: 0, atualizadoEm: null }, departamentos: [], atendentes: [], atendentesComConversa: [], atendentesSemConversa: [], pagina: 1, totalPaginas: 1, estado: { configurado: false, erro: null } }
   if (!bancoConfigurado()) return vazio
   try {
     const supabase = await createClient()
@@ -290,8 +322,12 @@ export async function getMonitorProtocolos(dep?: string, periodo?: string, atend
       let x = comuns(q)
       if (sit === 'abertas') x = x.in('status_multi360', STATUS_ABERTAS)
       else if (sit === 'finalizadas') x = x.eq('status_multi360', 'FINALIZADO')
-      // Atalhos dos cartões: "sem resposta" e "aguardando 1º atendimento"
+      // Atalhos dos cartões, por QUEM FALOU POR ÚLTIMO:
+      //  - "esperando"      = cliente falou por último → escritório precisa responder
+      //  - "aguardacliente" = equipe falou por último  → aguardando o cliente
+      // ("pendentes" = legado: status AGUARDANDO do Multi360, ainda usado por um link do Início)
       if (so === 'esperando') x = x.in('status_multi360', STATUS_ABERTAS).eq('ultima_mensagem_direcao', 'cliente')
+      else if (so === 'aguardacliente') x = x.in('status_multi360', STATUS_ABERTAS).neq('ultima_mensagem_direcao', 'cliente')
       else if (so === 'pendentes') x = x.eq('status_multi360', 'AGUARDANDO')
       return x
     }
@@ -305,8 +341,8 @@ export async function getMonitorProtocolos(dep?: string, periodo?: string, atend
     const from = (pag - 1) * MONITOR_POR_PAGINA
 
     // 2) Página de resultados (ordenada no banco)
-    // Ordem da lista: padrão "antiga" (mais antiga primeiro); "recente" inverte.
-    const asc = ordem !== 'recente'
+    // Ordem da lista: padrão "recente" (mais recente primeiro); "antiga" inverte.
+    const asc = ordem === 'antiga'
     let rows = comSituacao(supabase.from('v_at_monitor').select('*'))
     if (sit === 'finalizadas' || sit === 'todas') {
       rows = rows.order('ultima_mensagem_em', { ascending: asc, nullsFirst: false })
@@ -318,21 +354,27 @@ export async function getMonitorProtocolos(dep?: string, periodo?: string, atend
 
     // 3) Resumo do backlog ABERTO (sempre sobre conversas abertas, independente da aba)
     const espQ = comuns(supabase.from('v_at_monitor').select('id', { count: 'exact', head: true })).in('status_multi360', STATUS_ABERTAS).eq('ultima_mensagem_direcao', 'cliente')
-    const pendQ = comuns(supabase.from('v_at_monitor').select('id', { count: 'exact', head: true })).eq('status_multi360', 'AGUARDANDO')
+    // "Aguardando o cliente" = aberta em que a EQUIPE falou por último (não o cliente)
+    const aguardaClienteQ = comuns(supabase.from('v_at_monitor').select('id', { count: 'exact', head: true })).in('status_multi360', STATUS_ABERTAS).neq('ultima_mensagem_direcao', 'cliente')
 
     // atendentes que TÊM conversa aberta agora (p/ separar no filtro)
     const comConvQ = supabase.from('at_protocolos').select('atendente_nome').in('status_multi360', STATUS_ABERTAS).not('atendente_nome', 'is', null).limit(2000)
+    // departamentos que EXISTEM nas conversas abertas agora — lista dinâmica (reflete a
+    // reorganização de setores no Multi360 sozinha, sem lista fixa que envelhece).
+    const depQ = supabase.from('at_protocolos').select('departamento').in('status_multi360', STATUS_ABERTAS).not('departamento', 'is', null).limit(3000)
 
-    const [rowsRes, espRes, pendRes, logRes, colabRes, comConvRes] = await Promise.all([
+    const [rowsRes, espRes, aguardaClienteRes, logRes, colabRes, comConvRes, depRes] = await Promise.all([
       rows,
       espQ,
-      pendQ,
+      aguardaClienteQ,
       supabase.from('at_extracao_log').select('executado_em').eq('camada', 'A').order('executado_em', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('at_colaboradores').select('nome').order('nome'),
       comConvQ,
+      depQ,
     ])
     if (rowsRes.error) return { ...vazio, estado: { configurado: true, erro: rowsRes.error.message } }
 
+    const departamentos = [...new Set(((depRes.data ?? []) as { departamento: string }[]).map((r) => r.departamento).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'))
     const itens = (rowsRes.data ?? []) as ProtocoloMonitor[]
     const atendentes = ((colabRes.data ?? []) as { nome: string }[]).map((c) => c.nome).filter(Boolean)
     const setComConversa = new Set(((comConvRes.data ?? []) as { atendente_nome: string }[]).map((r) => r.atendente_nome).filter(Boolean))
@@ -341,10 +383,10 @@ export async function getMonitorProtocolos(dep?: string, periodo?: string, atend
     const resumo: MonitorResumo = {
       total,
       esperando: espRes.count ?? 0,
-      pendentes: pendRes.count ?? 0,
+      aguardandoCliente: aguardaClienteRes.count ?? 0,
       atualizadoEm: (logRes.data as { executado_em?: string } | null)?.executado_em ?? null,
     }
-    return { itens, resumo, departamentos: DEPARTAMENTOS_MULTI360, atendentes, atendentesComConversa, atendentesSemConversa, pagina: pag, totalPaginas, estado: { configurado: true, erro: null } }
+    return { itens, resumo, departamentos, atendentes, atendentesComConversa, atendentesSemConversa, pagina: pag, totalPaginas, estado: { configurado: true, erro: null } }
   } catch (e) {
     return { ...vazio, estado: { configurado: true, erro: (e as Error).message } }
   }
@@ -409,9 +451,9 @@ export async function getAuditoria(marcoHoras = 24, dep?: string, atendente?: st
     if (listaRes.error) return { ...vazio, estado: { configurado: true, erro: listaRes.error.message } }
 
     const todos = (listaRes.data ?? []) as AuditoriaItem[]
-    // Ordem: padrão "antiga" = quem espera HÁ MAIS TEMPO primeiro; "recente" inverte.
+    // Ordem: padrão "recente" = silêncio mais recente primeiro; "antiga" = quem espera HÁ MAIS TEMPO primeiro.
     const cmp = (a: AuditoriaItem, b: AuditoriaItem) =>
-      ordem === 'recente' ? a.parado_horas - b.parado_horas : b.parado_horas - a.parado_horas
+      ordem === 'antiga' ? b.parado_horas - a.parado_horas : a.parado_horas - b.parado_horas
     const recentes = todos.filter((x) => x.parado_dias <= 60).sort(cmp)
     const antigos = todos.filter((x) => x.parado_dias > 60).sort(cmp)
     const faixas = MARCOS_AUDITORIA.map((h, i) => ({ horas: h, total: faixasRes[i]?.count ?? 0 }))
@@ -520,48 +562,54 @@ export async function getHistoricoCliente(protocoloId: string): Promise<Historic
   if (!bancoConfigurado()) return null
   try {
     const supabase = await createClient()
-    const { data: proto } = await supabase.from('at_protocolos').select('cliente_id').eq('id', protocoloId).maybeSingle()
-    const clienteId = (proto as { cliente_id?: string } | null)?.cliente_id ?? null
-    if (!clienteId) return null
 
-    const [{ data: cliente }, { data: protos }] = await Promise.all([
-      supabase.from('at_clientes').select('id, nome, telefone').eq('id', clienteId).maybeSingle(),
-      supabase
-        .from('at_protocolos')
-        .select('id, numero_protocolo, status_multi360, departamento, atendente_nome, criado_em_multi360, ultima_mensagem_em, ultima_mensagem_direcao')
-        .eq('cliente_id', clienteId)
-        .order('ultima_mensagem_em', { ascending: false, nullsFirst: false })
-        .limit(200),
+    // O histórico é montado por funções SECURITY DEFINER no banco (at_historico_*).
+    // Elas conferem o acesso (vê tudo, ou responsável por ao menos 1 protocolo do
+    // cliente) e então devolvem o histórico COMPLETO do cliente, sem o RLS por
+    // responsável recortar os atendimentos feitos por outros atendentes. Assim a
+    // promessa "histórico completo do cliente" vale também para o colaborador —
+    // que continua só conseguindo abrir clientes que já atende.
+    const [{ data: clientes }, { data: protos }] = await Promise.all([
+      supabase.rpc('at_historico_cliente_info', { p_protocolo_id: protocoloId }),
+      supabase.rpc('at_historico_protocolos', { p_protocolo_id: protocoloId }),
     ])
 
-    const lista = (protos ?? []) as HistoricoProtocolo[]
-    const ids = lista.map((p) => p.id)
+    const cliente = ((clientes ?? []) as { id: string; nome?: string; telefone?: string }[])[0]
+    if (!cliente) return null
 
-    // todas as mensagens de todos os protocolos do cliente (uma consulta só)
-    const mensagens = ids.length
-      ? ((
-          await supabase
-            .from('at_mensagens')
-            .select('id, protocolo_id, remetente_tipo, remetente_nome, texto, tem_anexo, enviado_em, ordem')
-            .in('protocolo_id', ids)
-            .order('enviado_em', { ascending: true })
-            .order('ordem', { ascending: true })
-            .limit(4000)
-        ).data ?? [])
-      : []
+    const lista = (protos ?? []) as HistoricoProtocolo[]
+
+    // Mensagens: a RPC devolve TODAS ordenadas (antiga→recente), mas o Supabase corta
+    // em 1.000 linhas por chamada. Clientes com histórico longo (>1.000 msgs) perdiam
+    // as RECENTES — a tela mostrava conversa de anos atrás. Buscamos em páginas de 1.000
+    // até trazer tudo (teto de segurança de 40 páginas = 40 mil mensagens).
+    const PAGINA_MSG = 1000
+    const mensagens: (AtMensagem & { protocolo_id: string })[] = []
+    for (let p = 0; p < 40; p++) {
+      const { data: bloco, error: erroMsg } = await supabase
+        .rpc('at_historico_mensagens', { p_protocolo_id: protocoloId })
+        // ordena na chamada externa também — sem isso o Postgres não garante a mesma
+        // ordem entre páginas e a virada de página poderia duplicar/pular mensagens.
+        .order('enviado_em', { ascending: true })
+        .order('ordem', { ascending: true })
+        .order('id', { ascending: true }) // desempate único (ordem reinicia por protocolo)
+        .range(p * PAGINA_MSG, p * PAGINA_MSG + PAGINA_MSG - 1)
+      if (erroMsg || !bloco || bloco.length === 0) break
+      mensagens.push(...(bloco as (AtMensagem & { protocolo_id: string })[]))
+      if (bloco.length < PAGINA_MSG) break
+    }
 
     const porProtocolo = new Map<string, AtMensagem[]>()
-    for (const m of mensagens as (AtMensagem & { protocolo_id: string })[]) {
+    for (const m of mensagens) {
       if (!porProtocolo.has(m.protocolo_id)) porProtocolo.set(m.protocolo_id, [])
       porProtocolo.get(m.protocolo_id)!.push(m)
     }
     for (const p of lista) p.mensagens = porProtocolo.get(p.id) ?? []
 
-    const cli = cliente as { nome?: string; telefone?: string } | null
     return {
-      cliente_id: clienteId,
-      cliente_nome: cli?.nome ?? null,
-      cliente_telefone: cli?.telefone ?? null,
+      cliente_id: cliente.id,
+      cliente_nome: cliente.nome ?? null,
+      cliente_telefone: cliente.telefone ?? null,
       atualProtocoloId: protocoloId,
       protocolos: lista,
       totalMensagens: mensagens.length,
