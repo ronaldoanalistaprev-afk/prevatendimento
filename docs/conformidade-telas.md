@@ -131,7 +131,16 @@ rodar). Antes as duas diziam a mesma frase.
 5. **Regra 52 — glifos restantes (telas fora desta leva):** `✓` na grade de permissões
    (`configuracoes/permissoes`), `✓`/`⚠` em `login`, `nova-senha` e `conta`, `🇧🇷` na tela antiga
    `conversas/nova` (admin legada), e setas `→`/`←` tipográficas de texto (baixo risco). 🔄
-6. **Regra 48 — percentuais:** conferir vírgula/casas onde há `%` (Início, Desempenho). 🔄
+6. **Regra 48 — percentuais:** ✅ conferido — Início mostra proporção como inteiro com `%` colado
+   (`pct.toFixed(0)%`); Desempenho não exibe percentual em texto (só largura de barra em CSS). Nuance
+   menor: em Início a diferença entre dois meses diz "N pontos"; a Regra 48 pede "pontos percentuais"
+   por extenso na primeira vez. 🔄 (ajuste de redação, baixo risco).
+
+7. **Regra 55 — teclado nos formulários:** ⏳ as telas de cadastro/edição com vários campos
+   (`NovoColaborador`, `NovaCobranca`, formulários de modelo/papel) usam `<form onSubmit>` — hoje o
+   **Enter salva o formulário inteiro**. A Regra 55 (item 9) pede que, em cadastro/edição, o **Enter
+   avance de campo** e **não salve** (Ctrl+Enter salva). É mudança de comportamento que merece
+   conferência no aparelho antes de entregar — próxima rodada.
 
 > Atualizar esta ficha a cada tela entregue (Regra 54) e a cada auditoria (Regra 37), e refletir o
 > resumo em `Documentos Globais\Conformidade do Documento Mestre.txt`.
