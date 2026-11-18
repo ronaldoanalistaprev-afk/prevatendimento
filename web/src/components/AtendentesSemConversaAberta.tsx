@@ -66,30 +66,36 @@ export default function AtendentesSemConversaAberta({ lista }: { lista: Atendent
         </div>
 
         {lista.length >= LIMITE_BUSCA && (
-          <div className="caixa-icone" style={{ flexShrink: 0, width: 200 }}>
-            <Search className="icone" aria-hidden="true" focusable="false" />
-            <input className="entrada" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Procurar pelo nome" aria-label="Procurar atendente pelo nome" style={{ minHeight: 36 }} />
+          <div className="campo" style={{ flex: '1 1 220px', maxWidth: 360 }}>
+            <label className="so-leitor" htmlFor="busca-sem-conversa">Procurar atendente pelo nome</label>
+            <div className="caixa-icone">
+              <Search className="icone" aria-hidden="true" focusable="false" />
+              <input id="busca-sem-conversa" className="entrada" type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Procurar pelo nome" autoComplete="off" enterKeyHint="search" />
+            </div>
           </div>
         )}
       </div>
 
       {/* Lista */}
       {visiveis.length === 0 ? (
-        <p className="texto-apoio" style={{ padding: '12px 2px' }}>Nenhum atendente com esse nome.</p>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 8 }}>
-          {visiveis.map((c) => (
-            <div key={c.atendente} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--recuo)', boxShadow: 'inset 0 0 0 1px var(--linha)', borderRadius: 12, padding: '8px 10px', minWidth: 0 }}>
-              <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--recuo-2)', color: 'var(--tinta-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11, flexShrink: 0 }}>{iniciais(c.atendente)}</div>
-              <div style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 600, color: 'var(--tinta)', overflowWrap: 'anywhere' }}>{formatarNome(c.atendente)}</div>
-              <span className="selo selo-sucesso" title={`${c.finalizadas} conversas já encerradas`}>{c.finalizadas} encerradas</span>
-            </div>
-          ))}
+        <div className="vazio-curto" role="status">
+          <Search className="icone" aria-hidden="true" focusable="false" />
+          <span>Nenhum atendente com “{busca.trim()}”. Confira a grafia ou apague a busca.</span>
         </div>
+      ) : (
+        <ul id="lista-sem-conversa" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 8 }}>
+          {visiveis.map((c) => (
+            <li key={c.atendente} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--recuo)', boxShadow: 'inset 0 0 0 1px var(--linha)', borderRadius: 'var(--raio)', padding: '8px 10px', minWidth: 0 }}>
+              <span className="avatar p" aria-hidden="true">{iniciais(c.atendente)}</span>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--t-meta)', fontWeight: 600, color: 'var(--tinta)', overflowWrap: 'anywhere' }}>{formatarNome(c.atendente)}</span>
+              <span className="selo selo-sucesso">{c.finalizadas} {c.finalizadas === 1 ? 'encerrada' : 'encerradas'}</span>
+            </li>
+          ))}
+        </ul>
       )}
 
       {!buscando && filtrada.length > LIMITE && (
-        <button className="botao botao-secundario" onClick={() => setExpandido((v) => !v)} style={{ marginTop: 12 }}>
+        <button type="button" className="botao botao-secundario" aria-expanded={expandido} aria-controls="lista-sem-conversa" onClick={() => setExpandido((v) => !v)} style={{ marginTop: 12 }}>
           {expandido ? (<><ChevronUp className="icone icone-p" aria-hidden="true" focusable="false" /> Mostrar menos</>) : (<><ChevronDown className="icone icone-p" aria-hidden="true" focusable="false" /> Ver todos os {filtrada.length} atendentes ({escondidos} ocultos)</>)}
         </button>
       )}

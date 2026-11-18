@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { ChevronDown, ChevronUp, Clock, Check, Users } from 'lucide-react'
 import { formatarDataHora, formatarNome } from '@/lib/utils'
 import type { HistoricoProtocolo, AtMensagem } from '@/lib/dados'
@@ -11,6 +11,7 @@ function ehFinalizada(status: string | null): boolean {
 
 export default function BlocoProtocolo({ p, atual, espera }: { p: HistoricoProtocolo; atual: boolean; espera?: string }) {
   const [aberto, setAberto] = useState(false)
+  const idMensagens = useId()
   const finalizada = ehFinalizada(p.status_multi360)
   const clienteFalouPorUltimo = p.ultima_mensagem_direcao === 'cliente'
 
@@ -26,16 +27,27 @@ export default function BlocoProtocolo({ p, atual, espera }: { p: HistoricoProto
   const escondidas = ordenadas.length - visiveis.length
 
   return (
-    <section className="cartao" style={{ overflow: 'hidden', boxShadow: atual ? '0 0 0 1.5px var(--acao), var(--sombra-cartao)' : 'var(--sombra-cartao)' }}>
+    <section className="cartao" aria-label={`Protocolo ${p.numero_protocolo}`} style={{ overflow: 'hidden', boxShadow: atual ? '0 0 0 1.5px var(--acao), var(--sombra-cartao)' : 'var(--sombra-cartao)' }}>
       {/* separador do protocolo */}
-      <div style={{ background: 'var(--recuo)', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', borderBottom: '1px solid var(--linha)' }}>
+      <div style={{ background: 'var(--recuo)', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '6px 10px', flexWrap: 'wrap', borderBottom: '1px solid var(--linha)' }}>
         <span className={`selo ${finalizada ? 'selo-neutro' : 'selo-sucesso'}`}>{finalizada ? 'Finalizada' : 'Aberta'}</span>
-        <span style={{ fontSize: 13, fontWeight: 650, color: 'var(--tinta)' }}>Protocolo {p.numero_protocolo}</span>
-        <span className="texto-apoio">{p.departamento ?? '—'} · {p.atendente_nome ? formatarNome(p.atendente_nome) : 'sem atendente'}</span>
-        {atual && <span style={{ fontSize: 12, fontWeight: 650, color: 'var(--acao)' }}>• você abriu este</span>}
-        <button onClick={() => setAberto((v) => !v)} className="botao botao-secundario" style={{ marginLeft: 'auto', minHeight: 30, padding: '0 12px', fontSize: 13 }}>
-          {aberto ? <><ChevronUp className="icone icone-p" aria-hidden="true" focusable="false" /> Retrair</> : <><ChevronDown className="icone icone-p" aria-hidden="true" focusable="false" /> Expandir{escondidas > 0 ? ` (+${escondidas})` : ''}</>}
-        </button>
+        <h2 className="sub-titulo">Protocolo {p.numero_protocolo}</h2>
+        <span className="texto-apoio">{p.departamento ?? 'sem setor'} · {p.atendente_nome ? formatarNome(p.atendente_nome) : 'sem atendente'}</span>
+        {atual && <span className="selo selo-acao">você abriu este</span>}
+        {ordenadas.length > 3 && (
+          <button
+            type="button"
+            onClick={() => setAberto((v) => !v)}
+            className="botao botao-discreto"
+            aria-expanded={aberto}
+            aria-controls={idMensagens}
+            style={{ marginLeft: 'auto' }}
+          >
+            {aberto
+              ? <><ChevronUp className="icone icone-p" aria-hidden="true" focusable="false" /> Mostrar só as 3 últimas</>
+              : <><ChevronDown className="icone icone-p" aria-hidden="true" focusable="false" /> Mostrar todas ({ordenadas.length})</>}
+          </button>
+        )}
       </div>
 
       {/* participantes da conversa (sempre que capturados) */}
@@ -49,28 +61,28 @@ export default function BlocoProtocolo({ p, atual, espera }: { p: HistoricoProto
         </div>
       )}
 
-      {/* quem falou por último */}
+      {/* quem falou por último (cor + ícone + texto: nada só pela cor) */}
       {!finalizada && (
-        <div style={{ padding: '7px 16px', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, background: clienteFalouPorUltimo ? 'var(--atencao-suave)' : 'var(--sucesso-suave)', color: clienteFalouPorUltimo ? 'var(--atencao)' : 'var(--sucesso)', borderBottom: '1px solid var(--linha)' }}>
+        <div style={{ padding: '7px 16px', fontSize: 'var(--t-meta)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, background: clienteFalouPorUltimo ? 'var(--atencao-suave)' : 'var(--sucesso-suave)', color: clienteFalouPorUltimo ? 'var(--atencao)' : 'var(--sucesso)', borderBottom: '1px solid var(--linha)' }}>
           {clienteFalouPorUltimo
             ? <><Clock className="icone icone-p" aria-hidden="true" focusable="false" /> O cliente falou por último — esperando resposta da equipe{espera ? ` há ${espera}` : ''}</>
             : <><Check className="icone icone-p" aria-hidden="true" focusable="false" /> A equipe respondeu por último</>}
         </div>
       )}
 
-      {/* mensagens (mais recente primeiro) — fundo estilo WhatsApp, de propósito */}
-      <div style={{ background: '#ECE5DD', padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {/* mensagens (mais recente primeiro): cliente à esquerda, equipe à direita */}
+      <div id={idMensagens} style={{ background: 'var(--recuo-2)', padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {ordenadas.length === 0 ? (
-          <div style={{ textAlign: 'center', color: '#5F6368', fontSize: 13, margin: '16px auto' }}>Sem mensagens capturadas.</div>
+          <p className="vazio-linha" style={{ textAlign: 'center', margin: '16px auto' }}>Sem mensagens capturadas.</p>
         ) : (
           <>
-            <div style={{ textAlign: 'center', fontSize: 12, color: '#4A4E53', fontWeight: 600, marginBottom: 4, background: 'rgba(255,255,255,0.7)', borderRadius: 999, padding: '3px 10px', alignSelf: 'center' }}>
-              da mensagem mais recente para a mais antiga{!aberto && escondidas > 0 ? ` · vendo as 3 últimas (+${escondidas} ao expandir)` : ''}
-            </div>
+            <p className="texto-apoio" style={{ textAlign: 'center', fontSize: 'var(--t-pequeno)', fontWeight: 600, marginBottom: 4, background: 'var(--superficie)', borderRadius: 999, padding: '3px 10px', alignSelf: 'center' }}>
+              Da mensagem mais recente para a mais antiga{!aberto && escondidas > 0 ? ` · vendo as 3 últimas de ${ordenadas.length}` : ''}
+            </p>
             {visiveis.map((m) => <Bolha key={m.id} m={m} />)}
             {escondidas > 0 && !aberto && (
-              <button onClick={() => setAberto(true)} className="botao botao-principal" style={{ alignSelf: 'center', marginTop: 4, minHeight: 30 }}>
-                <ChevronDown className="icone icone-p" aria-hidden="true" focusable="false" /> Ver as {escondidas} mensagens anteriores
+              <button type="button" onClick={() => setAberto(true)} className="botao botao-secundario" aria-expanded={false} aria-controls={idMensagens} style={{ alignSelf: 'center', marginTop: 4 }}>
+                <ChevronDown className="icone icone-p" aria-hidden="true" focusable="false" /> Ver as {escondidas} {escondidas === 1 ? 'mensagem anterior' : 'mensagens anteriores'}
               </button>
             )}
           </>
@@ -83,14 +95,15 @@ export default function BlocoProtocolo({ p, atual, espera }: { p: HistoricoProto
 function Bolha({ m }: { m: AtMensagem }) {
   const daEquipe = m.remetente_tipo === 'colaborador' || m.remetente_tipo === 'bot'
   return (
-    <div style={{ alignSelf: daEquipe ? 'flex-end' : 'flex-start', maxWidth: '78%', background: daEquipe ? '#DCF8C6' : '#FFFFFF', borderRadius: 10, padding: '8px 12px', boxShadow: '0 1px 1px rgba(0,0,0,0.08)' }}>
-      <div style={{ fontSize: 11.5, fontWeight: 700, color: daEquipe ? '#0B4D5A' : '#7E22CE', marginBottom: 2 }}>
+    <div style={{ alignSelf: daEquipe ? 'flex-end' : 'flex-start', maxWidth: '78%', background: daEquipe ? 'var(--acao-suave)' : 'var(--superficie)', borderRadius: 'var(--raio)', padding: '8px 12px', boxShadow: 'var(--sombra-cartao)' }}>
+      <div style={{ fontSize: 'var(--t-pequeno)', fontWeight: 650, color: daEquipe ? 'var(--acao-forte)' : 'var(--atencao)', marginBottom: 2, overflowWrap: 'anywhere' }}>
+        <span className="so-leitor">{daEquipe ? 'Equipe' : 'Cliente'}: </span>
         {m.remetente_nome ? formatarNome(m.remetente_nome) : daEquipe ? 'Equipe' : 'Cliente'}
       </div>
-      <div style={{ fontSize: 14, color: '#191B1D', whiteSpace: 'pre-wrap' }}>
-        {m.texto ?? <span style={{ color: '#5F6368', fontStyle: 'italic' }}>{m.tem_anexo ? '[anexo]' : '[sem texto]'}</span>}
+      <div style={{ fontSize: 'var(--t-meta)', color: 'var(--tinta)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+        {m.texto ?? <span style={{ color: 'var(--tinta-3)', fontStyle: 'italic' }}>{m.tem_anexo ? '[anexo]' : '[sem texto]'}</span>}
       </div>
-      <div style={{ fontSize: 11.5, color: '#4A4E53', fontWeight: 700, textAlign: 'right', marginTop: 3 }}>{formatarDataHora(m.enviado_em)}</div>
+      <div style={{ fontSize: 'var(--t-pequeno)', color: 'var(--tinta-2)', fontWeight: 600, textAlign: 'right', marginTop: 3, fontVariantNumeric: 'tabular-nums' }}>{formatarDataHora(m.enviado_em)}</div>
     </div>
   )
 }

@@ -4,7 +4,8 @@ import BannerConfig from '@/components/BannerConfig'
 import Expansivel from '@/components/Expansivel'
 import { getPapelAtual } from '@/lib/papel'
 import { getPermissoesMapa, podeAcessar } from '@/lib/permissoes'
-import { BookMarked, ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
+import SemPermissao from '@/components/SemPermissao'
 import type { RefTipoBeneficio, RefTipoServico } from '@/lib/tipos'
 
 export const dynamic = 'force-dynamic'
@@ -13,7 +14,7 @@ function LinhaItem({ esquerda, nome, direita }: { esquerda?: React.ReactNode; no
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderTop: '1px solid var(--linha)' }}>
       <div style={{ width: 64, flexShrink: 0 }}>{esquerda}</div>
-      <span style={{ flex: 1, color: 'var(--tinta-2)', fontSize: 14 }}>{nome}</span>
+      <span style={{ flex: 1, minWidth: 0, color: 'var(--tinta-2)', fontSize: 'var(--t-meta)' }}>{nome}</span>
       {direita}
     </div>
   )
@@ -22,10 +23,10 @@ function LinhaItem({ esquerda, nome, direita }: { esquerda?: React.ReactNode; no
 function SubSecao({ titulo, n, children }: { titulo: string; n: number; children: React.ReactNode }) {
   return (
     <div>
-      <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--tinta-3)', padding: '12px 20px 2px', textTransform: 'uppercase', letterSpacing: 0.3 }}>
-        {titulo} <span style={{ color: 'var(--tinta-3)' }}>({n})</span>
-      </div>
-      {n === 0 ? <div style={{ padding: '6px 20px 12px', color: 'var(--tinta-3)', fontSize: 13 }}>Nenhum neste regime.</div> : children}
+      <h3 className="sub-titulo" style={{ padding: '12px 20px 4px', color: 'var(--tinta-2)' }}>
+        {titulo} <span style={{ color: 'var(--tinta-3)', fontWeight: 500 }}>({n})</span>
+      </h3>
+      {n === 0 ? <p className="texto-apoio" style={{ padding: '6px 20px 12px' }}>Nenhum neste regime.</p> : children}
     </div>
   )
 }
@@ -42,7 +43,7 @@ function Bloco({ regime, beneficios, servicos }: { regime: 'RGPS' | 'RPPS'; bene
     <Expansivel titulo={info.titulo} subtitulo={`${info.sub} · ${beneficios.length} benefícios, ${servicos.length} serviços`} inicialAberto={false}>
       <SubSecao titulo="Benefícios" n={beneficios.length}>
         {beneficios.map((b) => (
-          <LinhaItem key={b.id} esquerda={regime === 'RGPS' ? <ChipCodigo codigo={b.codigo} /> : null} nome={b.nome} direita={b.exige_modalidade ? <span className="selo selo-atencao">exige subtipo</span> : null} />
+          <LinhaItem key={b.id} esquerda={regime === 'RGPS' ? <ChipCodigo codigo={b.codigo} /> : null} nome={b.nome} direita={b.exige_modalidade ? <span className="selo selo-atencao">Exige Subtipo</span> : null} />
         ))}
       </SubSecao>
       <SubSecao titulo="Serviços" n={servicos.length}>
@@ -58,7 +59,8 @@ export default async function CatalogoPage() {
   if (!podeAcessar(mapa, 'configuracoes', papel.role)) {
     return (
       <main id="conteudo" className="conteudo" tabIndex={-1}>
-        <div className="cartao" style={{ marginTop: 8 }}><div className="vazio"><p className="vazio-texto">Você não tem acesso a esta tela.</p></div></div>
+        <div className="cabeca"><div className="cabeca-texto"><h1 className="titulo">Catálogo Previdenciário</h1></div></div>
+        <SemPermissao tela="Catálogo Previdenciário" />
       </main>
     )
   }
@@ -76,10 +78,8 @@ export default async function CatalogoPage() {
     <main id="conteudo" className="conteudo" tabIndex={-1} style={{ maxWidth: 1000 }}>
       <Link href="/dashboard/configuracoes" className="voltar"><ArrowLeft className="icone icone-p" aria-hidden="true" focusable="false" /> Configurações</Link>
       <div style={{ margin: '12px 0 22px' }}>
-        <h1 className="titulo" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <BookMarked className="icone icone-g" style={{ color: 'var(--acao)' }} aria-hidden="true" focusable="false" /> Catálogo Previdenciário
-        </h1>
-        <p className="subtitulo">Separado por regime. Clique num bloco para expandir ou retrair. <b>&quot;exige subtipo&quot;</b> = benefício com modalidade (ex.: Aposentadoria por idade, por tempo, especial…).</p>
+        <h1 className="titulo">Catálogo Previdenciário</h1>
+        <p className="subtitulo">Separado por regime. Clique num bloco para expandir ou retrair. <b>&quot;Exige Subtipo&quot;</b> = benefício com modalidade (ex.: Aposentadoria por idade, por tempo, especial…).</p>
       </div>
 
       {!configurado && <BannerConfig />}

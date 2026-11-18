@@ -1,56 +1,72 @@
 import type { NivelUrgencia, EstagioJornada, ObjetivoStatus, MissaoStatus, Prioridade } from './tipos'
 
-/** Rótulo + cores do status do Objetivo. */
-export function statusObjetivo(s: ObjetivoStatus): { label: string; bg: string; fg: string } {
+// ── Cores de selo (T9 da auditoria de 18/11/2026) ───────────────────────────
+// Só as cores da Apple Design: cada situação devolve a classe `.selo-*` da folha
+// (apple-design.css) e, para quem ainda pinta à mão, os tokens equivalentes.
+// A cor nunca vai sozinha: o selo sempre traz o texto (Regra 46).
+export type ToneSelo = 'sucesso' | 'atencao' | 'perigo' | 'neutro' | 'acao'
+const TOKENS_SELO: Record<ToneSelo, { bg: string; fg: string }> = {
+  sucesso: { bg: 'var(--sucesso-suave)', fg: 'var(--sucesso)' },
+  atencao: { bg: 'var(--atencao-suave)', fg: 'var(--atencao)' },
+  perigo: { bg: 'var(--perigo-suave)', fg: 'var(--perigo)' },
+  neutro: { bg: 'var(--recuo-2)', fg: 'var(--tinta-2)' },
+  acao: { bg: 'var(--acao-suave)', fg: 'var(--acao-forte)' },
+}
+function selo(tom: ToneSelo): { classe: string; bg: string; fg: string } {
+  return { classe: `selo-${tom}`, ...TOKENS_SELO[tom] }
+}
+
+/** Rótulo + selo do status do Objetivo. */
+export function statusObjetivo(s: ObjetivoStatus): { label: string; classe: string; bg: string; fg: string } {
   switch (s) {
     case 'EM_ANDAMENTO':
-      return { label: 'Em andamento', bg: '#DBEAFE', fg: '#1D4ED8' }
+      return { label: 'Em Andamento', ...selo('acao') }
     case 'CONCLUIDO':
-      return { label: 'Concluído', bg: '#DCFCE7', fg: '#15803D' }
+      return { label: 'Concluído', ...selo('sucesso') }
     case 'ABANDONADO':
-      return { label: 'Abandonado', bg: '#F1F5F9', fg: '#64748B' }
+      return { label: 'Abandonado', ...selo('neutro') }
     case 'FUTURO':
-      return { label: 'Futuro', bg: '#F3E8FF', fg: '#7E22CE' }
+      return { label: 'Futuro', ...selo('neutro') }
     default:
-      return { label: 'Aberto', bg: '#FEF9C3', fg: '#A16207' }
+      return { label: 'Aberto', ...selo('atencao') }
   }
 }
 
-/** Rótulo + cores do status da Missão. */
-export function statusMissao(s: MissaoStatus): { label: string; bg: string; fg: string } {
+/** Rótulo + selo do status da Missão. */
+export function statusMissao(s: MissaoStatus): { label: string; classe: string; bg: string; fg: string } {
   switch (s) {
     case 'EM_EXECUCAO':
-      return { label: 'Em execução', bg: '#DBEAFE', fg: '#1D4ED8' }
+      return { label: 'Em Execução', ...selo('acao') }
     case 'AGUARDANDO_CLIENTE':
-      return { label: 'Aguardando cliente', bg: '#FEF9C3', fg: '#A16207' }
+      return { label: 'Aguardando Cliente', ...selo('atencao') }
     case 'AGUARDANDO_TERCEIROS':
-      return { label: 'Aguardando terceiros', bg: '#FEF9C3', fg: '#A16207' }
+      return { label: 'Aguardando Terceiros', ...selo('atencao') }
     case 'AGUARDANDO_INSS':
-      return { label: 'Aguardando INSS', bg: '#FFEDD5', fg: '#C2410C' }
+      return { label: 'Aguardando INSS', ...selo('atencao') }
     case 'SUSPENSA':
-      return { label: 'Suspensa', bg: '#F1F5F9', fg: '#64748B' }
+      return { label: 'Suspensa', ...selo('neutro') }
     case 'CONCLUIDA':
-      return { label: 'Concluída', bg: '#DCFCE7', fg: '#15803D' }
+      return { label: 'Concluída', ...selo('sucesso') }
     case 'CANCELADA':
-      return { label: 'Cancelada', bg: '#F1F5F9', fg: '#64748B' }
+      return { label: 'Cancelada', ...selo('neutro') }
     default:
-      return { label: 'Criada', bg: '#EEF2F7', fg: '#475569' }
+      return { label: 'Criada', ...selo('neutro') }
   }
 }
 
-/** Rótulo + cores do status da Conversa. */
-export function statusConversa(s: string): { label: string; bg: string; fg: string } {
+/** Rótulo + selo do status da Conversa. */
+export function statusConversa(s: string): { label: string; classe: string; bg: string; fg: string } {
   switch (s) {
     case 'ABERTA':
-      return { label: 'Aberta', bg: '#FEF9C3', fg: '#A16207' }
+      return { label: 'Aberta', ...selo('atencao') }
     case 'RESPONDIDA':
-      return { label: 'Respondida', bg: '#DCFCE7', fg: '#15803D' }
+      return { label: 'Respondida', ...selo('sucesso') }
     case 'PENDENTE':
-      return { label: 'Pendente', bg: '#FFEDD5', fg: '#C2410C' }
+      return { label: 'Pendente', ...selo('perigo') }
     case 'FECHADA':
-      return { label: 'Fechada', bg: '#F1F5F9', fg: '#64748B' }
+      return { label: 'Fechada', ...selo('neutro') }
     default:
-      return { label: s, bg: '#F1F5F9', fg: '#64748B' }
+      return { label: s, ...selo('neutro') }
   }
 }
 
@@ -68,17 +84,25 @@ export function rotuloWhatsapp(valor: string | null | undefined): string {
   return pareceTelefone(valor) ? formatarTelefone(valor) : 'sem telefone (id privado)'
 }
 
-/** Cor da prioridade. */
+/** Cor da prioridade (token da Apple Design). */
 export function corPrioridade(p: Prioridade): string {
+  return selo(tomPrioridade(p)).fg
+}
+
+/** Classe `.selo-*` da prioridade (o selo sempre traz o nome da prioridade junto). */
+export function seloPrioridade(p: Prioridade): string {
+  return selo(tomPrioridade(p)).classe
+}
+
+function tomPrioridade(p: Prioridade): ToneSelo {
   switch (p) {
     case 'URGENTE':
-      return '#B91C1C'
+      return 'perigo'
     case 'ALTA':
-      return '#C2410C'
     case 'MEDIA':
-      return '#A16207'
+      return 'atencao'
     default:
-      return '#64748B'
+      return 'neutro'
   }
 }
 
@@ -98,18 +122,16 @@ export function rotuloEstagio(estagio: EstagioJornada): string {
   }
 }
 
-/** Cores do badge por estágio (fundo, texto). */
-export function coresEstagio(estagio: EstagioJornada): { bg: string; fg: string } {
+/** Selo do estágio (classe `.selo-*` e os tokens equivalentes). */
+export function coresEstagio(estagio: EstagioJornada): { classe: string; bg: string; fg: string } {
   switch (estagio) {
     case 'CLIENTE':
     case 'CLIENTE_ATIVO':
-      return { bg: '#DBEAFE', fg: '#1D4ED8' }
+      return selo('acao')
     case 'PRETENSO_CLIENTE':
-      return { bg: '#F3E8FF', fg: '#7E22CE' }
-    case 'EX_CLIENTE':
-      return { bg: '#F1F5F9', fg: '#64748B' }
+      return selo('atencao')
     default:
-      return { bg: '#F1F5F9', fg: '#64748B' }
+      return selo('neutro')
   }
 }
 
@@ -280,17 +302,17 @@ export function formatarDataHoraSegundos(iso: string | null | undefined): string
   return `${diaDaSemana(d)} ${data} ${hora}`
 }
 
-/** Cores por nível de urgência (fundo, texto). */
-export function coresUrgencia(nivel: NivelUrgencia): { bg: string; fg: string; label: string } {
+/** Selo por nível de urgência (classe `.selo-*`, tokens e rótulo). */
+export function coresUrgencia(nivel: NivelUrgencia): { classe: string; bg: string; fg: string; label: string } {
   switch (nivel) {
     case 'CRÍTICO':
-      return { bg: '#FEE2E2', fg: '#B91C1C', label: 'Crítico' }
+      return { ...selo('perigo'), label: 'Crítico' }
     case 'URGENTE':
-      return { bg: '#FFEDD5', fg: '#C2410C', label: 'Urgente' }
+      return { ...selo('perigo'), label: 'Urgente' }
     case 'ALTO':
-      return { bg: '#FEF9C3', fg: '#A16207', label: 'Atenção' }
+      return { ...selo('atencao'), label: 'Atenção' }
     default:
-      return { bg: '#DCFCE7', fg: '#15803D', label: 'Normal' }
+      return { ...selo('sucesso'), label: 'Normal' }
   }
 }
 

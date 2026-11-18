@@ -1,9 +1,10 @@
 import Link from 'next/link'
-import { AlertTriangle, UserX, ChevronRight, CheckCircle2, ChevronDown, Check } from 'lucide-react'
+import { AlertTriangle, UserX, ChevronRight, CheckCircle2, ChevronDown } from 'lucide-react'
 import { getAcoes, type SecaoAcao } from '@/lib/acoes'
 import { getPapelAtual } from '@/lib/papel'
 import { getPermissoesMapa, podeAcessar } from '@/lib/permissoes'
 import SeloAtualizacao from '@/components/SeloAtualizacao'
+import SemPermissao from '@/components/SemPermissao'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,12 +13,16 @@ const ICONES: Record<string, typeof UserX> = {
   'user-x': UserX,
 }
 
+// Âncora do detalhe: o cartão escolhido leva a tela até o detalhe, que abre logo abaixo dele (A1).
+const ANCORA = 'detalhe-acao'
+
 export default async function AcoesPage({ searchParams }: { searchParams: Promise<{ tipo?: string }> }) {
   const [{ tipo }, papel, mapa] = await Promise.all([searchParams, getPapelAtual(), getPermissoesMapa()])
   if (!podeAcessar(mapa, 'acoes', papel.role)) {
     return (
       <main id="conteudo" className="conteudo" tabIndex={-1}>
-        <div className="cartao" style={{ marginTop: 8 }}><div className="vazio"><p className="vazio-texto">Você não tem acesso a esta tela.</p></div></div>
+        <div className="cabeca"><div className="cabeca-texto"><h1 className="titulo">Ações necessárias</h1></div></div>
+        <SemPermissao tela="Ações necessárias" />
       </main>
     )
   }
@@ -31,9 +36,7 @@ export default async function AcoesPage({ searchParams }: { searchParams: Promis
     <main id="conteudo" className="conteudo" tabIndex={-1}>
       <div className="cabeca">
         <div className="cabeca-texto">
-          <h1 className="titulo" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <AlertTriangle className="icone icone-g" style={{ color: 'var(--atencao)' }} aria-hidden="true" focusable="false" /> Ações necessárias
-          </h1>
+          <h1 className="titulo">Ações necessárias</h1>
           <p className="subtitulo">
             Situações que o sistema encontrou nas conversas abertas e que a equipe precisa corrigir. Clique num cartão para ver os detalhes.
             {restrito ? ' Mostrando apenas as suas conversas.' : ''}
@@ -42,19 +45,34 @@ export default async function AcoesPage({ searchParams }: { searchParams: Promis
         </div>
       </div>
 
-      {/* Cartões (um por tipo de ação) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12, marginBottom: 18 }}>
-        {secoes.map((s) => (<Card key={s.chave} secao={s} aberto={selecionada?.chave === s.chave} />))}
-      </div>
-
-      {selecionada && <Detalhe secao={selecionada} />}
-
       {!selecionada && totalPendencias === 0 && (
-        <div className="aviso aviso-info" style={{ fontSize: 'var(--t-corpo)' }}>
-          <CheckCircle2 className="icone" aria-hidden="true" focusable="false" /> Tudo em dia. Nenhuma ação necessária no momento.
+        <div className="cartao" style={{ marginBottom: 14 }}>
+          <p className="pend-nada" style={{ paddingTop: 13 }}>
+            <CheckCircle2 className="icone" aria-hidden="true" focusable="false" /> Tudo em dia. Nenhuma ação necessária no momento.
+          </p>
         </div>
       )}
+
+      {/* Cartões (um por tipo de ação). O detalhe abre logo abaixo do cartão escolhido, ocupando a linha toda. */}
+      <div className="grade-numeros" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
+        {secoes.map((s) => (
+          <Bloco key={s.chave} secao={s} aberto={selecionada?.chave === s.chave} />
+        ))}
+      </div>
     </main>
+  )
+}
+
+function Bloco({ secao, aberto }: { secao: SecaoAcao; aberto: boolean }) {
+  return (
+    <>
+      <Card secao={secao} aberto={aberto} />
+      {aberto && (
+        <div style={{ gridColumn: '1 / -1' }}>
+          <Detalhe secao={secao} />
+        </div>
+      )}
+    </>
   )
 }
 
@@ -62,58 +80,63 @@ function Card({ secao, aberto }: { secao: SecaoAcao; aberto: boolean }) {
   const Icone = ICONES[secao.icone] ?? AlertTriangle
   const n = secao.itens.length
   const temPendencia = n > 0
-  const href = aberto ? '/dashboard/acoes' : `/dashboard/acoes?tipo=${secao.chave}`
+  const href = aberto ? '/dashboard/acoes' : `/dashboard/acoes?tipo=${secao.chave}#${ANCORA}`
   return (
-    <Link href={href} className="cartao" style={{ display: 'block', textDecoration: 'none', padding: '14px 16px', boxShadow: aberto ? '0 0 0 1.5px var(--acao)' : 'var(--sombra-cartao)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-        <Icone className="icone" style={{ color: temPendencia ? 'var(--atencao)' : 'var(--sucesso)' }} aria-hidden="true" focusable="false" />
-        <span className={`selo ${temPendencia ? 'selo-atencao' : 'selo-sucesso'}`}>
-          {temPendencia ? n : <Check className="icone" aria-label="tudo certo" />}
-        </span>
-      </div>
-      <div className="sub-titulo" style={{ marginTop: 8 }}>{secao.titulo}</div>
-      <div style={{ fontSize: 13, color: temPendencia ? 'var(--atencao)' : 'var(--sucesso)', fontWeight: 600, marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+    <Link href={href} className={`mon-num${aberto ? ' ativo' : ''}`} aria-current={aberto ? 'true' : undefined}>
+      <dl style={{ margin: 0 }}>
+        <dt><Icone className="icone" aria-hidden="true" focusable="false" />{secao.titulo}</dt>
+        <dd style={{ color: temPendencia ? 'var(--atencao)' : 'var(--tinta-3)' }}>{n.toLocaleString('pt-BR')}</dd>
+      </dl>
+      <div className="pista" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 'var(--t-pequeno)' }}>
         {temPendencia ? (
-          <>{aberto ? 'vendo abaixo' : `${n} para corrigir`}<ChevronDown className="icone icone-p" style={{ transform: aberto ? 'rotate(180deg)' : 'none', color: 'inherit' }} aria-hidden="true" focusable="false" /></>
-        ) : 'tudo certo'}
+          <>
+            {aberto ? 'Fechar os detalhes' : `${n === 1 ? '1 para corrigir' : `${n.toLocaleString('pt-BR')} para corrigir`} · ver detalhes`}
+            <ChevronDown className="icone icone-p" style={{ transform: aberto ? 'rotate(180deg)' : 'none' }} aria-hidden="true" focusable="false" />
+          </>
+        ) : (
+          <><CheckCircle2 className="icone icone-p" style={{ color: 'var(--sucesso)' }} aria-hidden="true" focusable="false" /> Tudo certo</>
+        )}
       </div>
     </Link>
   )
 }
 
 function Detalhe({ secao }: { secao: SecaoAcao }) {
-  const Icone = ICONES[secao.icone] ?? AlertTriangle
+  const n = secao.itens.length
   return (
-    <section className="cartao">
+    <section className="cartao" id={ANCORA} tabIndex={-1} aria-labelledby={`${ANCORA}-titulo`} style={{ scrollMarginTop: 16 }}>
       <div className="cartao-cabeca">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Icone className="icone" style={{ color: 'var(--atencao)' }} aria-hidden="true" focusable="false" />
-          <h2 className="cartao-titulo">{secao.titulo}</h2>
-          <span className={`selo ${secao.itens.length > 0 ? 'selo-atencao' : 'selo-sucesso'}`}>{secao.itens.length}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <h2 className="cartao-titulo" id={`${ANCORA}-titulo`}>{secao.titulo}</h2>
+          <span className={`selo ${n > 0 ? 'selo-atencao' : 'selo-sucesso'}`}>{n === 0 ? 'Tudo certo' : n === 1 ? '1 para corrigir' : `${n.toLocaleString('pt-BR')} para corrigir`}</span>
         </div>
+        <Link href="/dashboard/acoes" className="botao botao-discreto">Fechar os detalhes</Link>
       </div>
-      <div className="cartao-corpo">
-        <p className="texto-apoio" style={{ marginBottom: 12 }}>{secao.descricao}</p>
-        {secao.itens.length === 0 ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--sucesso)', fontSize: 14 }}>
-            <CheckCircle2 className="icone" aria-hidden="true" focusable="false" /> Nada a corrigir aqui.
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {secao.itens.map((it) => (
-              <div key={it.id} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '10px 14px', borderRadius: 12, boxShadow: 'inset 0 0 0 1px var(--linha)' }}>
-                <div style={{ flex: 1, minWidth: 220 }}>
-                  <div style={{ fontWeight: 650, fontSize: 14, color: it.alerta ? 'var(--atencao)' : 'var(--tinta)' }}>{it.titulo}</div>
-                  <div className="texto-apoio" style={{ marginTop: 2 }}>{it.subtitulo}</div>
+      <p className="texto-apoio" style={{ padding: '0 16px 10px' }}>{secao.descricao}</p>
+      {n === 0 ? (
+        <p className="pend-nada"><CheckCircle2 className="icone" aria-hidden="true" focusable="false" /> Nada a corrigir aqui.</p>
+      ) : (
+        <ul className="mon-lista">
+          {secao.itens.map((it) => (
+            <li key={it.id} className="mon-item">
+              <div>
+                <div className="mon-nome-linha">
+                  <span className="mon-nome">{it.titulo}</span>
+                  {it.alerta && <span className="selo selo-atencao">Cadastro sem nome</span>}
                 </div>
-                {it.protocolo_id && (
-                  <Link href={`/dashboard/monitor/${it.protocolo_id}`} className="botao botao-secundario">Ver conversa <ChevronRight className="icone icone-p" aria-hidden="true" focusable="false" /></Link>
-                )}
+                <div className="mon-meta">{it.subtitulo}</div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+              {it.protocolo_id && (
+                <div className="mon-dir">
+                  <Link href={`/dashboard/monitor/${it.protocolo_id}`} className="mon-abrir" style={{ minHeight: 'var(--alvo)' }}>
+                    Ver conversa <ChevronRight className="icone" aria-hidden="true" focusable="false" />
+                  </Link>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   )
 }

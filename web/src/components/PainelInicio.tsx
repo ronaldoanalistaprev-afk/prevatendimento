@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { AlarmClock, Clock, Archive, ChevronRight, TrendingDown, TrendingUp, Minus, UserPlus, BellRing, Users } from 'lucide-react'
+import { AlarmClock, Clock, Archive, ChevronRight, ArrowRight, TrendingDown, TrendingUp, Minus, UserPlus, BellRing, Users, CheckCircle2, BarChart3 } from 'lucide-react'
 import type { DadosInicio, MesMetrica } from '@/lib/inicio'
 import { formatarNome, formatarDataHora, formatarDuracao } from '@/lib/utils'
 
@@ -24,7 +24,7 @@ function minutosLegivel(min: number | null): string {
   return r ? `${h}h ${r}min` : `${h}h`
 }
 
-export default function Painel({ dados, nome }: { dados: DadosInicio; nome: string | null }) {
+export default function Painel({ dados }: { dados: DadosInicio }) {
   const { uso, meses } = dados
 
   // O mês corrente ainda está correndo: aparece no gráfico, mas não serve de
@@ -63,10 +63,16 @@ export default function Painel({ dados, nome }: { dados: DadosInicio; nome: stri
         <CartaoAcao variante="neutro" icone={Archive} valor={dados.filaAntiga} titulo="Fila antiga (esquecidos)" texto="parados há mais de 60 dias" href="/dashboard/auditoria?antigos=1" />
       </div>
 
-      {dados.maisAntigos.length > 0 && (
-        <section className="cartao" style={{ marginBottom: 18 }}>
-          <div className="cartao-cabeca"><h2 className="cartao-titulo">Quem espera há mais tempo</h2></div>
-          <div className="cartao-corpo">
+      <section className="cartao" style={{ marginBottom: 18 }}>
+        <div className="cartao-cabeca"><h2 className="cartao-titulo">Quem espera há mais tempo</h2></div>
+        <div className="cartao-corpo">
+          {dados.maisAntigos.length === 0 ? (
+            <p className="vazio-curto">
+              <CheckCircle2 className="icone" aria-hidden="true" focusable="false" />
+              Nenhum cliente na lista de espera da Auditoria agora. Quando alguém ficar sem resposta, aparece aqui, de quem espera há mais tempo.
+            </p>
+          ) : (
+          <>
             <ul className="ini-espera">
               {dados.maisAntigos.map((a) => (
                 <li key={a.id}>
@@ -88,26 +94,36 @@ export default function Painel({ dados, nome }: { dados: DadosInicio; nome: stri
               ))}
             </ul>
             <div style={{ textAlign: 'right', marginTop: 8 }}>
-              <Link href="/dashboard/auditoria" style={{ fontSize: 14, fontWeight: 600 }}>Ver os {dados.paraResolverAgora} na Auditoria →</Link>
+              <Link href="/dashboard/auditoria" className="botao botao-discreto" style={{ color: 'var(--acao)' }}>
+                Ver os {dados.paraResolverAgora.toLocaleString('pt-BR')} na Auditoria <ArrowRight className="icone icone-p" aria-hidden="true" focusable="false" />
+              </Link>
             </div>
-          </div>
-        </section>
-      )}
+          </>
+          )}
+        </div>
+      </section>
 
       {/* ===== B) Estamos respondendo? ===== */}
-      {meses.length > 0 && (
-        <section className="cartao" style={{ marginBottom: 18 }}>
-          <div className="cartao-cabeca"><h2 className="cartao-titulo">Estamos respondendo os clientes?</h2></div>
-          <div className="cartao-corpo">
+      <section className="cartao" style={{ marginBottom: 18 }}>
+        <div className="cartao-cabeca"><h2 className="cartao-titulo">Estamos respondendo os clientes?</h2></div>
+        <div className="cartao-corpo">
+          {meses.length === 0 ? (
+            <p className="vazio-curto">
+              <BarChart3 className="icone" aria-hidden="true" focusable="false" />
+              O gráfico mês a mês aparece quando houver o primeiro mês de conversas espelhadas do Multi360.
+            </p>
+          ) : (
+          <>
             <Veredito delta={delta} atual={atual} anterior={anterior} />
             <Barras meses={meses} />
             <p style={{ fontSize: 'var(--t-pequeno)', color: 'var(--tinta-3)', marginTop: 10, lineHeight: 1.5 }}>
               Cada barra é um mês. A barra cheia seria 100% dos clientes que falaram e tiveram resposta em até 24 horas. O último mês ainda está correndo.
               {' '}Quando sua equipe responde, ela responde rápido — o tempo mais comum é de <b>{minutosLegivel(atual?.mediana_min != null ? Number(atual.mediana_min) : null)}</b>. O problema não é demora: é o cliente que nunca recebe resposta.
             </p>
-          </div>
-        </section>
-      )}
+          </>
+          )}
+        </div>
+      </section>
 
       {/* ===== C) O sistema está sendo usado? ===== */}
       {pendentes.length > 0 ? (
@@ -134,7 +150,9 @@ export default function Painel({ dados, nome }: { dados: DadosInicio; nome: stri
           <div className="cartao-cabeca"><h2 className="cartao-titulo">O sistema está sendo usado</h2></div>
           <div className="cartao-corpo" style={{ fontSize: 14, color: 'var(--tinta-2)' }}>
             {uso.pessoasComAcesso} pessoas com acesso · {uso.cobrancasCriadas} cobranças criadas · {uso.cobrancasResolvidas} resolvidas.{' '}
-            <Link href="/dashboard/cobrancas" style={{ fontWeight: 600 }}>Ver o painel de cobrança →</Link>
+            <Link href="/dashboard/cobrancas" style={{ fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4, minHeight: 'var(--alvo)' }}>
+              Ver o painel de cobrança <ArrowRight className="icone icone-p" aria-hidden="true" focusable="false" />
+            </Link>
           </div>
         </section>
       )}
@@ -142,7 +160,6 @@ export default function Painel({ dados, nome }: { dados: DadosInicio; nome: stri
       <p style={{ fontSize: 'var(--t-pequeno)', color: 'var(--tinta-3)', marginTop: 14, textAlign: 'center' }}>
         {dados.conversasAbertas.toLocaleString('pt-BR')} conversas abertas espelhadas do Multi360.
       </p>
-      {nome && <span style={{ display: 'none' }}>{nome}</span>}
     </>
   )
 }
@@ -182,25 +199,57 @@ function Veredito({ delta, atual, anterior }: { delta: number | null; atual: Mes
   )
 }
 
+/**
+ * Gráfico mês a mês. As barras são só desenho (o leitor de tela pula); os números de cada mês
+ * ficam na lista logo abaixo, aberta com um toque — nada depende de passar o mouse (Regras 46 e 47).
+ * Com mais de 6 meses, o rótulo vai em meses alternados (sempre o último), para caber em 320 px
+ * sem letra menor que 12,5 px.
+ */
 function Barras({ meses }: { meses: MesMetrica[] }) {
+  const alterna = meses.length > 6
+  const ultimo = meses.length - 1
+  const mostraRotulo = (i: number) => !alterna || (ultimo - i) % 2 === 0
+  const pctDe = (m: MesMetrica) => (m.pct_resposta_24h != null ? Number(m.pct_resposta_24h) : 0)
   return (
-    <div className="ini-barras">
-      {meses.map((m) => {
-        const pct = m.pct_resposta_24h != null ? Number(m.pct_resposta_24h) : 0
-        const bom = pct >= 75
-        const ruim = pct < 65
-        const cor = bom ? 'var(--sucesso)' : ruim ? 'var(--perigo)' : 'var(--atencao)'
-        return (
-          <div key={m.competencia} className="ini-barra-col">
-            <div style={{ fontSize: 10, color: 'var(--tinta-2)', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{pct.toFixed(0)}</div>
-            <div className="ini-barra-trilho">
-              <div title={`${rotuloMes(m.competencia)}: ${pct.toFixed(0)}% respondidos em 24h · ${m.rodadas} clientes falaram · ${m.rodadas_sem_resposta} nunca tiveram resposta`} style={{ width: '100%', height: `${Math.max(3, pct)}%`, background: cor, borderRadius: 6 }} />
+    <>
+      <div className="ini-barras" aria-hidden="true" style={{ gap: alterna ? 4 : 10, height: 'auto' }}>
+        {meses.map((m, i) => {
+          const pct = pctDe(m)
+          const bom = pct >= 75
+          const ruim = pct < 65
+          const cor = bom ? 'var(--sucesso)' : ruim ? 'var(--perigo)' : 'var(--atencao)'
+          return (
+            <div key={m.competencia} className="ini-barra-col">
+              <div style={{ fontSize: 12.5, lineHeight: 1.2, color: 'var(--tinta-2)', fontWeight: 650, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', visibility: mostraRotulo(i) ? 'visible' : 'hidden' }}>{pct.toFixed(0)}%</div>
+              <div className="ini-barra-trilho">
+                <div style={{ width: '100%', height: `${Math.max(3, pct)}%`, background: cor, borderRadius: 6 }} />
+              </div>
+              <div style={{ fontSize: 12.5, lineHeight: 1.2, color: 'var(--tinta-3)', whiteSpace: 'nowrap', visibility: mostraRotulo(i) ? 'visible' : 'hidden' }}>{rotuloMesCurto(m.competencia)}</div>
             </div>
-            <div style={{ fontSize: 10, color: 'var(--tinta-3)' }}>{rotuloMesCurto(m.competencia)}</div>
-          </div>
-        )
-      })}
-    </div>
+          )
+        })}
+      </div>
+      <details style={{ marginTop: 10 }}>
+        <summary style={{ cursor: 'pointer', minHeight: 'var(--alvo)', display: 'flex', alignItems: 'center', fontWeight: 600, color: 'var(--acao)', fontSize: 'var(--t-meta)' }}>
+          Ver os números de cada mês
+        </summary>
+        <ul style={{ listStyle: 'none', margin: '4px 0 0', padding: 0 }}>
+          {[...meses].reverse().map((m) => {
+            const pct = pctDe(m)
+            const faixa = pct >= 75 ? { classe: 'selo-sucesso', texto: 'bom' } : pct < 65 ? { classe: 'selo-perigo', texto: 'ruim' } : { classe: 'selo-atencao', texto: 'atenção' }
+            return (
+              <li key={m.competencia} style={{ display: 'flex', alignItems: 'center', gap: '4px 10px', flexWrap: 'wrap', padding: '7px 0', borderTop: '1px solid var(--linha)', fontSize: 'var(--t-meta)' }}>
+                <strong style={{ minWidth: 70 }}>{rotuloMes(m.competencia)}</strong>
+                <span className={`selo ${faixa.classe}`}>{pct.toFixed(0)}% · {faixa.texto}</span>
+                <span style={{ color: 'var(--tinta-2)' }}>
+                  {Number(m.rodadas).toLocaleString('pt-BR')} {Number(m.rodadas) === 1 ? 'cliente falou' : 'clientes falaram'} · {Number(m.rodadas_sem_resposta).toLocaleString('pt-BR')} {Number(m.rodadas_sem_resposta) === 1 ? 'nunca teve resposta' : 'nunca tiveram resposta'}
+                </span>
+              </li>
+            )
+          })}
+        </ul>
+      </details>
+    </>
   )
 }
 

@@ -69,9 +69,9 @@ export async function POST(req: Request) {
   const telefone = (body.telefone ?? '').trim() || null
   const atColaboradorId = (body.at_colaborador_id ?? '').trim() || null
 
-  if (!nome || !email || senha.length < 6) {
+  if (!nome || !email || senha.length < 8) {
     return NextResponse.json(
-      { erro: 'nome, e-mail e senha (mín. 6 caracteres) são obrigatórios' },
+      { erro: 'Informe o nome, o e-mail e uma senha com pelo menos 8 caracteres.' },
       { status: 400 }
     )
   }

@@ -9,7 +9,8 @@ import { getPermissoesMapa, podeAcessar } from '@/lib/permissoes'
 import AtendentesSemConversaAberta from '@/components/AtendentesSemConversaAberta'
 import { formatarNome } from '@/lib/utils'
 import type { Usuario } from '@/lib/tipos'
-import { UserCog, MessageSquare, AlarmClock, CheckCircle2, UserX } from 'lucide-react'
+import SemPermissao from '@/components/SemPermissao'
+import { MessageSquare, AlarmClock, CheckCircle2, UserX, Lock } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -68,7 +69,8 @@ export default async function ColaboradoresPage() {
   if (!podeAcessar(mapa, 'colaboradores', papel.role)) {
     return (
       <main id="conteudo" className="conteudo" tabIndex={-1}>
-        <div className="cartao" style={{ marginTop: 8 }}><div className="vazio"><p className="vazio-texto">Você não tem acesso a esta tela.</p></div></div>
+        <div className="cabeca"><div className="cabeca-texto"><h1 className="titulo">Colaboradores</h1></div></div>
+        <SemPermissao tela="Colaboradores" />
       </main>
     )
   }
@@ -92,9 +94,7 @@ export default async function ColaboradoresPage() {
     <main id="conteudo" className="conteudo" tabIndex={-1}>
       <div className="cabeca">
         <div className="cabeca-texto">
-          <h1 className="titulo" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <UserCog className="icone icone-g" style={{ color: 'var(--acao)' }} aria-hidden="true" focusable="false" /> Colaboradores
-          </h1>
+          <h1 className="titulo">Colaboradores</h1>
           <p className="subtitulo">A equipe que atende no WhatsApp (Multi360) e quem tem acesso ao sistema.</p>
         </div>
       </div>
@@ -117,33 +117,38 @@ export default async function ColaboradoresPage() {
       <div style={{ marginBottom: 12, display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
         <h2 className="ini-secao-titulo">Equipe ativa no WhatsApp</h2>
         <span className="texto-apoio">
-          {ativos.length} atendentes com conversa aberta · {totalAbertas} abertas · {totalEsperando24} sem resposta há +24h
-          <span style={{ color: 'var(--tinta-3)' }}> — quem tem mais gente esperando aparece primeiro</span>
+          {ativos.length} {ativos.length === 1 ? 'atendente' : 'atendentes'} com conversa aberta · {totalAbertas} {totalAbertas === 1 ? 'aberta' : 'abertas'} · {totalEsperando24} sem resposta há mais de 24 h
+          <span style={{ color: 'var(--tinta-3)' }}>. Quem tem mais gente esperando aparece primeiro.</span>
         </span>
       </div>
 
       {ativos.length === 0 ? (
-        <div className="cartao"><div className="vazio"><p className="vazio-texto">
-          {equipe.length === 0 ? 'Ainda não há atendentes lidos do Multi360. Rode o leitor com o token configurado e a equipe aparece aqui.' : 'Nenhum atendente tem conversa em aberto agora.'}
-        </p></div></div>
+        <div className="cartao"><div className="vazio">
+          <div className="vazio-icone"><MessageSquare className="icone" aria-hidden="true" focusable="false" /></div>
+          <div className="vazio-titulo">{equipe.length === 0 ? 'A equipe ainda não apareceu' : 'Ninguém com conversa em aberto agora'}</div>
+          <p className="vazio-texto">
+            {equipe.length === 0 ? 'Os atendentes aparecem aqui assim que o leitor do Multi360 fizer a primeira leitura. Se demorar, veja Configurações › Situação do sistema.' : 'Todas as conversas da equipe estão encerradas. Quando um cliente escrever, o atendente responsável volta a aparecer aqui.'}
+          </p>
+        </div></div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
-          {ativos.map((c) => {
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: 14 }}>
+          {ativos.map((c, i) => {
             const alerta = c.esperando24 > 0
             return (
-              <section key={c.atendente} className="cartao" style={{ padding: '16px 18px' }}>
+              <section key={c.atendente} className="cartao" style={{ padding: '16px 18px' }} aria-labelledby={`atendente-ativo-${i}`}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                  <div style={{ width: 42, height: 42, borderRadius: '50%', background: alerta ? 'var(--atencao-suave)' : 'var(--acao-suave)', color: alerta ? 'var(--atencao)' : 'var(--acao)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>{iniciais(c.atendente)}</div>
+                  <span className="avatar" aria-hidden="true">{iniciais(c.atendente)}</span>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 650, color: 'var(--tinta)', fontSize: 15, overflowWrap: 'anywhere' }}>{formatarNome(c.atendente)}</div>
+                    <h3 id={`atendente-ativo-${i}`} style={{ fontWeight: 650, color: 'var(--tinta)', fontSize: 15.5, overflowWrap: 'anywhere' }}>{formatarNome(c.atendente)}</h3>
                     <div className="texto-apoio">Atendente WhatsApp</div>
                   </div>
+                  {alerta && <span className="selo selo-perigo" style={{ marginLeft: 'auto' }}><AlarmClock className="icone" aria-hidden="true" focusable="false" />Atrasado</span>}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, textAlign: 'center' }}>
-                  <Metrica icone={MessageSquare} valor={c.abertas} label="abertas" cor="var(--tinta)" />
-                  <Metrica icone={AlarmClock} valor={c.esperando24} label="sem resposta +24h" cor={alerta ? 'var(--perigo)' : 'var(--sucesso)'} />
-                  <Metrica icone={CheckCircle2} valor={c.finalizadas} label="finalizadas" cor="var(--sucesso)" />
-                </div>
+                <dl className="grade-numeros" style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
+                  <Metrica icone={MessageSquare} valor={c.abertas} label={c.abertas === 1 ? 'Aberta' : 'Abertas'} />
+                  <Metrica icone={AlarmClock} valor={c.esperando24} label="Sem resposta +24 h" tom={alerta ? 'perigo' : undefined} />
+                  <Metrica icone={CheckCircle2} valor={c.finalizadas} label={c.finalizadas === 1 ? 'Encerrada' : 'Encerradas'} />
+                </dl>
               </section>
             )
           })}
@@ -184,18 +189,21 @@ export default async function ColaboradoresPage() {
           papeis={opcoesPapel.map((p) => ({ codigo: p.codigo, nome: p.nome }))}
         />
       ) : (
-        <div className="cartao" style={{ marginTop: 20 }}><div className="cartao-corpo" style={{ paddingTop: 15, color: 'var(--tinta-2)', fontSize: 14 }}>Apenas o administrador gerencia os acessos.</div></div>
+        <div className="cartao" style={{ marginTop: 20 }}><div className="vazio-curto" style={{ padding: '14px 16px' }}>
+          <Lock className="icone" aria-hidden="true" focusable="false" />
+          <span>Só o administrador cadastra, edita e desativa acessos. Se precisar de um login novo, peça a ele.</span>
+        </div></div>
       )}
     </main>
   )
 }
 
-function Metrica({ icone: Icone, valor, label, cor }: { icone: typeof MessageSquare; valor: number | string; label: string; cor: string }) {
+/** Número do cartão do atendente: a peça .mon-num da referência (auditoria T11). */
+function Metrica({ icone: Icone, valor, label, tom }: { icone: typeof MessageSquare; valor: number | string; label: string; tom?: 'perigo' }) {
   return (
-    <div style={{ background: 'var(--recuo)', borderRadius: 10, padding: '8px 4px' }}>
-      <Icone className="icone icone-p" style={{ color: cor, marginBottom: 2 }} aria-hidden="true" focusable="false" />
-      <div style={{ fontSize: 18, fontWeight: 650, color: cor, lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{valor}</div>
-      <div style={{ fontSize: 11, color: 'var(--tinta-3)' }}>{label}</div>
+    <div className={`mon-num${tom ? ` ${tom}` : ''}`} style={{ padding: '10px 10px 11px', boxShadow: 'inset 0 0 0 1px var(--linha)', background: 'var(--recuo)' }}>
+      <dt><Icone className="icone" aria-hidden="true" focusable="false" />{label}</dt>
+      <dd style={{ fontSize: 22 }}>{valor}</dd>
     </div>
   )
 }

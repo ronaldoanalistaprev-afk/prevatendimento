@@ -30,12 +30,14 @@ export default function FiltroCompetencia() {
     }
     p.delete('pagina')
     const s = p.toString()
+    window.dispatchEvent(new Event('prevatendimento:navegando'))
     router.push(`${pathname}${s ? '?' + s : ''}`)
   }
 
+  // Tamanho e altura vêm da folha (.entrada): 40 px no computador, 48 px e letra de 16 px no celular.
   return (
-    <div className="caixa-select" style={{ minWidth: 130 }}>
-      <select className="entrada" value={atual} onChange={(e) => muda(e.target.value)} aria-label="Filtrar por mês (competência)" style={{ minHeight: 34, fontSize: 14 }}>
+    <div className="caixa-select" style={{ minWidth: 150 }}>
+      <select className="entrada" value={atual} onChange={(e) => muda(e.target.value)} aria-label="Filtrar por mês (competência)">
         <option value="">Qualquer mês</option>
         {opcoes.map((o) => (<option key={o.valor} value={o.valor}>{o.rotulo}</option>))}
       </select>

@@ -1,5 +1,10 @@
+import Link from 'next/link'
+import { getPapelAtual } from '@/lib/papel'
+import SemPermissao from '@/components/SemPermissao'
 import { createClient } from '@/lib/supabase/server'
 import BannerConfig from '@/components/BannerConfig'
+import { formatarNome } from '@/lib/utils'
+import { Users, AlertCircle } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,67 +33,75 @@ async function getStats(): Promise<{ itens: StatColaborador[]; configurado: bool
   }
 }
 
+const numero = (n: number | null | undefined) => (n == null ? '—' : n.toLocaleString('pt-BR'))
+
+/**
+ * Gestão de Pendências — rota antiga, fora do menu (os mesmos números estão em Desempenho).
+ * Convertida para a Apple Design em 18/11/2026 (auditoria X1): tabela que vira cartão no celular,
+ * selos com texto, nomes pela Regra 24, erro em linguagem simples.
+ */
 export default async function GestaoPage() {
+  // Telas fora do menu, só para quem vê tudo (auditoria P2/X1). O banco já bloqueia os dados para os demais.
+  if (!(await getPapelAtual()).verTudo) return <main id="conteudo" className="conteudo" tabIndex={-1}><SemPermissao tela="a Gestão de Pendências" /></main>
+
   const { itens, configurado, erro } = await getStats()
 
   return (
-    <div style={{ padding: '28px 32px', maxWidth: 1100, margin: '0 auto' }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1A3C5A' }}>Gestão de Pendências</h1>
-        <p style={{ fontSize: 14, color: '#6B7280', marginTop: 4 }}>
-          Carga e SLA por colaborador — quem tem mais conversas paradas.
-        </p>
+    <main id="conteudo" className="conteudo" tabIndex={-1} style={{ maxWidth: 1100 }}>
+      <div className="cabeca">
+        <div className="cabeca-texto">
+          <h1 className="titulo">Gestão de Pendências</h1>
+          <p className="subtitulo">Carga e tempo de resposta por colaborador: quem tem mais conversas paradas. Os mesmos números, mais completos, estão em <Link href="/dashboard/desempenho">Desempenho</Link>.</p>
+        </div>
       </div>
 
-      {(!configurado || erro) && <BannerConfig erro={erro} />}
+      {!configurado && <BannerConfig />}
+      {configurado && erro && (
+        <div className="aviso aviso-perigo" role="alert" style={{ marginBottom: 16 }}>
+          <AlertCircle className="icone" aria-hidden="true" focusable="false" />
+          <div>Não foi possível carregar os números agora. Recarregue a página; se continuar, avise o responsável técnico.</div>
+        </div>
+      )}
 
-      <div
-        style={{
-          background: '#fff',
-          borderRadius: 16,
-          border: '1px solid #EEF2F7',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
-          overflow: 'hidden',
-        }}
-      >
+      <section className={`cartao${itens.length ? ' lista-cartao' : ''}`}>
         {itens.length === 0 ? (
-          <div style={{ padding: '48px 20px', textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>
-            Sem dados de colaboradores ainda.
+          <div className="vazio">
+            <div className="vazio-icone"><Users className="icone" aria-hidden="true" focusable="false" /></div>
+            <div className="vazio-titulo">Sem dados de colaboradores ainda</div>
+            <p className="vazio-texto">Os números aparecem aqui quando houver conversas atribuídas a alguém da equipe.</p>
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
-            <thead>
-              <tr style={{ background: '#F8FAFC', color: '#6B7280', textAlign: 'left' }}>
-                <th style={{ padding: '12px 20px', fontWeight: 600 }}>Atendente</th>
-                <th style={{ padding: '12px 20px', fontWeight: 600 }}>Conversas</th>
-                <th style={{ padding: '12px 20px', fontWeight: 600 }}>Abertas</th>
-                <th style={{ padding: '12px 20px', fontWeight: 600 }}>Pendentes</th>
-                <th style={{ padding: '12px 20px', fontWeight: 600 }}>Tempo médio (h)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {itens.map((s) => (
-                <tr key={s.id} style={{ borderTop: '1px solid #F1F5F9' }}>
-                  <td style={{ padding: '12px 20px', fontWeight: 600, color: '#1A3C5A' }}>{s.nome}</td>
-                  <td style={{ padding: '12px 20px' }}>{s.total_conversas}</td>
-                  <td style={{ padding: '12px 20px' }}>{s.conversas_abertas}</td>
-                  <td style={{ padding: '12px 20px' }}>
-                    <span
-                      style={{
-                        fontWeight: 700,
-                        color: s.conversas_pendentes > 0 ? '#C2410C' : '#15803D',
-                      }}
-                    >
-                      {s.conversas_pendentes}
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px 20px' }}>{s.tempo_medio_resposta ?? '—'}</td>
+          <div className="tabela-caixa">
+            <table className="tabela tabela-cartoes">
+              <caption className="so-leitor">Carga por colaborador</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Atendente</th>
+                  <th scope="col">Pendentes</th>
+                  <th scope="col">Conversas</th>
+                  <th scope="col">Abertas</th>
+                  <th scope="col">Tempo médio de resposta</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {itens.map((s) => (
+                  <tr key={s.id}>
+                    <td className="nome" data-rotulo="Atendente" style={{ overflowWrap: 'anywhere' }}>{formatarNome(s.nome)}</td>
+                    <td className="situacao" data-rotulo="Pendentes">
+                      <span className={`selo ${s.conversas_pendentes > 0 ? 'selo-atencao' : 'selo-sucesso'}`}>
+                        {s.conversas_pendentes > 0 ? `${numero(s.conversas_pendentes)} ${s.conversas_pendentes === 1 ? 'pendente' : 'pendentes'}` : 'Em Dia'}
+                      </span>
+                    </td>
+                    <td className="num" data-rotulo="Conversas">{numero(s.total_conversas)}</td>
+                    <td className="num" data-rotulo="Abertas">{numero(s.conversas_abertas)}</td>
+                    <td className="num" data-rotulo="Tempo médio de resposta">{s.tempo_medio_resposta == null ? '—' : `${s.tempo_medio_resposta.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} h`}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
-      </div>
-    </div>
+      </section>
+    </main>
   )
 }

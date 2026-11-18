@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { ArrowLeft, CheckCircle2, XCircle, Server } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, XCircle } from 'lucide-react'
+import SemPermissao from '@/components/SemPermissao'
 import { getPapelAtual } from '@/lib/papel'
 import { getPermissoesMapa, podeAcessar } from '@/lib/permissoes'
 import { getMonitorProtocolos } from '@/lib/dados'
@@ -9,13 +10,13 @@ export const dynamic = 'force-dynamic'
 
 function LinhaStatus({ ok, titulo, detalhe }: { ok: boolean; titulo: string; detalhe: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderTop: '1px solid var(--linha)' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px 12px', padding: '12px 0', borderTop: '1px solid var(--linha)', flexWrap: 'wrap' }}>
       {ok ? <CheckCircle2 className="icone" style={{ color: 'var(--sucesso)', flexShrink: 0 }} aria-hidden="true" focusable="false" /> : <XCircle className="icone" style={{ color: 'var(--perigo)', flexShrink: 0 }} aria-hidden="true" focusable="false" />}
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tinta)' }}>{titulo}</div>
+      <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+        <h2 className="sub-titulo">{titulo}</h2>
         <div className="texto-apoio">{detalhe}</div>
       </div>
-      <span className={`selo ${ok ? 'selo-sucesso' : 'selo-perigo'}`}>{ok ? 'OK' : 'Atenção'}</span>
+      <span className={`selo ${ok ? 'selo-sucesso' : 'selo-perigo'}`}>{ok ? 'Funcionando' : 'Com Problema'}</span>
     </div>
   )
 }
@@ -25,7 +26,8 @@ export default async function SituacaoPage() {
   if (!podeAcessar(mapa, 'configuracoes', papel.role)) {
     return (
       <main id="conteudo" className="conteudo" tabIndex={-1}>
-        <div className="cartao" style={{ marginTop: 8 }}><div className="vazio"><p className="vazio-texto">Você não tem acesso a esta tela.</p></div></div>
+        <div className="cabeca"><div className="cabeca-texto"><h1 className="titulo">Situação do sistema</h1></div></div>
+        <SemPermissao tela="Situação do sistema" />
       </main>
     )
   }
@@ -39,9 +41,8 @@ export default async function SituacaoPage() {
   return (
     <main id="conteudo" className="conteudo" tabIndex={-1} style={{ maxWidth: 820 }}>
       <Link href="/dashboard/configuracoes" className="voltar"><ArrowLeft className="icone icone-p" aria-hidden="true" focusable="false" /> Configurações</Link>
-      <h1 className="titulo" style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '12px 0 20px' }}>
-        <Server className="icone icone-g" style={{ color: 'var(--acao)' }} aria-hidden="true" focusable="false" /> Situação do sistema
-      </h1>
+      <h1 className="titulo" style={{ margin: '12px 0 20px' }}>Situação do sistema</h1>
+
 
       <section className="cartao"><div className="cartao-corpo" style={{ paddingTop: 4 }}>
         <LinhaStatus ok={bancoOk} titulo="Banco de dados" detalhe="Onde ficam guardadas as conversas, clientes e mensagens." />
@@ -49,7 +50,7 @@ export default async function SituacaoPage() {
         <LinhaStatus ok={leitorRecente} titulo="Leitor do Multi360" detalhe={resumo.atualizadoEm ? `Última atualização: ${formatarDataHoraSegundos(resumo.atualizadoEm)} (há ${formatarDuracao(resumo.atualizadoEm)})` : 'Ainda não sincronizado.'} />
       </div></section>
       {!leitorRecente && (
-        <div className="aviso aviso-atencao" style={{ marginTop: 10 }}>
+        <div className="aviso aviso-atencao" role="status" style={{ marginTop: 10 }}>
           <div><b>O leitor de conversas está parado.</b> Enquanto ele não voltar, as conversas do WhatsApp não são atualizadas aqui — o que você vê é a última leitura. Avise o responsável técnico para religá-lo.</div>
         </div>
       )}

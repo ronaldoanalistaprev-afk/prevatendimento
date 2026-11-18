@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { ArrowLeft, Users } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
+import SemPermissao from '@/components/SemPermissao'
 import { createClient } from '@/lib/supabase/server'
 import { getPapelAtual } from '@/lib/papel'
 import { getPapeis } from '@/lib/poderes'
@@ -29,7 +30,8 @@ export default async function PapeisPage() {
   if (!podeAcessar(mapa, 'configuracoes', papel.role) || !ehAdministrador) {
     return (
       <main id="conteudo" className="conteudo" tabIndex={-1}>
-        <div className="cartao" style={{ marginTop: 8 }}><div className="vazio"><p className="vazio-texto">Apenas o Administrador gerencia os papéis.</p></div></div>
+        <div className="cabeca"><div className="cabeca-texto"><h1 className="titulo">Papéis</h1></div></div>
+        <SemPermissao tela="Papéis (só o Administrador gerencia os papéis)" />
       </main>
     )
   }
@@ -39,9 +41,8 @@ export default async function PapeisPage() {
   return (
     <main id="conteudo" className="conteudo" tabIndex={-1} style={{ maxWidth: 900 }}>
       <Link href="/dashboard/configuracoes" className="voltar"><ArrowLeft className="icone icone-p" aria-hidden="true" focusable="false" /> Configurações</Link>
-      <h1 className="titulo" style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '12px 0 6px' }}>
-        <Users className="icone icone-g" style={{ color: 'var(--acao)' }} aria-hidden="true" focusable="false" /> Papéis — os cargos do sistema
-      </h1>
+      <h1 className="titulo" style={{ margin: '12px 0 6px' }}>Papéis — os cargos do sistema</h1>
+
       <p className="subtitulo">Cada login tem um papel. Aqui você define <b>o que cada papel pode fazer</b>. Para escolher <b>quais telas</b> cada papel enxerga, use <Link href="/dashboard/configuracoes/permissoes">Permissões</Link>.</p>
       <p className="ini-secao-sub" style={{ margin: '4px 0 18px' }}>Os quatro papéis <b>de fábrica</b> podem ter o nome e a descrição mudados, mas não podem ser excluídos — só desativados. Um papel em uso por alguém não pode ser excluído: troque o papel da pessoa antes.</p>
 

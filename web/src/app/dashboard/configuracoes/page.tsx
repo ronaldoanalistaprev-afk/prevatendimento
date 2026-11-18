@@ -1,7 +1,8 @@
 import Link from 'next/link'
-import { Settings, Server, ShieldCheck, BookMarked, Users, MessageSquareText } from 'lucide-react'
+import { Server, ShieldCheck, BookMarked, Users, MessageSquareText, ChevronRight } from 'lucide-react'
 import { getPapelAtual } from '@/lib/papel'
 import { getPermissoesMapa, podeAcessar } from '@/lib/permissoes'
+import SemPermissao from '@/components/SemPermissao'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,7 +28,8 @@ export default async function ConfiguracoesPage() {
   if (!podeAcessar(mapa, 'configuracoes', papel.role)) {
     return (
       <main id="conteudo" className="conteudo" tabIndex={-1}>
-        <div className="cartao" style={{ marginTop: 8 }}><div className="vazio"><p className="vazio-texto">Você não tem acesso a esta tela.</p></div></div>
+        <div className="cabeca"><div className="cabeca-texto"><h1 className="titulo">Configurações</h1></div></div>
+        <SemPermissao tela="Configurações" />
       </main>
     )
   }
@@ -39,28 +41,34 @@ export default async function ConfiguracoesPage() {
   })
 
   return (
-    <main id="conteudo" className="conteudo" tabIndex={-1}>
+    <main id="conteudo" className="conteudo" tabIndex={-1} style={{ maxWidth: 900 }}>
       <div className="cabeca">
         <div className="cabeca-texto">
-          <h1 className="titulo" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Settings className="icone icone-g" style={{ color: 'var(--acao)' }} aria-hidden="true" focusable="false" /> Configurações
-          </h1>
+          <h1 className="titulo">Configurações</h1>
           <p className="subtitulo">Escolha o que deseja configurar.</p>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
-        {visiveis.map((c) => {
-          const Icone = c.icone
-          return (
-            <Link key={c.href} href={c.href} className="cartao" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 20, textDecoration: 'none', minHeight: 150 }}>
-              <div className="vazio-icone"><Icone className="icone icone-g" aria-hidden="true" focusable="false" /></div>
-              <div className="sub-titulo" style={{ fontSize: 15.5 }}>{c.titulo}</div>
-              <div className="texto-apoio" style={{ lineHeight: 1.5 }}>{c.descricao}</div>
-            </Link>
-          )
-        })}
-      </div>
+      {/* Linhas clicáveis da referência (.pend-item), como em Pendências (auditoria G1). */}
+      <nav className="cartao" aria-label="Áreas de configuração">
+        <ul className="pend-lista" style={{ paddingTop: 6 }}>
+          {visiveis.map((c) => {
+            const Icone = c.icone
+            return (
+              <li key={c.href}>
+                <Link href={c.href} className="pend-item" style={{ gridTemplateColumns: 'auto minmax(0, 1fr) auto', minHeight: 56 }}>
+                  <span className="avatar p" aria-hidden="true"><Icone className="icone icone-p" style={{ color: 'var(--acao-forte)' }} aria-hidden="true" focusable="false" /></span>
+                  <span style={{ minWidth: 0 }}>
+                    <span className="pend-nome" style={{ display: 'block' }}>{c.titulo}</span>
+                    <span className="texto-apoio" style={{ display: 'block' }}>{c.descricao}</span>
+                  </span>
+                  <ChevronRight className="icone" aria-hidden="true" focusable="false" />
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+      </nav>
     </main>
   )
 }

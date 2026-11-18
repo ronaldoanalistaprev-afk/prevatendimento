@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
-import { LayoutDashboard } from 'lucide-react'
 import { getPapelAtual } from '@/lib/papel'
+import { formatarNome } from '@/lib/utils'
 import { getDadosInicio } from '@/lib/inicio'
 import PainelInicio from '@/components/PainelInicio'
 import SeloAtualizacao from '@/components/SeloAtualizacao'
@@ -26,10 +26,7 @@ export default async function DashboardHome() {
     <main id="conteudo" className="conteudo" tabIndex={-1}>
       <div className="cabeca">
         <div className="cabeca-texto">
-          <h1 className="titulo" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <LayoutDashboard className="icone icone-g" style={{ color: 'var(--acao)' }} aria-hidden="true" focusable="false" />
-            {primeiroNome ? `Olá, ${primeiroNome}.` : 'Painel'}
-          </h1>
+          <h1 className="titulo">{primeiroNome ? `Olá, ${formatarNome(primeiroNome)}.` : 'Início'}</h1>
           <p className="subtitulo">A situação do escritório, e o que precisa de decisão.</p>
           <p className="texto-apoio" style={{ marginTop: 4 }}><SeloAtualizacao /></p>
         </div>
@@ -37,7 +34,7 @@ export default async function DashboardHome() {
 
       {dados.erro && <BannerConfig erro={dados.erro} />}
 
-      <PainelInicio dados={dados} nome={papel.nome} />
+      <PainelInicio dados={dados} />
     </main>
   )
 }

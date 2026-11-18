@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { CheckCircle2, X } from 'lucide-react'
+import { AlertCircle, CheckCircle2, X } from 'lucide-react'
 
 /**
  * Aviso do pé da tela (Documento Mestre — Regras 43 item 2 e 50; referência .aviso-pe e comportamento.js:290).
@@ -11,9 +11,10 @@ import { CheckCircle2, X } from 'lucide-react'
  * Uso num componente cliente:
  *   const { avisar } = useAvisoPe()
  *   avisar({ texto: 'Cobrança criada.', desfazer: async () => { … } })
+ *   avisar({ texto: 'Não foi possível desfazer. Tente de novo.', erro: true })
  */
-interface Aviso { id: number; texto: string; desfazer?: () => Promise<void> | void }
-interface Ctx { avisar: (a: { texto: string; desfazer?: () => Promise<void> | void }) => void }
+interface Aviso { id: number; texto: string; erro?: boolean; desfazer?: () => Promise<void> | void }
+interface Ctx { avisar: (a: { texto: string; erro?: boolean; desfazer?: () => Promise<void> | void }) => void }
 
 const AvisoCtx = createContext<Ctx>({ avisar: () => {} })
 export const useAvisoPe = () => useContext(AvisoCtx)
@@ -67,13 +68,18 @@ export function AvisoPeProvider({ children }: { children: React.ReactNode }) {
   async function onDesfazer() {
     if (!aviso?.desfazer) return
     setDesfazendo(true)
-    try { await aviso.desfazer() } finally { fechar() }
+    try {
+      await aviso.desfazer()
+      fechar()
+    } catch {
+      avisar({ texto: 'Não foi possível desfazer. Tente de novo ou faça a mudança na própria tela.', erro: true })
+    }
   }
 
   return (
     <AvisoCtx.Provider value={{ avisar }}>
       {children}
-      <div role="status" aria-live="polite" className="so-leitor">{aviso && !saindo ? aviso.texto : ''}</div>
+      <div role={aviso?.erro ? 'alert' : 'status'} aria-live={aviso?.erro ? 'assertive' : 'polite'} className="so-leitor">{aviso && !saindo ? aviso.texto : ''}</div>
       {aviso && (
         <div
           key={aviso.id}
@@ -84,7 +90,9 @@ export function AvisoPeProvider({ children }: { children: React.ReactNode }) {
           onBlur={retomar}
           onTouchStart={pausar}
         >
-          <CheckCircle2 className="icone icone-ok" aria-hidden="true" focusable="false" />
+          {aviso.erro
+            ? <AlertCircle className="icone icone-erro" aria-hidden="true" focusable="false" />
+            : <CheckCircle2 className="icone icone-ok" aria-hidden="true" focusable="false" />}
           <span className="aviso-pe-texto">{aviso.texto}</span>
           {aviso.desfazer && (
             <button type="button" className="botao botao-discreto" onClick={onDesfazer} disabled={desfazendo}>

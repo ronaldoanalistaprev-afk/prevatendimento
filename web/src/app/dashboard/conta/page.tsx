@@ -4,11 +4,16 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { tecladoFormulario } from '@/lib/formulario'
-import { Eye, EyeOff, Loader2, KeyRound, CheckCircle2 } from 'lucide-react'
+import { useAvisoPe } from '@/components/AvisoPe'
+import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
+
+const MINIMO = 8
+const faltam = (n: number) => (n === 1 ? 'Falta 1 caractere.' : `Faltam ${n} caracteres.`)
 
 /** Minha conta — a pessoa já logada troca a própria senha, sem depender de e-mail. */
 export default function ContaPage() {
   const router = useRouter()
+  const { avisar } = useAvisoPe()
 
   const [email, setEmail] = useState<string | null>(null)
   const [senha, setSenha] = useState('')
@@ -16,18 +21,27 @@ export default function ContaPage() {
   const [mostrar, setMostrar] = useState(false)
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
-  const [ok, setOk] = useState(false)
+  const [tocado, setTocado] = useState<{ senha?: boolean; confirmacao?: boolean }>({})
 
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null))
   }, [])
 
+  // Validação junto do campo, enquanto digita (Regras 10, 18 e 19).
+  const erroSenha = !senha ? 'Digite a nova senha.' : senha.length < MINIMO ? `A senha precisa ter pelo menos ${MINIMO} caracteres. ${faltam(MINIMO - senha.length)}` : null
+  const erroConfirmacao = !confirmacao ? 'Repita a nova senha.' : confirmacao !== senha ? 'As duas senhas não são iguais.' : null
+  const mostrarErroSenha = tocado.senha && erroSenha
+  const mostrarErroConfirmacao = (tocado.confirmacao || (confirmacao.length > 0 && confirmacao.length >= senha.length)) && erroConfirmacao
+
   async function handleSalvar(e: React.FormEvent) {
     e.preventDefault()
-    setErro(null); setOk(false)
-    if (senha.length < 8) { setErro('A senha precisa ter pelo menos 8 caracteres.'); return }
-    if (senha !== confirmacao) { setErro('As duas senhas não são iguais. Digite de novo.'); return }
+    setErro(null)
+    setTocado({ senha: true, confirmacao: true })
+    if (erroSenha || erroConfirmacao) {
+      document.getElementById(erroSenha ? 'conta-senha' : 'conta-senha-repetir')?.focus()
+      return
+    }
     setSalvando(true)
     const supabase = createClient()
     const { error } = await supabase.auth.updateUser({ password: senha })
@@ -40,44 +54,59 @@ export default function ContaPage() {
       else setErro('Não foi possível trocar a senha agora. Tente de novo em instantes.')
       return
     }
-    setSenha(''); setConfirmacao(''); setOk(true); router.refresh()
+    setSenha(''); setConfirmacao(''); setTocado({})
+    avisar({ texto: 'Senha trocada. Use a nova senha no próximo acesso.' })
+    router.refresh()
   }
+
+  const botaoOlho = (
+    <button type="button" className="botao-icone" onClick={() => setMostrar((v) => !v)} aria-label={mostrar ? 'Ocultar a senha' : 'Mostrar a senha'} aria-pressed={mostrar} title={mostrar ? 'Ocultar a senha' : 'Mostrar a senha'}>
+      {mostrar ? <EyeOff className="icone icone-p" aria-hidden="true" focusable="false" /> : <Eye className="icone icone-p" aria-hidden="true" focusable="false" />}
+    </button>
+  )
 
   return (
     <main id="conteudo" className="conteudo" tabIndex={-1} style={{ maxWidth: 520 }}>
-      <h1 className="titulo" style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 4px' }}>
-        <KeyRound className="icone icone-g" style={{ color: 'var(--acao)' }} aria-hidden="true" focusable="false" /> Minha conta
-      </h1>
+      <h1 className="titulo" style={{ margin: '4px 0 4px' }}>Minha conta</h1>
       <p className="subtitulo" style={{ marginBottom: 22 }}>
         Troque a sua senha aqui, na hora — sem precisar de e-mail.
         {email ? <> Você está logado como <b style={{ color: 'var(--tinta)' }}>{email}</b>.</> : null}
       </p>
 
-      <form onSubmit={handleSalvar} onKeyDown={tecladoFormulario} className="cartao" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <label className="campo">
-          <span className="rotulo">Nova senha</span>
+      <form onSubmit={handleSalvar} onKeyDown={tecladoFormulario} noValidate className="cartao" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div className="campo">
+          <label className="rotulo" htmlFor="conta-senha">Nova senha <span className="obrig" aria-hidden="true">*</span></label>
           <div className="senha-caixa">
-            <input className="entrada" type={mostrar ? 'text' : 'password'} value={senha} onChange={(e) => setSenha(e.target.value)} placeholder="Pelo menos 8 caracteres" autoComplete="new-password" required />
-            <button type="button" className="botao-icone" onClick={() => setMostrar((v) => !v)} aria-label={mostrar ? 'Ocultar a senha' : 'Mostrar a senha'} title={mostrar ? 'Ocultar a senha' : 'Mostrar a senha'}>
-              {mostrar ? <EyeOff className="icone icone-p" aria-hidden="true" focusable="false" /> : <Eye className="icone icone-p" aria-hidden="true" focusable="false" />}
-            </button>
+            <input
+              id="conta-senha" className="entrada" type={mostrar ? 'text' : 'password'} value={senha}
+              onChange={(e) => setSenha(e.target.value)} onBlur={() => setTocado((t) => ({ ...t, senha: true }))}
+              autoComplete="new-password" aria-required="true"
+              aria-invalid={mostrarErroSenha ? true : undefined} aria-describedby="conta-senha-ajuda"
+            />
+            {botaoOlho}
           </div>
-        </label>
+          {mostrarErroSenha
+            ? <p className="erro-campo" id="conta-senha-ajuda"><AlertCircle className="icone" aria-hidden="true" focusable="false" />{erroSenha}</p>
+            : <p className="ajuda" id="conta-senha-ajuda">{senha.length >= MINIMO ? 'Tamanho certo.' : senha.length > 0 ? faltam(MINIMO - senha.length) : `Pelo menos ${MINIMO} caracteres.`}</p>}
+        </div>
 
-        <label className="campo">
-          <span className="rotulo">Repita a nova senha</span>
+        <div className="campo">
+          <label className="rotulo" htmlFor="conta-senha-repetir">Repita a nova senha <span className="obrig" aria-hidden="true">*</span></label>
           <div className="senha-caixa">
-            <input className="entrada" type={mostrar ? 'text' : 'password'} value={confirmacao} onChange={(e) => setConfirmacao(e.target.value)} placeholder="Digite a mesma senha" autoComplete="new-password" required />
-            <button type="button" className="botao-icone" onClick={() => setMostrar((v) => !v)} aria-label={mostrar ? 'Ocultar a senha' : 'Mostrar a senha'} title={mostrar ? 'Ocultar a senha' : 'Mostrar a senha'}>
-              {mostrar ? <EyeOff className="icone icone-p" aria-hidden="true" focusable="false" /> : <Eye className="icone icone-p" aria-hidden="true" focusable="false" />}
-            </button>
+            <input
+              id="conta-senha-repetir" className="entrada" type={mostrar ? 'text' : 'password'} value={confirmacao}
+              onChange={(e) => setConfirmacao(e.target.value)} onBlur={() => setTocado((t) => ({ ...t, confirmacao: true }))}
+              autoComplete="new-password" aria-required="true"
+              aria-invalid={mostrarErroConfirmacao ? true : undefined} aria-describedby={mostrarErroConfirmacao ? 'conta-senha-repetir-erro' : undefined}
+            />
+            {botaoOlho}
           </div>
-        </label>
+          {mostrarErroConfirmacao && <p className="erro-campo" id="conta-senha-repetir-erro"><AlertCircle className="icone" aria-hidden="true" focusable="false" />{erroConfirmacao}</p>}
+        </div>
 
-        {erro && <div className="aviso aviso-perigo">{erro}</div>}
-        {ok && <div className="aviso aviso-info"><CheckCircle2 className="icone" aria-hidden="true" focusable="false" /><div>Senha trocada com sucesso. Use a nova senha no próximo acesso.</div></div>}
+        {erro && <div className="aviso aviso-perigo" role="alert"><AlertCircle className="icone" aria-hidden="true" focusable="false" /><div>{erro}</div></div>}
 
-        <button type="submit" disabled={salvando} className="botao botao-principal" style={{ minHeight: 48 }}>
+        <button type="submit" disabled={salvando} className="botao botao-principal">
           {salvando ? <><Loader2 className="icone icone-p animate-spin" aria-hidden="true" focusable="false" /> Salvando…</> : 'Salvar nova senha'}
         </button>
       </form>

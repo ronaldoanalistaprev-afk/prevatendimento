@@ -900,3 +900,7 @@ legend { padding: 0; }
 .aviso-pe .botao-discreto { min-height: 36px; }
 @media (max-width: 767px), (pointer: coarse) { .aviso-pe .botao-discreto, .aviso-pe .botao-icone { min-height: 44px; min-width: 44px; } }
 @media (prefers-reduced-motion: reduce) { .aviso-pe, .aviso-pe.saindo { transition: opacity .2s ease; transform: translateX(-50%); } }
+@media (max-width: 767px), (pointer: coarse) { .mon-abrir { min-height: 44px; } }
+.aviso-pe .icone-erro { color: var(--perigo); }
+.mon-num.dentro { background: var(--recuo); box-shadow: none; }
+.mon-num.atencao dd { color: var(--atencao); }

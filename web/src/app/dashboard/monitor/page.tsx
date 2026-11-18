@@ -4,11 +4,11 @@ import BannerConfig from '@/components/BannerConfig'
 import AutoRefresh from '@/components/AutoRefresh'
 import SeloAtualizacao from '@/components/SeloAtualizacao'
 import { formatarTelefone, formatarDataHora, formatarDuracao, formatarNome } from '@/lib/utils'
-import { Radar, Clock, Inbox, AlarmClock, ChevronRight, Paperclip, X } from 'lucide-react'
+import { Radar, Clock, Inbox, AlarmClock, ChevronRight, ChevronLeft, Paperclip, X } from 'lucide-react'
 import SeletorMultiplo from '@/components/SeletorMultiplo'
 import FiltroCompetencia from '@/components/FiltroCompetencia'
 import FiltroOrdem from '@/components/FiltroOrdem'
-import BuscaMonitor from '@/components/BuscaMonitor'
+import BuscaMonitor, { FiltrosRecolhiveis } from '@/components/BuscaMonitor'
 import LembrarPeriodo from '@/components/LembrarPeriodo'
 import { getPapelAtual } from '@/lib/papel'
 
@@ -80,6 +80,14 @@ export default async function MonitorPage({ searchParams }: { searchParams: Prom
 
   const finalizadas = situacao === 'finalizadas'
 
+  // A conversa aberta leva o endereço desta lista para o "voltar" devolver os mesmos filtros (Regra 42 item 2).
+  const listaAtual = construir({ pagina })
+  const qsLista = listaAtual.includes('?') ? listaAtual.slice(listaAtual.indexOf('?') + 1) : ''
+  const hrefConversa = (id: string) => `/dashboard/monitor/${id}${qsLista ? `?volta=${encodeURIComponent(qsLista)}` : ''}`
+
+  // Quantos filtros da segunda linha estão ligados (vai no botão "Mais filtros (n)" do celular).
+  const filtrosExtraAtivos = (competencia || periodo !== 'hoje' ? 1 : 0) + deps.length + atendentes.length + (ordem === 'antiga' ? 1 : 0)
+
   // Etiquetas de filtro ligado (Regra 1): cada filtro ativo vira uma etiqueta com X que
   // remove SÓ aquele filtro (um por valor de setor/atendente). "Limpar filtros" limpa tudo.
   const competenciaLabel = (c: string) => { const [a, m] = c.split('-'); return m && a ? `${m}/${a}` : c }
@@ -97,9 +105,7 @@ export default async function MonitorPage({ searchParams }: { searchParams: Prom
       <LembrarPeriodo />
       <div className="cabeca">
         <div className="cabeca-texto">
-          <h1 className="titulo" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Radar className="icone icone-g" style={{ color: 'var(--acao)' }} aria-hidden="true" focusable="false" /> Monitor Diário
-          </h1>
+          <h1 className="titulo">Monitor Diário</h1>
           <p className="subtitulo">Conversas do Multi360. Quem está esperando aparece primeiro, de quem espera há mais tempo.</p>
           <p className="texto-apoio" style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <AutoRefresh />
@@ -132,39 +138,42 @@ export default async function MonitorPage({ searchParams }: { searchParams: Prom
       <section className="cartao" aria-label="Conversas">
         <div className="mon-barra">
           <BuscaMonitor />
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginLeft: 'auto' }}>
-            <span className="mon-rot">Situação</span>
-            <div className="abas">
+          <nav aria-label="Situação" style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginLeft: 'auto' }}>
+            <span className="mon-rot" aria-hidden="true">Situação</span>
+            <div className="chips">
               {SITUACOES.map((si) => (
-                <Link key={si.chave} className="aba" aria-selected={situacao === si.chave} href={qs({ situacao: si.chave })}>{si.label}</Link>
+                <Link key={si.chave} className="chip" aria-current={situacao === si.chave ? 'true' : undefined} href={qs({ situacao: si.chave })}>{si.label}</Link>
               ))}
             </div>
-          </div>
+          </nav>
         </div>
-        <div className="mon-barra">
-          <span className="mon-rot">Período</span>
-          <div className="abas">
-            {PERIODOS.map((pe) => (
-              <Link key={pe.chave} className="aba" aria-selected={!competencia && periodo === pe.chave} href={qs({ periodo: pe.chave })}>{pe.label}</Link>
-            ))}
-          </div>
-          <span style={{ fontSize: 12.5, color: 'var(--tinta-3)' }}>ou</span>
+        <FiltrosRecolhiveis ativos={filtrosExtraAtivos}>
+          <nav aria-label="Período" style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span className="mon-rot" aria-hidden="true">Período</span>
+            <div className="chips">
+              {PERIODOS.map((pe) => (
+                <Link key={pe.chave} className="chip" aria-current={!competencia && periodo === pe.chave ? 'true' : undefined} href={qs({ periodo: pe.chave })}>{pe.label}</Link>
+              ))}
+            </div>
+          </nav>
+          <span className="mon-rot">ou</span>
           <FiltroCompetencia />
-          <span style={{ width: 1, height: 22, background: 'var(--linha)', margin: '0 4px' }} />
+          <span aria-hidden="true" style={{ width: 1, height: 22, background: 'var(--linha)', margin: '0 4px' }} />
           <SeletorMultiplo nome="dep" rotulo="Setor" rotuloVazio="todos" opcoes={departamentos.map((d) => ({ valor: d }))} />
           {!restrito && temAtendentes && (
             <SeletorMultiplo
               nome="atendente"
               rotulo="Atendente"
               rotuloVazio="todos"
+              nomeDePessoa
               opcoes={[
                 ...atendentesComConversa.map((a) => ({ valor: a, grupo: 'Com conversa aberta' })),
                 ...atendentesSemConversa.map((a) => ({ valor: a, grupo: 'Sem conversa aberta' })),
               ]}
             />
           )}
-          <span style={{ marginLeft: 'auto' }}><FiltroOrdem /></span>
-        </div>
+          <span style={{ marginLeft: 'auto', minWidth: 0 }}><FiltroOrdem /></span>
+        </FiltrosRecolhiveis>
 
         {restrito && (
           <div className="mon-barra"><span className="aviso aviso-neutro" style={{ padding: '6px 12px' }}>Mostrando apenas as suas conversas{papel.colaboradorNome ? ` (${formatarNome(papel.colaboradorNome)})` : ''}.</span></div>
@@ -184,24 +193,20 @@ export default async function MonitorPage({ searchParams }: { searchParams: Prom
           </div>
         )}
 
-        {/* Contagem */}
-        <div className="tabela-pe">
-          {itens.length > 0 ? (
-            <span>Mostrando <strong>{primeiro}–{ultimo}</strong> de <strong>{resumo.total.toLocaleString('pt-BR')}</strong> conversas{totalPaginas > 1 ? ` · página ${pagina} de ${totalPaginas}` : ''}</span>
-          ) : <span />}
-          {temFiltro && <Link className="botao botao-discreto" href="/dashboard/monitor">Limpar filtros</Link>}
-        </div>
-
         {itens.length === 0 ? (
           <div className="mon-vazio">
             <Radar className="icone" aria-hidden="true" focusable="false" />
             {temFiltro ? (
               <>
-                <p className="vazio-titulo">Nenhuma conversa com estes filtros.</p>
+                <p className="vazio-titulo">Nenhuma conversa com estes filtros</p>
+                <p className="vazio-texto">Tire um dos filtros acima, ou limpe todos para voltar às conversas abertas de hoje.</p>
                 <Link className="botao botao-secundario" href="/dashboard/monitor">Limpar filtros</Link>
               </>
             ) : (
-              <p className="vazio-texto">Ainda não há conversas sincronizadas do Multi360. Assim que o leitor do Multi360 rodar, as conversas aparecem aqui.</p>
+              <>
+                <p className="vazio-titulo">Ainda não há conversas</p>
+                <p className="vazio-texto">Ainda não há conversas sincronizadas do Multi360. Assim que o leitor do Multi360 rodar, as conversas aparecem aqui.</p>
+              </>
             )}
           </div>
         ) : (
@@ -213,12 +218,12 @@ export default async function MonitorPage({ searchParams }: { searchParams: Prom
                 <li key={p.id} className="mon-item">
                   <div>
                     <div className="mon-nome-linha">
-                      <Link className="mon-nome" href={`/dashboard/monitor/${p.id}`}>{formatarNome(p.cliente_nome)}</Link>
+                      <Link className="mon-nome" href={hrefConversa(p.id)}>{formatarNome(p.cliente_nome)}</Link>
                       {p.departamento && <span className="mon-dep">{p.departamento}</span>}
                     </div>
                     <div className="mon-meta">
                       {formatarTelefone(p.cliente_telefone)}
-                      {p.possui_anexo && <Paperclip className="icone" aria-label="tem anexo" />}
+                      {p.possui_anexo && <Paperclip className="icone" role="img" aria-label="tem anexo" focusable="false" />}
                       {' · '}Atendente: {p.atendente_nome ? formatarNome(p.atendente_nome) : <span className="semat">sem atendente</span>}
                     </div>
                     <div className="mon-previa">
@@ -236,23 +241,36 @@ export default async function MonitorPage({ searchParams }: { searchParams: Prom
                     ) : (
                       <span className="selo selo-sucesso">Respondido</span>
                     )}
-                    <Link className="mon-abrir" href={`/dashboard/monitor/${p.id}`} title="Abrir conversa">Abrir <ChevronRight className="icone" aria-hidden="true" focusable="false" /></Link>
+                    <Link className="mon-abrir" href={hrefConversa(p.id)} title="Abrir conversa" style={{ minHeight: 'max(34px, var(--alvo))' }}>Abrir<span className="so-leitor"> a conversa de {formatarNome(p.cliente_nome)}</span> <ChevronRight className="icone" aria-hidden="true" focusable="false" /></Link>
                   </div>
                 </li>
               )
             })}
           </ul>
         )}
-      </section>
 
-      {/* Paginação */}
-      {totalPaginas > 1 && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 16 }}>
-          {pagina > 1 ? <Link className="botao botao-secundario" href={paginaHref(pagina - 1)}>← Anterior</Link> : <span className="botao botao-secundario" aria-disabled="true">← Anterior</span>}
-          <span style={{ fontSize: 14, color: 'var(--tinta-2)' }}>Página {pagina} de {totalPaginas}</span>
-          {pagina < totalPaginas ? <Link className="botao botao-secundario" href={paginaHref(pagina + 1)}>Próxima →</Link> : <span className="botao botao-secundario" aria-disabled="true">Próxima →</span>}
-        </div>
-      )}
+        {/* Pé do cartão: contagem, limpar e páginas (referência .tabela-pe) */}
+        {(itens.length > 0 || temFiltro) && (
+          <div className="tabela-pe" style={{ flexWrap: 'wrap' }}>
+            {itens.length > 0 ? (
+              <span>Mostrando <strong>{primeiro}–{ultimo}</strong> de <strong>{resumo.total.toLocaleString('pt-BR')}</strong> conversas{totalPaginas > 1 ? ` · página ${pagina} de ${totalPaginas}` : ''}</span>
+            ) : <span />}
+            <nav className="botoes" aria-label="Páginas da lista" style={{ flexWrap: 'wrap' }}>
+              {temFiltro && itens.length > 0 && <Link className="botao botao-discreto" href="/dashboard/monitor">Limpar filtros</Link>}
+              {totalPaginas > 1 && (
+                <>
+                  {pagina > 1
+                    ? <Link className="botao botao-secundario" href={paginaHref(pagina - 1)}><ChevronLeft className="icone icone-p" aria-hidden="true" focusable="false" />Anterior</Link>
+                    : <span className="botao botao-secundario" aria-disabled="true"><ChevronLeft className="icone icone-p" aria-hidden="true" focusable="false" />Anterior</span>}
+                  {pagina < totalPaginas
+                    ? <Link className="botao botao-secundario" href={paginaHref(pagina + 1)}>Próxima<ChevronRight className="icone icone-p" aria-hidden="true" focusable="false" /></Link>
+                    : <span className="botao botao-secundario" aria-disabled="true">Próxima<ChevronRight className="icone icone-p" aria-hidden="true" focusable="false" /></span>}
+                </>
+              )}
+            </nav>
+          </div>
+        )}
+      </section>
     </main>
   )
 }
