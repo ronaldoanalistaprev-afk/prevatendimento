@@ -25,5 +25,8 @@ async function getUltimaAtualizacaoSemCache(): Promise<string | null> {
 
 export const getUltimaAtualizacao = cache(getUltimaAtualizacaoSemCache)
 
-/** O leitor roda a cada 15 minutos; sem notícia há mais de 45, a sincronização parou (token vencido, computador desligado…). */
+/**
+ * O leitor roda a cada 15 minutos (POLL_INTERVAL_MIN no multi360-reader) e grava o registro no FIM da rodada.
+ * 45 min = três rodadas: cobre uma rodada longa sem acender aviso à toa. Se o intervalo do leitor mudar, ajuste aqui.
+ */
 export const ATRASO_MAXIMO_MIN = 45
