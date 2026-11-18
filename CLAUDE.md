@@ -198,6 +198,18 @@ projeto, desde o início e de agora em diante"*. O que vale aqui, em ordem de us
    (CLAUDE global).
 8. **Aparência:** skill Apple Design sobre a base das 15 telas do PrevSystem (item "Design" da seção 5). Tela nova já nasce nela.
 
+9. **Práticas que o PrevSystem confirmou em 18/11/2026** (resposta da "🟦 PrevSystem 19"):
+   - **Teste de banco** sempre numa transação desfeita (`begin … rollback`), agindo como o usuário com
+     `set_config('request.jwt.claims', …)` e `set local role authenticated`. Relatório só com contagens.
+   - **Conferente em segundo plano**. Depois das correções, uma segunda leitura só dos acertos. Commit só depois.
+   - **Contexto:** conferir o uso (`get_usage`) a cada entrega. Aos 70%, gravar o estado, avisar e propor a troca (comando 111).
+   - **Pasta compartilhada:** cada conversa faz commit só dos próprios arquivos e nunca usa stash, reset ou troca de branch.
+   - **Dado pessoal entre projetos** fica só em pasta fora do git. Recados levam só contagens e o caminho.
+   - **Subagente** só para conferir ou para busca grande. **Conversa lateral** só quando o Ronaldo pede ou na troca de conversa.
+   - `.gitattributes` com `*.sql eol=lf`.
+   - **Vitrine** (telas reais com dados fictícios, sem login, para fotografar em 1440/390/320 px e medir rolagem lateral e toque
+     < 44 px): o PrevSystem tem. Aqui ainda não existe — está na lista de construção.
+
 ## 6. Pendências operacionais
 
 1. **Religar a sincronização** (token do Multi360 — seção 2). É o que destrava o sistema.
