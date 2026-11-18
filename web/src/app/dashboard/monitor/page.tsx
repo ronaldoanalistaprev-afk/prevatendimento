@@ -62,8 +62,10 @@ export default async function MonitorPage({ searchParams }: { searchParams: Prom
     }
     const si = 'situacao' in op ? op.situacao : (op.tiraSituacao ? 'abertas' : situacao)
     if (si && si !== 'abertas') p.set('situacao', si)
+    // O atalho "só" (quem falou por último) só faz sentido em conversas abertas; ao ir
+    // para a aba Finalizadas ele é descartado (senão a lista fica vazia por contradição).
     const soFinal = 'so' in op ? op.so : (op.tiraSo ? null : so)
-    if (soFinal) p.set('so', soFinal)
+    if (soFinal && si !== 'finalizadas') p.set('so', soFinal)
     if (ordem) p.set('ordem', ordem)
     if (op.pagina && op.pagina > 1) p.set('pagina', String(op.pagina))
     const s = p.toString()
@@ -84,7 +86,7 @@ export default async function MonitorPage({ searchParams }: { searchParams: Prom
   const etiquetas: { label: string; href: string }[] = []
   if (busca) etiquetas.push({ label: `Busca: "${busca}"`, href: construir({ tiraBusca: true }) })
   for (const d of deps) etiquetas.push({ label: `Setor: ${d}`, href: construir({ tiraDep: d }) })
-  if (competencia) etiquetas.push({ label: `Competência: ${competenciaLabel(competencia)}`, href: construir({ tiraCompetencia: true }) })
+  if (competencia) etiquetas.push({ label: `Competência: ${competenciaLabel(competencia)}`, href: construir({ tiraCompetencia: true, tiraPeriodo: true }) })
   else if (periodo !== 'hoje') etiquetas.push({ label: `Período: ${PERIODOS.find((x) => x.chave === periodo)?.label ?? periodo}`, href: construir({ tiraPeriodo: true }) })
   for (const a of atendentes) etiquetas.push({ label: `Atendente: ${formatarNome(a)}`, href: construir({ tiraAtendente: a }) })
   if (situacao !== 'abertas') etiquetas.push({ label: `Situação: ${SITUACOES.find((x) => x.chave === situacao)?.label ?? situacao}`, href: construir({ tiraSituacao: true }) })

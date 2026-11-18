@@ -85,7 +85,7 @@ export default function SeletorMultiplo({
       </button>
 
       {aberto && (
-        <div role="listbox" aria-label={rotulo} aria-multiselectable="true" style={{ position: 'absolute', zIndex: 50, top: 'calc(100% + 4px)', left: 0, minWidth: 250, maxWidth: 320, background: 'var(--superficie)', border: '1px solid var(--linha)', borderRadius: 12, boxShadow: '0 12px 34px rgba(0,0,0,0.14)', padding: 8 }}>
+        <div role="group" aria-label={rotulo} style={{ position: 'absolute', zIndex: 50, top: 'calc(100% + 4px)', left: 0, minWidth: 250, maxWidth: 320, background: 'var(--superficie)', border: '1px solid var(--linha)', borderRadius: 12, boxShadow: '0 12px 34px rgba(0,0,0,0.14)', padding: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 4px' }}>
             <Search className="icone icone-p" style={{ color: 'var(--tinta-3)', flexShrink: 0 }} aria-hidden="true" focusable="false" />
             <input ref={buscaRef} className="entrada" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar…" aria-label={`Buscar ${rotulo}`} style={{ minHeight: 32, fontSize: 13 }} />
@@ -103,8 +103,7 @@ export default function SeletorMultiplo({
                       <button
                         key={o.valor}
                         type="button"
-                        role="option"
-                        aria-selected={marcado}
+                        aria-pressed={marcado}
                         onClick={() => alterna(o.valor)}
                         style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', minHeight: 40, padding: '6px 8px', background: marcado ? 'var(--acao-suave)' : 'transparent', border: 0, borderRadius: 8, cursor: 'pointer', textAlign: 'left', color: 'var(--tinta)' }}
                       >
