@@ -98,16 +98,25 @@ A decisão do Ronaldo é trazê-lo para o mesmo padrão. Situação de cada pila
   (`.gitignore` confere: `.env*`, `.mcp.json`, `whatsapp-service/auth_state/`).
 - **[✓ feito] Conferente independente:** agente `.claude/agents/conferente-prevatendimento.md` —
   acionado antes de dar algo por pronto (só lê e aponta; o maestro corrige).
-- **[em andamento] Documento Mestre de Padronização:** auditar as telas contra as 56 regras
-  (`...\Documentos Globais\Documento Mestre de Padronização - versão 2.txt`) e registrar em
-  `...\Conformidade do Documento Mestre.txt` (seção PrevAtendimento) e em `docs/conformidade-telas.md`
-  (detalhe por tela). **Rodada 1 feita em 16/11/2026** (código; falta a foto no aparelho = Regra 54):
-  Regra 43 — eliminados os diálogos nativos do navegador (novo `web/src/components/Confirmacao.tsx`,
-  `useConfirmacao`, cumprindo Regra 55 item 17 e Regra 43 item 7); Regra 23 — nome não é mais cortado
-  com "…" (quebra a linha); Regra 52 — ícones lucide no lugar de emoji; Regra 45 — Monitor separa
-  "sem resultado" de "primeiro uso". **Falta:** esqueleto de carregamento (Regra 45 CARREGANDO),
-  etiqueta removível de filtro ligado (Regra 1), percentuais (Regra 48) e a conferência no aparelho
-  (Regra 54) — lista em `docs/conformidade-telas.md`.
+- **[código concluído — falta só a FOTO (Regra 54)] Documento Mestre de Padronização:** auditar as
+  telas contra as regras (`...\Documentos Globais\Documento Mestre de Padronização - versão 2.txt`) e
+  registrar em `...\Conformidade do Documento Mestre.txt` (seção PrevAtendimento) e em
+  `docs/conformidade-telas.md` (detalhe por tela). **Rodada 1 (16/11/2026):** Regra 43 (diálogos
+  nativos → `web/src/components/Confirmacao.tsx`/`useConfirmacao`), Regra 23 (nome não corta com "…"),
+  Regra 52 (ícones lucide), Regra 45 (Monitor separa "sem resultado" de "primeiro uso"). **Rodada 2
+  (18/11/2026, com o conferente):** Regra 45 (esqueleto de carregamento `loading.tsx` + índices de
+  desempenho), Regra 1 (etiquetas de filtro removíveis no Monitor e Auditoria), Regra 55 (helper
+  `web/src/lib/formulario.ts` — Enter avança campo, Ctrl+Enter salva — nos 7 formulários de
+  cadastro/edição; não no login nem na busca), Regra 57 (setor e atendente viraram seletor pesquisável
+  de várias opções, `web/src/components/SeletorMultiplo.tsx`); Regras 48/52 conferidas (ok). **Único
+  item de conformidade ainda aberto: Regra 54** (a foto/teclado no aparelho, 390/1440/320 px — depende
+  do Ronaldo abrir as telas). Lista em `docs/conformidade-telas.md`.
+- **[18/11/2026] Participantes da conversa + tempo de espera (decisão "só mostrar" do Ronaldo):** a
+  tela da conversa mostra o **responsável** (destacado) e os **participantes** adicionados, e traz o
+  **tempo de espera** que só aparecia no Monitor ("Esperando há X"). O **gestor** pode acompanhar sem
+  ser participante. Coluna `at_protocolos.participantes jsonb` (NULL até capturar); o leitor
+  (`multi360-reader/`) preenche quando o **token do Multi360** for renovado (hoje vencido). Só
+  exibição — não mexe em SLA nem cobrança.
 - **[decidido 16/11/2026 — em andamento] Design: skill Apple Design.** O Ronaldo decidiu incluir o
   PrevAtendimento na exceção da skill Apple Design (*"vamos usar nesse e no PrevControl o Apple
   Design"*). A skill está instalada em `.claude\skills\apple-design` (idêntica à do PrevSystem).
