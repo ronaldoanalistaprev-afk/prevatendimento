@@ -114,7 +114,7 @@ A decisão do Ronaldo é trazê-lo para o mesmo padrão. Situação de cada pila
 - **[✓ feito] Controle de versões:** o trabalho (3 meses sem commit) foi salvo no git. Baseline =
   marca `publicada-01` = o que está no ar na Vercel. Daqui em diante: a **versão publicada** (que a
   equipe usaria) só muda quando o **Ronaldo** manda publicar; o Claude trabalha na **versão em
-  construção** e **nunca roda `vercel --prod` por conta própria**. Segredos ficam fora do git
+  construção** e publica sozinho só a entrega aprovada pelo conferente (autorização de 18/11/2026, seção 5-A item 5). Segredos ficam fora do git
   (`.gitignore` confere: `.env*`, `.mcp.json`, `whatsapp-service/auth_state/`).
 - **[✓ feito] Conferente independente:** agente `.claude/agents/conferente-prevatendimento.md` —
   acionado antes de dar algo por pronto (só lê e aponta; o maestro corrige).
@@ -191,7 +191,7 @@ projeto, desde o início e de agora em diante"*. O que vale aqui, em ordem de us
    - só acrescenta, e é compatível com a versão no ar;
    - consulta lenta se mede antes e depois (`pg_stat_statements`, `explain analyze` como usuário logado);
    - o banco-rascunho espera o "sim" do Ronaldo (custo).
-5. **Versões:** a versão publicada só muda por ordem do Ronaldo (marca `publicada-NN`). Ver o item 5, "Controle de versões".
+5. **Versões — autorização permanente de 18/11/2026 (DA-61):** o Claude **publica sozinho** na Vercel (`vercel --prod`) toda entrega que o conferente aprovar, marca `publicada-NN` e avisa o Ronaldo depois; se der errado, volta à versão anterior. **Não** foram autorizados de forma permanente (continuam pedindo o "sim" a cada vez): mudança no banco de produção, banco-rascunho (custo) e apagar arquivos ou contas.
 6. **"Sim" e "pronto" só com verificação** completa. Parte não verificada → a resposta é "não", dizendo o que falta. Pronto é
    o que foi conferido (Regra 54: foto em 390/1440/320 px; teclado).
 7. **Perguntas ao Ronaldo:** uma por vez, completa, com opções numeradas, a sugerida primeiro e "Outra" por último

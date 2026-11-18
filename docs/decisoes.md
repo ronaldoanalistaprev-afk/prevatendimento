@@ -103,6 +103,9 @@
 | DA-57 | 18/11/2026 | Ronaldo | **Participantes da conversa:** "Só mostrar". A tela da conversa mostra o responsável em destaque, os participantes e o tempo de espera; o **gestor acompanha sem ser participante**. Não muda o cálculo de espera nem as cobranças. | Em vigor |
 | DA-58 | 18/11/2026 | Técnica (Claude, aplicando regra global) | Filtros de **setor** e **atendente** permitem **marcar várias opções** num seletor com busca (Regra 57). Situação e período continuam com uma opção só. | Em vigor |
 | DA-59 | 18/11/2026 | Ronaldo | **Estado vivo vence anotação:** antes de dizer que algo está parado, vencido ou pendente, conferir no banco, no processo rodando e na Vercel. Pedido dele: "evitar que esse problema ocorra novamente". | Em vigor |
+| DA-60 | 18/11/2026 | Ronaldo | **Método do PrevSystem em todo o projeto:** maestro + conferente independente, memória que não se perde (estado-do-projeto, decisões, pendências, continuar-na-NN), regra automatizar/avisar/impedir. Pedido dele: "aplique aqui a todo o projeto, desde o início e de agora em diante". CLAUDE.md §5-A. | Em vigor |
+| DA-61 | 18/11/2026 | Ronaldo | **Publicar sozinho:** autorização permanente para o Claude publicar na Vercel a entrega aprovada pelo conferente, avisando depois. Não autorizou de forma permanente: mudança no banco de produção, banco-rascunho e apagar arquivos ou contas (seguem pedindo o "sim"). Substitui em parte a regra "só o Ronaldo publica". | Em vigor |
+| DA-62 | 18/11/2026 | Técnica (Claude) | **Desempenho:** regras de acesso do banco calculadas uma vez por consulta; servidor da Vercel em São Paulo (`gru1`), junto do banco; uma consulta só por página para papel e permissões. | Em vigor |
 
 ---
 
