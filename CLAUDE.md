@@ -156,6 +156,7 @@ A decisão do Ronaldo é trazê-lo para o mesmo padrão. Situação de cada pila
     Permissões, Papéis, Modelos, Catálogo), Marco Zero, Minha conta, Laboratório WhatsApp, Pessoas; a
     janela de confirmação do sistema e todos os filtros/avisos. Build limpo. **`UsuarioLogado.tsx`
     ficou órfão** (o rodapé do menu passou a ser inline no `Sidebar`) — dá para apagar.
+  - **18/11/2026: auditoria tela a tela e correção** (`docs/auditoria-ux-apple-2026-11-18.md`, 93 achados), publicada como `publicada-02`. Peças comuns: `components/AvisoPe.tsx` (aviso do pé com Desfazer — toda ação nova usa), `components/SemPermissao.tsx`, classes `.chip`/`.avatar`/`.grade-numeros`. Tela nova já nasce com elas.
   - **Falta ainda (pós-conversão):** a conferência na FOTO pelo Ronaldo (Regra 54, 390/1440/320 px) e
     os itens de comportamento que a Rodada 1 do Documento Mestre deixou abertos (esqueleto de
     carregamento = Regra 45; Enter avança campo nos formulários = Regra 55) — ver
