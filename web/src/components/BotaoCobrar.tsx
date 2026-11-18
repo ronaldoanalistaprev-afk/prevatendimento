@@ -94,7 +94,15 @@ export default function BotaoCobrar({ protocoloId, atendente, modelos = [] }: { 
     try {
       const res = await fetch('/api/cobrancas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ protocolo_id: protocoloId, mensagem, prazo: inputParaIso(prazo), modelo_id: modeloId || null }) })
       const data = await res.json()
-      if (!res.ok) throw new Error(data?.erro ?? 'Falha ao cobrar')
+      if (!res.ok) {
+        const porCodigo: Record<number, string> = {
+          401: 'Sua sessão terminou. Entre de novo no sistema e envie a cobrança outra vez.',
+          403: 'O seu papel não permite cobrar atendentes. Peça ao administrador, se precisar.',
+          404: 'Esta conversa não foi encontrada. Atualize a página e tente de novo.',
+          400: 'Confira a mensagem e o prazo da cobrança e tente de novo.',
+        }
+        throw new Error(porCodigo[res.status] ?? 'Não foi possível enviar a cobrança. Tente de novo; se continuar, avise o administrador.')
+      }
       const novaId: string | undefined = data?.id
       fechar()
       router.refresh()
@@ -112,8 +120,9 @@ export default function BotaoCobrar({ protocoloId, atendente, modelos = [] }: { 
           : undefined,
       })
     } catch (err) {
-      console.error('cobrar atendente', err)
-      setErro('Não foi possível enviar a cobrança. Confira a internet e tente de novo; se continuar, avise o administrador.')
+      // Mensagem escolhida pelo código da resposta (acima); falha de rede cai no texto geral.
+      const msg = (err as Error).message
+      setErro(msg && !/fetch|network/i.test(msg) ? msg : 'Não foi possível enviar a cobrança. Confira a internet e tente de novo.')
     } finally {
       setSalvando(false)
     }

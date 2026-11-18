@@ -107,7 +107,6 @@ export function AvisoPeProvider({ children }: { children: React.ReactNode }) {
           onMouseLeave={retomar}
           onFocus={pausar}
           onBlur={retomar}
-          onTouchStart={pausar}
         >
           {aviso.erro
             ? <AlertCircle className="icone icone-erro" aria-hidden="true" focusable="false" />
