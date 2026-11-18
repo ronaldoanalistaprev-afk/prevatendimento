@@ -121,15 +121,20 @@ async function backfillParticipantes(limite = 80) {
     const { data } = await db
       .from('at_protocolos')
       .select('id, numero_protocolo')
+      .eq('empresa_id', empresaId)
       .in('status_multi360', ['ATIVO', 'AGUARDANDO', 'POTENCIAL'])
       .is('participantes', null)
       .limit(limite)
     if (!data || data.length === 0) return 0
+    let capturadas = 0
     for (const p of data) {
       const d = await detalheContato(p.numero_protocolo)
-      await gravarParticipantes(p.id, d ? d.participantes : [])
+      // Só grava quando a leitura deu certo. Se o detalhe falhou (d === null), NÃO
+      // grava []: deixa a coluna NULL para o backfill tentar de novo na próxima rodada
+      // (senão um blip de rede marcaria a conversa como "sem participantes" para sempre).
+      if (d) { await gravarParticipantes(p.id, d.participantes); capturadas++ }
     }
-    return data.length
+    return capturadas
   } catch {
     return 0
   }
@@ -643,8 +648,10 @@ async function sync() {
       comNovas++
       await syncMensagens(proto.id, String(reg.id))
       // Participantes (só exibição): reaproveita o detalhe do pendente; senão busca.
+      // Só grava quando a leitura deu certo (detalhe != null); em falha deixa NULL para
+      // o backfill tentar depois, em vez de marcar como "sem participantes" por engano.
       if (!detalhe) detalhe = await detalheContato(reg.id)
-      await gravarParticipantes(proto.id, detalhe ? detalhe.participantes : [])
+      if (detalhe) await gravarParticipantes(proto.id, detalhe.participantes)
     }
   }
   // Potenciais: guarda como protocolo status POTENCIAL (conta como aberto). Grava a

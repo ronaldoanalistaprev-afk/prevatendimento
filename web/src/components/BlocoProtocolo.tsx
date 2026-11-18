@@ -43,8 +43,8 @@ export default function BlocoProtocolo({ p, atual, espera }: { p: HistoricoProto
         <div style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', borderBottom: '1px solid var(--linha)' }}>
           <Users className="icone icone-p" style={{ color: 'var(--tinta-3)' }} aria-hidden="true" focusable="false" />
           <span className="texto-apoio">{acompanhantes.length > 0 ? 'Participantes:' : 'Responsável:'}</span>
-          {responsavel && <span className="selo selo-acao">{formatarNome(responsavel.nome)} · responsável</span>}
-          {acompanhantes.map((a) => (<span key={a.nome} className="selo selo-neutro">{formatarNome(a.nome)}</span>))}
+          {responsavel && <span className="selo selo-acao" style={{ whiteSpace: 'normal', overflowWrap: 'anywhere' }}>{formatarNome(responsavel.nome)} · responsável</span>}
+          {acompanhantes.map((a) => (<span key={a.nome} className="selo selo-neutro" style={{ whiteSpace: 'normal', overflowWrap: 'anywhere' }}>{formatarNome(a.nome)}</span>))}
           {!responsavel && acompanhantes.length === 0 && <span className="texto-apoio">—</span>}
         </div>
       )}

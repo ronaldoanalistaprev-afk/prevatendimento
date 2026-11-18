@@ -869,3 +869,8 @@ legend { padding: 0; }
 .etiqueta-filtro .x { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:50%; background:var(--linha); color:var(--tinta-2); }
 .etiqueta-filtro .x .icone { width:12px; height:12px; }
 .etiqueta-filtro:hover .x { background:var(--acao); color:#fff; }
+/* Em telas de toque, o alvo tem pelo menos 44 px de altura (Regra 47). */
+@media (pointer: coarse) {
+  .etiqueta-filtro { min-height:44px; padding-top:7px; padding-bottom:7px; }
+  .etiqueta-filtro .x { width:26px; height:26px; }
+}
