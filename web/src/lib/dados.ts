@@ -532,6 +532,13 @@ export async function getProtocoloConversa(id: string): Promise<{
   }
 }
 
+/** Participante de uma conversa no Multi360 (espelhado). O principal é o dono
+ * da conversa; os demais foram adicionados para acompanhar. Capturado pelo leitor. */
+export interface AtParticipante {
+  nome: string
+  principal: boolean
+}
+
 export interface HistoricoProtocolo {
   id: string
   numero_protocolo: string
@@ -541,6 +548,7 @@ export interface HistoricoProtocolo {
   criado_em_multi360: string | null
   ultima_mensagem_em: string | null
   ultima_mensagem_direcao: string | null
+  participantes: AtParticipante[] | null
   mensagens: AtMensagem[]
 }
 

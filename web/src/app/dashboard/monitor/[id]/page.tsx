@@ -1,9 +1,9 @@
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Clock } from 'lucide-react'
 import { getHistoricoCliente } from '@/lib/dados'
 import { getModelosCobranca } from '@/lib/modelos'
 import { getPapelAtual } from '@/lib/papel'
-import { formatarTelefone, formatarNome } from '@/lib/utils'
+import { formatarTelefone, formatarNome, formatarDuracao } from '@/lib/utils'
 import BotaoCobrar from '@/components/BotaoCobrar'
 import BlocoProtocolo from '@/components/BlocoProtocolo'
 import SeloAtualizacao from '@/components/SeloAtualizacao'
@@ -39,6 +39,10 @@ export default async function MonitorConversaPage({ params }: { params: Promise<
   const atual = hist.protocolos.find((p) => p.id === hist.atualProtocoloId) ?? hist.protocolos[0]
   const abertos = hist.protocolos.filter((p) => !ehFinalizada(p.status_multi360)).length
   const finalizados = hist.protocolos.length - abertos
+  // Tempo de espera (igual ao selo "Aguardando · X" do Monitor): só quando a
+  // conversa atual está aberta e o cliente falou por último (a bola está com o escritório).
+  const atualEsperando = atual && !ehFinalizada(atual.status_multi360) && atual.ultima_mensagem_direcao === 'cliente'
+  const esperaAtual = atualEsperando ? formatarDuracao(atual.ultima_mensagem_em) : null
 
   return (
     <main id="conteudo" className="conteudo" tabIndex={-1} style={{ maxWidth: 860 }}>
@@ -56,6 +60,11 @@ export default async function MonitorConversaPage({ params }: { params: Promise<
               {formatarTelefone(hist.cliente_telefone)} · {hist.protocolos.length} atendimento{hist.protocolos.length > 1 ? 's' : ''} ({abertos} aberto{abertos !== 1 ? 's' : ''}, {finalizados} finalizado{finalizados !== 1 ? 's' : ''}) · {hist.totalMensagens} mensagens
             </div>
           </div>
+          {esperaAtual && (
+            <div className="selo selo-atencao" style={{ flexShrink: 0, alignSelf: 'flex-start' }}>
+              <Clock className="icone icone-p" aria-hidden="true" focusable="false" /> Esperando há {esperaAtual}
+            </div>
+          )}
         </div>
       </section>
 
@@ -66,10 +75,13 @@ export default async function MonitorConversaPage({ params }: { params: Promise<
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-        {hist.protocolos.map((p) => (<BlocoProtocolo key={p.id} p={p} atual={p.id === hist.atualProtocoloId} />))}
+        {hist.protocolos.map((p) => {
+          const esperando = !ehFinalizada(p.status_multi360) && p.ultima_mensagem_direcao === 'cliente'
+          return (<BlocoProtocolo key={p.id} p={p} atual={p.id === hist.atualProtocoloId} espera={esperando ? formatarDuracao(p.ultima_mensagem_em) : undefined} />)
+        })}
       </div>
 
-      <p className="texto-apoio" style={{ marginTop: 14, textAlign: 'center' }}>Histórico completo do cliente (todos os atendimentos). Somente leitura — a captura vem do Multi360.</p>
+      <p className="texto-apoio" style={{ marginTop: 14, textAlign: 'center' }}>Histórico completo do cliente (todos os atendimentos). Somente leitura — a captura vem do Multi360. O responsável e os participantes acima vêm do Multi360; o gestor pode acompanhar qualquer conversa sem ser participante.</p>
     </main>
   )
 }

@@ -89,9 +89,49 @@ async function detalheContato(id) {
       nome: (u.usuarioNome || '').trim() || null,
       atendenteNome: u.atendenteNome || null,
       status: u.status || null,
+      // Participantes da conversa (só exibição): OWNER = o principal; os demais foram
+      // adicionados. Guardamos [{nome, principal}].
+      participantes: mapearParticipantes(j?.participantes),
     }
   } catch {
     return null
+  }
+}
+
+// Lista de participantes do Multi360 -> [{nome, principal}] (principal = tipo OWNER).
+function mapearParticipantes(arr) {
+  if (!Array.isArray(arr)) return []
+  return arr
+    .map((p) => ({ nome: (p?.nome || '').trim(), principal: p?.tipo === 'OWNER' }))
+    .filter((p) => p.nome)
+}
+
+// Grava os participantes de um protocolo (só exibição; não muda SLA nem cobrança).
+async function gravarParticipantes(protoId, participantes) {
+  if (!protoId) return
+  try {
+    await db.from('at_protocolos').update({ participantes: participantes ?? [] }).eq('id', protoId)
+  } catch { /* não interrompe a sincronização por causa disto */ }
+}
+
+// Preenchimento leve: conversas abertas que ainda não tiveram os participantes
+// buscados (coluna NULL). Poucas por rodada, para não dar rajada na API do Multi360.
+async function backfillParticipantes(limite = 80) {
+  try {
+    const { data } = await db
+      .from('at_protocolos')
+      .select('id, numero_protocolo')
+      .in('status_multi360', ['ATIVO', 'AGUARDANDO', 'POTENCIAL'])
+      .is('participantes', null)
+      .limit(limite)
+    if (!data || data.length === 0) return 0
+    for (const p of data) {
+      const d = await detalheContato(p.numero_protocolo)
+      await gravarParticipantes(p.id, d ? d.participantes : [])
+    }
+    return data.length
+  } catch {
+    return 0
   }
 }
 
@@ -579,12 +619,13 @@ async function sync() {
   for (const reg of registros) {
     // Pendentes vêm "enxutos" (sem telefone/nome) — busca o contato no detalhe.
     const pendente = !reg.contatoTelefone
+    let detalhe = null
     if (pendente) {
-      const d = await detalheContato(reg.id)
-      if (d) {
-        reg.contatoTelefone = d.telefone
-        if (!reg.nome && d.nome) reg.nome = d.nome
-        if (!reg.atendenteNome && d.atendenteNome) reg.atendenteNome = d.atendenteNome
+      detalhe = await detalheContato(reg.id)
+      if (detalhe) {
+        reg.contatoTelefone = detalhe.telefone
+        if (!reg.nome && detalhe.nome) reg.nome = detalhe.nome
+        if (!reg.atendenteNome && detalhe.atendenteNome) reg.atendenteNome = detalhe.atendenteNome
       }
     }
     const clienteId = await upsertCliente(reg)
@@ -601,6 +642,9 @@ async function sync() {
     if (Number(reg.mensagensNaoVisualizadas) > 0 || pendente || semMensagens) {
       comNovas++
       await syncMensagens(proto.id, String(reg.id))
+      // Participantes (só exibição): reaproveita o detalhe do pendente; senão busca.
+      if (!detalhe) detalhe = await detalheContato(reg.id)
+      await gravarParticipantes(proto.id, detalhe ? detalhe.participantes : [])
     }
   }
   // Potenciais: guarda como protocolo status POTENCIAL (conta como aberto). Grava a
@@ -624,6 +668,10 @@ async function sync() {
   if (potNovos) console.log(`   ${potNovos} potencial(is) capturado(s).`)
   if (semTelefone) console.log(`   (${semTelefone} conversas sem telefone identificável — ignoradas)`)
   await resolverCobrancasRespondidas()
+
+  // Participantes (só exibição): preenche aos poucos as abertas que ainda não têm.
+  const nPart = await backfillParticipantes(80)
+  if (nPart) console.log(`   ${nPart} conversa(s) tiveram os participantes capturados.`)
 
   // Reconcilia: o que saiu de TODAS as filas de abertas (Ativos + Pendentes +
   // Potenciais) foi encerrado na Multi360 → marca como FINALIZADO no nosso banco.

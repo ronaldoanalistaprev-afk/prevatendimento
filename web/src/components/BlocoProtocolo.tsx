@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, Clock, Check } from 'lucide-react'
+import { ChevronDown, ChevronUp, Clock, Check, Users } from 'lucide-react'
 import { formatarDataHora, formatarNome } from '@/lib/utils'
 import type { HistoricoProtocolo, AtMensagem } from '@/lib/dados'
 
@@ -9,10 +9,17 @@ function ehFinalizada(status: string | null): boolean {
   return status === 'FINALIZADO'
 }
 
-export default function BlocoProtocolo({ p, atual }: { p: HistoricoProtocolo; atual: boolean }) {
+export default function BlocoProtocolo({ p, atual, espera }: { p: HistoricoProtocolo; atual: boolean; espera?: string }) {
   const [aberto, setAberto] = useState(false)
   const finalizada = ehFinalizada(p.status_multi360)
   const clienteFalouPorUltimo = p.ultima_mensagem_direcao === 'cliente'
+
+  // Participantes da conversa (espelhados do Multi360): o responsável (principal)
+  // e os demais colaboradores adicionados para acompanhar. O gestor pode entrar
+  // numa conversa sem ser participante — por isso ele não aparece nesta lista.
+  const participantes = p.participantes ?? []
+  const responsavel = participantes.find((x) => x.principal) ?? null
+  const acompanhantes = participantes.filter((x) => !x.principal)
 
   const ordenadas = [...p.mensagens].reverse()
   const visiveis = aberto ? ordenadas : ordenadas.slice(0, 3)
@@ -31,11 +38,22 @@ export default function BlocoProtocolo({ p, atual }: { p: HistoricoProtocolo; at
         </button>
       </div>
 
+      {/* participantes da conversa (sempre que capturados) */}
+      {participantes.length > 0 && (
+        <div style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', borderBottom: '1px solid var(--linha)' }}>
+          <Users className="icone icone-p" style={{ color: 'var(--tinta-3)' }} aria-hidden="true" focusable="false" />
+          <span className="texto-apoio">{acompanhantes.length > 0 ? 'Participantes:' : 'Responsável:'}</span>
+          {responsavel && <span className="selo selo-acao">{formatarNome(responsavel.nome)} · responsável</span>}
+          {acompanhantes.map((a) => (<span key={a.nome} className="selo selo-neutro">{formatarNome(a.nome)}</span>))}
+          {!responsavel && acompanhantes.length === 0 && <span className="texto-apoio">—</span>}
+        </div>
+      )}
+
       {/* quem falou por último */}
       {!finalizada && (
         <div style={{ padding: '7px 16px', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, background: clienteFalouPorUltimo ? 'var(--atencao-suave)' : 'var(--sucesso-suave)', color: clienteFalouPorUltimo ? 'var(--atencao)' : 'var(--sucesso)', borderBottom: '1px solid var(--linha)' }}>
           {clienteFalouPorUltimo
-            ? <><Clock className="icone icone-p" aria-hidden="true" focusable="false" /> O cliente falou por último — esperando resposta da equipe</>
+            ? <><Clock className="icone icone-p" aria-hidden="true" focusable="false" /> O cliente falou por último — esperando resposta da equipe{espera ? ` há ${espera}` : ''}</>
             : <><Check className="icone icone-p" aria-hidden="true" focusable="false" /> A equipe respondeu por último</>}
         </div>
       )}
