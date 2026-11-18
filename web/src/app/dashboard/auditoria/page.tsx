@@ -1,8 +1,7 @@
 import Link from 'next/link'
 import { getAuditoria, MARCOS_AUDITORIA, getDepartamentosAbertos } from '@/lib/dados'
 import { getPainelGestor } from '@/lib/gestao'
-import FiltroSetor from '@/components/FiltroSetor'
-import FiltroAtendente from '@/components/FiltroAtendente'
+import SeletorMultiplo from '@/components/SeletorMultiplo'
 import FiltroOrdem from '@/components/FiltroOrdem'
 import BannerConfig from '@/components/BannerConfig'
 import AutoRefresh from '@/components/AutoRefresh'
@@ -27,7 +26,7 @@ function rotuloMarco(h: number): string {
   return h < 24 ? `${h}h` : `${h / 24}d`
 }
 
-export default async function AuditoriaPage({ searchParams }: { searchParams: Promise<{ marco?: string; dep?: string; atendente?: string; antigos?: string; ordem?: string }> }) {
+export default async function AuditoriaPage({ searchParams }: { searchParams: Promise<{ marco?: string; dep?: string | string[]; atendente?: string | string[]; antigos?: string; ordem?: string }> }) {
   const { marco: marcoRaw, dep, atendente, antigos: antigosRaw, ordem } = await searchParams
   const marco = MARCOS_AUDITORIA.includes(Number(marcoRaw)) ? Number(marcoRaw) : 24
   const verAntigos = antigosRaw === '1'
@@ -39,50 +38,40 @@ export default async function AuditoriaPage({ searchParams }: { searchParams: Pr
       </main>
     )
   }
+  // Setor e atendente aceitam VÁRIOS valores (Regra 57).
+  const emLista = (v: string | string[] | undefined) => (Array.isArray(v) ? v : v ? [v] : []).filter(Boolean)
+  const deps = emLista(dep)
+  const atendentes = emLista(atendente)
   const [{ recentes, antigos, backlogCount, totalCount, faixas, estado }, painel, departamentos] = await Promise.all([
-    getAuditoria(marco, dep, atendente, ordem),
+    getAuditoria(marco, deps, atendentes, ordem),
     getPainelGestor(),
     getDepartamentosAbertos(),
   ])
   const lista = verAntigos ? antigos : recentes
-  const alternarAntigos = (ligar: boolean) => {
+  // Base dos links: todos os filtros ligados viram parâmetros (setor/atendente repetidos),
+  // com opção de trocar o marco/antigos e de TIRAR um valor de setor ou atendente.
+  const construir = (op: { marco?: number; antigos?: boolean; tiraDep?: string; tiraAtendente?: string } = {}) => {
     const p = new URLSearchParams()
-    if (marco !== 24) p.set('marco', String(marco))
-    if (dep) p.set('dep', dep)
-    if (atendente) p.set('atendente', atendente)
+    const m = 'marco' in op ? op.marco! : marco
+    if (m !== 24) p.set('marco', String(m))
+    for (const d of deps) if (d !== op.tiraDep) p.append('dep', d)
+    for (const a of atendentes) if (a !== op.tiraAtendente) p.append('atendente', a)
     if (ordem) p.set('ordem', ordem)
-    if (ligar) p.set('antigos', '1')
+    const antigosFinal = 'antigos' in op ? op.antigos : verAntigos
+    if (antigosFinal) p.set('antigos', '1')
     const s = p.toString()
     return `/dashboard/auditoria${s ? '?' + s : ''}`
   }
+  const alternarAntigos = (ligar: boolean) => construir({ antigos: ligar })
   const atendentesComConversa = painel.ranking.filter((r) => r.abertas > 0).map((r) => r.atendente)
   const atendentesSemConversa = painel.ranking.filter((r) => r.abertas === 0).map((r) => r.atendente)
-  const temFiltro = Boolean(dep || atendente || marco !== 24)
-  // Etiquetas de filtro ligado (Regra 1): setor e atendente (o tempo "marco" já
-  // aparece selecionado nas abas acima). Cada X remove só aquele filtro.
-  const auditHrefSem = (drop: 'dep' | 'atendente') => {
-    const p = new URLSearchParams()
-    if (marco !== 24) p.set('marco', String(marco))
-    if (dep && drop !== 'dep') p.set('dep', dep)
-    if (atendente && drop !== 'atendente') p.set('atendente', atendente)
-    if (ordem) p.set('ordem', ordem)
-    if (verAntigos) p.set('antigos', '1')
-    const s = p.toString()
-    return `/dashboard/auditoria${s ? '?' + s : ''}`
-  }
-  const etiquetas: { chave: 'dep' | 'atendente'; label: string }[] = []
-  if (dep) etiquetas.push({ chave: 'dep', label: `Setor: ${dep}` })
-  if (atendente) etiquetas.push({ chave: 'atendente', label: `Atendente: ${formatarNome(atendente)}` })
-  const marcoHref = (h: number) => {
-    const p = new URLSearchParams()
-    if (h !== 24) p.set('marco', String(h))
-    if (dep) p.set('dep', dep)
-    if (atendente) p.set('atendente', atendente)
-    if (ordem) p.set('ordem', ordem)
-    if (verAntigos) p.set('antigos', '1')
-    const s = p.toString()
-    return `/dashboard/auditoria${s ? '?' + s : ''}`
-  }
+  const temFiltro = Boolean(deps.length || atendentes.length || marco !== 24)
+  // Etiquetas de filtro ligado (Regra 1): um X por valor de setor/atendente (o tempo
+  // "marco" já aparece selecionado nas abas acima).
+  const etiquetas: { label: string; href: string }[] = []
+  for (const d of deps) etiquetas.push({ label: `Setor: ${d}`, href: construir({ tiraDep: d }) })
+  for (const a of atendentes) etiquetas.push({ label: `Atendente: ${formatarNome(a)}`, href: construir({ tiraAtendente: a }) })
+  const marcoHref = (h: number) => construir({ marco: h })
   const placar = painel.ranking
     .filter((p) => p.abertas > 0)
     .map((p) => ({
@@ -131,8 +120,16 @@ export default async function AuditoriaPage({ searchParams }: { searchParams: Pr
           </div>
         </div>
         <div className="mon-barra">
-          <FiltroSetor departamentos={departamentos} />
-          <FiltroAtendente comConversa={atendentesComConversa} semConversa={atendentesSemConversa} />
+          <SeletorMultiplo nome="dep" rotulo="Setor" rotuloVazio="todos" opcoes={departamentos.map((d) => ({ valor: d }))} />
+          <SeletorMultiplo
+            nome="atendente"
+            rotulo="Atendente"
+            rotuloVazio="todos"
+            opcoes={[
+              ...atendentesComConversa.map((a) => ({ valor: a, grupo: 'Com conversa aberta' })),
+              ...atendentesSemConversa.map((a) => ({ valor: a, grupo: 'Sem conversa aberta' })),
+            ]}
+          />
           <FiltroOrdem />
           {temFiltro && (
             <Link href="/dashboard/auditoria" className="botao botao-discreto" style={{ marginLeft: 'auto', color: 'var(--perigo)' }}>
@@ -145,7 +142,7 @@ export default async function AuditoriaPage({ searchParams }: { searchParams: Pr
             <span className="mon-rot">Filtros</span>
             <div className="etiquetas-filtro">
               {etiquetas.map((e) => (
-                <Link key={e.chave} className="etiqueta-filtro" href={auditHrefSem(e.chave)} aria-label={`Tirar filtro ${e.label}`} title={`Tirar filtro ${e.label}`}>
+                <Link key={e.label} className="etiqueta-filtro" href={e.href} aria-label={`Tirar filtro ${e.label}`} title={`Tirar filtro ${e.label}`}>
                   {e.label} <span className="x" aria-hidden="true"><X className="icone" focusable="false" /></span>
                 </Link>
               ))}

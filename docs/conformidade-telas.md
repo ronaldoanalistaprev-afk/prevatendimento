@@ -149,6 +149,15 @@ rodar). Antes as duas diziam a mesma frase.
    tela de entrar nem na busca (lá o Enter executa, de propósito). ⏳ **Falta a conferência no
    aparelho** (é mudança de comportamento — Regra 54).
 
+9. **Regra 57 — filtros de várias opções** ✅ feito no código em 18/11/2026: os filtros de **setor** e
+   **atendente** no Monitor e na Auditoria viraram um **seletor pesquisável de várias opções**
+   (`web/src/components/SeletorMultiplo.tsx`): marca-se mais de uma opção, busca sem acento, Esc e
+   clique fora fecham, vazio = sem filtro, as escolhas ficam no endereço (parâmetros repetidos
+   `?dep=A&dep=B`), as contagens/total/etiquetas consideram todas (loaders `getMonitorProtocolos`/
+   `getAuditoria` passaram a aceitar lista e filtrar com `IN`). Situação (abas) e período (datas)
+   seguem de opção única, pela própria Regra 57. Os componentes antigos `FiltroSetor`/`FiltroAtendente`
+   (seleção única) foram removidos. ⏳ falta a conferência no aparelho (teclado/celular, Regra 54).
+
 8. **Participantes da conversa + tempo de espera** ✅ feito em 18/11/2026 (decisão "Só mostrar" do
    Ronaldo): a tela da conversa (`monitor/[id]`) passa a mostrar o **responsável** (destacado) e os
    **participantes** adicionados (faixa no `BlocoProtocolo`), e traz o **tempo de espera** que só

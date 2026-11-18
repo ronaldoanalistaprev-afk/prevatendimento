@@ -5,9 +5,8 @@ import AutoRefresh from '@/components/AutoRefresh'
 import SeloAtualizacao from '@/components/SeloAtualizacao'
 import { formatarTelefone, formatarDataHora, formatarDuracao, formatarNome } from '@/lib/utils'
 import { Radar, Clock, Inbox, AlarmClock, ChevronRight, Paperclip, X } from 'lucide-react'
-import FiltroAtendente from '@/components/FiltroAtendente'
+import SeletorMultiplo from '@/components/SeletorMultiplo'
 import FiltroCompetencia from '@/components/FiltroCompetencia'
-import FiltroSetor from '@/components/FiltroSetor'
 import FiltroOrdem from '@/components/FiltroOrdem'
 import BuscaMonitor from '@/components/BuscaMonitor'
 import LembrarPeriodo from '@/components/LembrarPeriodo'
@@ -28,98 +27,68 @@ const SITUACOES = [
   { chave: 'todas', label: 'Todas' },
 ]
 
-export default async function MonitorPage({ searchParams }: { searchParams: Promise<{ dep?: string; periodo?: string; atendente?: string; situacao?: string; pagina?: string; busca?: string; competencia?: string; so?: string; ordem?: string }> }) {
+export default async function MonitorPage({ searchParams }: { searchParams: Promise<{ dep?: string | string[]; periodo?: string; atendente?: string | string[]; situacao?: string; pagina?: string; busca?: string; competencia?: string; so?: string; ordem?: string }> }) {
   const { dep, periodo: periodoRaw, atendente, situacao: situacaoRaw, pagina: paginaRaw, busca, competencia, so, ordem } = await searchParams
   const periodo = competencia ? 'tudo' : periodoRaw || 'hoje'
   const situacao = situacaoRaw || 'abertas'
   const paginaPedida = Math.max(1, Number(paginaRaw) || 1)
 
+  // Setor e atendente aceitam VÁRIOS valores (Regra 57).
+  const emLista = (v: string | string[] | undefined) => (Array.isArray(v) ? v : v ? [v] : []).filter(Boolean)
+  const deps = emLista(dep)
+
   // Colaborador só enxerga as próprias conversas (filtro travado no seu nome do Multi360).
   const papel = await getPapelAtual()
   const restrito = !papel.verTudo
-  const atendenteEfetivo = restrito ? (papel.colaboradorNome ?? 'sem-vinculo') : atendente
+  const atendentes = restrito ? [] : emLista(atendente)
+  const atendenteEfetivo = restrito ? (papel.colaboradorNome ?? 'sem-vinculo') : atendentes
 
-  const { itens, resumo, departamentos, atendentesComConversa, atendentesSemConversa, pagina, totalPaginas, estado } = await getMonitorProtocolos(dep, periodo, atendenteEfetivo, situacao, busca, competencia, paginaPedida, so, ordem)
+  const { itens, resumo, departamentos, atendentesComConversa, atendentesSemConversa, pagina, totalPaginas, estado } = await getMonitorProtocolos(deps, periodo, atendenteEfetivo, situacao, busca, competencia, paginaPedida, so, ordem)
   const temAtendentes = atendentesComConversa.length + atendentesSemConversa.length > 0
-  const temFiltro = Boolean(dep || busca || competencia || atendente || so || situacao !== 'abertas' || periodo !== 'hoje')
-  // Atalho dos cartões (liga/desliga "só sem resposta" / "só aguardando")
-  const soHref = (v: string) => {
+  const temFiltro = Boolean(deps.length || busca || competencia || atendentes.length || so || situacao !== 'abertas' || periodo !== 'hoje')
+
+  // Base dos links: todos os filtros ligados viram parâmetros (setor/atendente repetidos),
+  // com a possibilidade de SOBRESCREVER período/situação/so/pagina e de TIRAR um valor.
+  const construir = (op: { periodo?: string; situacao?: string; so?: string | null; pagina?: number; tiraDep?: string; tiraAtendente?: string; tiraBusca?: boolean; tiraCompetencia?: boolean; tiraPeriodo?: boolean; tiraSituacao?: boolean; tiraSo?: boolean } = {}) => {
     const p = new URLSearchParams()
-    if (dep) p.set('dep', dep)
-    if (competencia) p.set('competencia', competencia)
-    else if (periodo !== 'hoje') p.set('periodo', periodo)
-    if (atendente) p.set('atendente', atendente)
-    if (busca) p.set('busca', busca)
+    if (busca && !op.tiraBusca) p.set('busca', busca)
+    for (const d of deps) if (d !== op.tiraDep) p.append('dep', d)
+    for (const a of atendentes) if (a !== op.tiraAtendente) p.append('atendente', a)
+    // período × competência: a competência tem prioridade; trocar o período limpa a competência
+    if ('periodo' in op) { if (op.periodo && op.periodo !== 'hoje') p.set('periodo', op.periodo) }
+    else {
+      if (competencia && !op.tiraCompetencia) p.set('competencia', competencia)
+      else if (periodo !== 'hoje' && !op.tiraPeriodo) p.set('periodo', periodo)
+    }
+    const si = 'situacao' in op ? op.situacao : (op.tiraSituacao ? 'abertas' : situacao)
+    if (si && si !== 'abertas') p.set('situacao', si)
+    const soFinal = 'so' in op ? op.so : (op.tiraSo ? null : so)
+    if (soFinal) p.set('so', soFinal)
     if (ordem) p.set('ordem', ordem)
-    if (so !== v) p.set('so', v)
+    if (op.pagina && op.pagina > 1) p.set('pagina', String(op.pagina))
     const s = p.toString()
     return `/dashboard/monitor${s ? '?' + s : ''}`
   }
+  // Atalho dos cartões (liga/desliga "só sem resposta" / "só aguardando")
+  const soHref = (v: string) => construir({ so: so === v ? null : v })
   const primeiro = itens.length === 0 ? 0 : (pagina - 1) * 50 + 1
   const ultimo = (pagina - 1) * 50 + itens.length
-  const paginaHref = (n: number) => {
-    const p = new URLSearchParams()
-    if (dep) p.set('dep', dep)
-    if (!competencia && periodo !== 'hoje') p.set('periodo', periodo)
-    if (competencia) p.set('competencia', competencia)
-    if (situacao !== 'abertas') p.set('situacao', situacao)
-    if (atendente) p.set('atendente', atendente)
-    if (busca) p.set('busca', busca)
-    if (ordem) p.set('ordem', ordem)
-    if (so) p.set('so', so)
-    if (n > 1) p.set('pagina', String(n))
-    const s = p.toString()
-    return `/dashboard/monitor${s ? '?' + s : ''}`
-  }
-  const qs = (over: { dep?: string; periodo?: string; situacao?: string }) => {
-    const p = new URLSearchParams()
-    const d = 'dep' in over ? over.dep : dep
-    const pe = 'periodo' in over ? over.periodo : periodo
-    const si = 'situacao' in over ? over.situacao : situacao
-    if (d) p.set('dep', d)
-    if ('periodo' in over) {
-      if (pe) p.set('periodo', pe)
-    } else {
-      if (competencia) p.set('competencia', competencia)
-      else if (pe && pe !== 'hoje') p.set('periodo', pe)
-    }
-    if (si && si !== 'abertas') p.set('situacao', si)
-    if (atendente) p.set('atendente', atendente)
-    if (busca) p.set('busca', busca)
-    if (ordem) p.set('ordem', ordem)
-    if (so) p.set('so', so)
-    const s = p.toString()
-    return `/dashboard/monitor${s ? '?' + s : ''}`
-  }
+  const paginaHref = (n: number) => construir({ pagina: n })
+  const qs = (over: { periodo?: string; situacao?: string }) => construir(over)
 
   const finalizadas = situacao === 'finalizadas'
 
-  // Etiquetas de filtro ligado (Regra 1): cada filtro ativo vira uma etiqueta com X
-  // que remove SÓ aquele filtro. "Limpar filtros" (ao lado) continua limpando tudo.
-  const filtrosAtuais: Record<string, string> = {}
-  if (busca) filtrosAtuais.busca = busca
-  if (dep) filtrosAtuais.dep = dep
-  if (competencia) filtrosAtuais.competencia = competencia
-  else if (periodo !== 'hoje') filtrosAtuais.periodo = periodo
-  if (atendente && !restrito) filtrosAtuais.atendente = atendente
-  if (situacao !== 'abertas') filtrosAtuais.situacao = situacao
-  if (so) filtrosAtuais.so = so
-  if (ordem) filtrosAtuais.ordem = ordem // vai na URL, mas não vira etiqueta (é ordenação, não filtro)
-  const hrefSem = (drop: string) => {
-    const p = new URLSearchParams()
-    for (const [k, v] of Object.entries(filtrosAtuais)) if (k !== drop) p.set(k, v)
-    const s = p.toString()
-    return `/dashboard/monitor${s ? '?' + s : ''}`
-  }
+  // Etiquetas de filtro ligado (Regra 1): cada filtro ativo vira uma etiqueta com X que
+  // remove SÓ aquele filtro (um por valor de setor/atendente). "Limpar filtros" limpa tudo.
   const competenciaLabel = (c: string) => { const [a, m] = c.split('-'); return m && a ? `${m}/${a}` : c }
-  const etiquetas: { chave: string; label: string }[] = []
-  if (filtrosAtuais.busca) etiquetas.push({ chave: 'busca', label: `Busca: "${busca}"` })
-  if (filtrosAtuais.dep) etiquetas.push({ chave: 'dep', label: `Setor: ${dep}` })
-  if (filtrosAtuais.competencia) etiquetas.push({ chave: 'competencia', label: `Competência: ${competenciaLabel(competencia!)}` })
-  if (filtrosAtuais.periodo) etiquetas.push({ chave: 'periodo', label: `Período: ${PERIODOS.find((x) => x.chave === periodo)?.label ?? periodo}` })
-  if (filtrosAtuais.atendente) etiquetas.push({ chave: 'atendente', label: `Atendente: ${formatarNome(atendente!)}` })
-  if (filtrosAtuais.situacao) etiquetas.push({ chave: 'situacao', label: `Situação: ${SITUACOES.find((x) => x.chave === situacao)?.label ?? situacao}` })
-  if (filtrosAtuais.so) etiquetas.push({ chave: 'so', label: so === 'esperando' ? 'Só: escritório precisa responder' : 'Só: aguardando o cliente' })
+  const etiquetas: { label: string; href: string }[] = []
+  if (busca) etiquetas.push({ label: `Busca: "${busca}"`, href: construir({ tiraBusca: true }) })
+  for (const d of deps) etiquetas.push({ label: `Setor: ${d}`, href: construir({ tiraDep: d }) })
+  if (competencia) etiquetas.push({ label: `Competência: ${competenciaLabel(competencia)}`, href: construir({ tiraCompetencia: true }) })
+  else if (periodo !== 'hoje') etiquetas.push({ label: `Período: ${PERIODOS.find((x) => x.chave === periodo)?.label ?? periodo}`, href: construir({ tiraPeriodo: true }) })
+  for (const a of atendentes) etiquetas.push({ label: `Atendente: ${formatarNome(a)}`, href: construir({ tiraAtendente: a }) })
+  if (situacao !== 'abertas') etiquetas.push({ label: `Situação: ${SITUACOES.find((x) => x.chave === situacao)?.label ?? situacao}`, href: construir({ tiraSituacao: true }) })
+  if (so) etiquetas.push({ label: so === 'esperando' ? 'Só: escritório precisa responder' : 'Só: aguardando o cliente', href: construir({ tiraSo: true }) })
 
   return (
     <main id="conteudo" className="conteudo" tabIndex={-1}>
@@ -180,8 +149,18 @@ export default async function MonitorPage({ searchParams }: { searchParams: Prom
           <span style={{ fontSize: 12.5, color: 'var(--tinta-3)' }}>ou</span>
           <FiltroCompetencia />
           <span style={{ width: 1, height: 22, background: 'var(--linha)', margin: '0 4px' }} />
-          <FiltroSetor departamentos={departamentos} />
-          {!restrito && temAtendentes && <FiltroAtendente comConversa={atendentesComConversa} semConversa={atendentesSemConversa} />}
+          <SeletorMultiplo nome="dep" rotulo="Setor" rotuloVazio="todos" opcoes={departamentos.map((d) => ({ valor: d }))} />
+          {!restrito && temAtendentes && (
+            <SeletorMultiplo
+              nome="atendente"
+              rotulo="Atendente"
+              rotuloVazio="todos"
+              opcoes={[
+                ...atendentesComConversa.map((a) => ({ valor: a, grupo: 'Com conversa aberta' })),
+                ...atendentesSemConversa.map((a) => ({ valor: a, grupo: 'Sem conversa aberta' })),
+              ]}
+            />
+          )}
           <span style={{ marginLeft: 'auto' }}><FiltroOrdem /></span>
         </div>
 
@@ -195,7 +174,7 @@ export default async function MonitorPage({ searchParams }: { searchParams: Prom
             <span className="mon-rot">Filtros</span>
             <div className="etiquetas-filtro">
               {etiquetas.map((e) => (
-                <Link key={e.chave} className="etiqueta-filtro" href={hrefSem(e.chave)} aria-label={`Tirar filtro ${e.label}`} title={`Tirar filtro ${e.label}`}>
+                <Link key={e.label} className="etiqueta-filtro" href={e.href} aria-label={`Tirar filtro ${e.label}`} title={`Tirar filtro ${e.label}`}>
                   {e.label} <span className="x" aria-hidden="true"><X className="icone" focusable="false" /></span>
                 </Link>
               ))}

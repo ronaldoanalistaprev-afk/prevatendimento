@@ -263,7 +263,7 @@ export async function contarConversas(): Promise<{ abertas: number; finalizadas:
   }
 }
 
-export async function getMonitorProtocolos(dep?: string, periodo?: string, atendente?: string, situacao?: string, busca?: string, competencia?: string, pagina = 1, so?: string, ordem?: string): Promise<{
+export async function getMonitorProtocolos(dep?: string | string[], periodo?: string, atendente?: string | string[], situacao?: string, busca?: string, competencia?: string, pagina = 1, so?: string, ordem?: string): Promise<{
   itens: ProtocoloMonitor[]
   resumo: MonitorResumo
   departamentos: string[]
@@ -302,12 +302,18 @@ export async function getMonitorProtocolos(dep?: string, periodo?: string, atend
     const termoFon = normalizarFonetico(busca || '').replace(/[,%()]/g, '')
     const termoDigitos = (busca || '').replace(/\D/g, '')
 
+    // Setor e atendente aceitam VÁRIOS valores (Regra 57): uma opção = igualdade; várias = IN.
+    const deps = (Array.isArray(dep) ? dep : dep ? [dep] : []).filter(Boolean)
+    const atendentes_ = (Array.isArray(atendente) ? atendente : atendente ? [atendente] : []).filter(Boolean)
+
     // Filtros comuns (setor / atendente / período / busca) — reusados em contagens e listagem.
     /* eslint-disable @typescript-eslint/no-explicit-any */
     const comuns = (q: any): any => {
       let x = q
-      if (dep) x = x.eq('departamento', dep)
-      if (atendente) x = x.eq('atendente_nome', atendente)
+      if (deps.length === 1) x = x.eq('departamento', deps[0])
+      else if (deps.length > 1) x = x.in('departamento', deps)
+      if (atendentes_.length === 1) x = x.eq('atendente_nome', atendentes_[0])
+      else if (atendentes_.length > 1) x = x.in('atendente_nome', atendentes_)
       if (corteISO) x = x.gte('ultima_mensagem_em', corteISO)
       if (corteFimISO) x = x.lt('ultima_mensagem_em', corteFimISO)
       if (termoFon || termoDigitos) {
@@ -416,7 +422,7 @@ export interface PlacarItem {
 /** Marcos de tempo sem resposta que a Auditoria acompanha (em horas). */
 export const MARCOS_AUDITORIA = [2, 4, 8, 24, 48, 72]
 
-export async function getAuditoria(marcoHoras = 24, dep?: string, atendente?: string, ordem?: string): Promise<{
+export async function getAuditoria(marcoHoras = 24, dep?: string | string[], atendente?: string | string[], ordem?: string): Promise<{
   recentes: AuditoriaItem[]
   /** Parados há mais de 60 dias (a "fila antiga") — lista, não só a contagem. */
   antigos: AuditoriaItem[]
@@ -429,12 +435,17 @@ export async function getAuditoria(marcoHoras = 24, dep?: string, atendente?: st
   if (!bancoConfigurado()) return vazio
   try {
     const supabase = await createClient()
+    // Setor e atendente aceitam VÁRIOS valores (Regra 57): uma opção = igualdade; várias = IN.
+    const deps = (Array.isArray(dep) ? dep : dep ? [dep] : []).filter(Boolean)
+    const atendentes_ = (Array.isArray(atendente) ? atendente : atendente ? [atendente] : []).filter(Boolean)
     /* eslint-disable @typescript-eslint/no-explicit-any */
     // só conversas ABERTAS (finalizadas não são "sem resposta") + filtros de setor/atendente
     const base = (q: any): any => {
       let x = q.in('status_multi360', STATUS_ABERTAS)
-      if (dep) x = x.eq('departamento', dep)
-      if (atendente) x = x.eq('atendente_nome', atendente)
+      if (deps.length === 1) x = x.eq('departamento', deps[0])
+      else if (deps.length > 1) x = x.in('departamento', deps)
+      if (atendentes_.length === 1) x = x.eq('atendente_nome', atendentes_[0])
+      else if (atendentes_.length > 1) x = x.in('atendente_nome', atendentes_)
       return x
     }
     /* eslint-enable @typescript-eslint/no-explicit-any */
