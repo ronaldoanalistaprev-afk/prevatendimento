@@ -2,6 +2,8 @@ import { Fragment } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, MessageSquare, Send, Flag, FileText, Phone, StickyNote, Sparkles, Target, UserX, ChevronRight } from 'lucide-react'
 import { getPessoa } from '@/lib/dados'
+import { getPapelAtual } from '@/lib/papel'
+import SemPermissao from '@/components/SemPermissao'
 import { formatarCpf, formatarTelefone, formatarDataHora, rotuloEstagio, coresEstagio, tempoDecorrido, statusObjetivo, statusMissao, statusConversa, seloPrioridade, pareceTelefone, formatarNome } from '@/lib/utils'
 import type { Evento, TipoEvento } from '@/lib/tipos'
 
@@ -45,6 +47,8 @@ function iniciais(nome: string | null | undefined): string {
 }
 
 export default async function PessoaDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  if (!(await getPapelAtual()).verTudo) return <main id="conteudo" className="conteudo" tabIndex={-1}><SemPermissao tela="Pessoas" /></main>
+
   const { id } = await params
   const { pessoa, identificadores, eventos, conversas, objetivos } = await getPessoa(id)
 

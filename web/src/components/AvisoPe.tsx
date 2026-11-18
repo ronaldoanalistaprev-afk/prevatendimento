@@ -27,24 +27,40 @@ export function AvisoPeProvider({ children }: { children: React.ReactNode }) {
   const restante = useRef(8000)
   const inicio = useRef(0)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const saida = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const atual = useRef<number | null>(null)
 
-  const fechar = useCallback(() => {
+  /** Fecha o aviso — só o que está na tela agora (um aviso novo, aberto no meio, não é apagado). */
+  const fechar = useCallback((id?: number) => {
+    if (id !== undefined && id !== atual.current) return
+    const alvo = atual.current
     if (timer.current) clearTimeout(timer.current)
+    if (saida.current) clearTimeout(saida.current)
     setSaindo(true)
-    setTimeout(() => { setAviso(null); setSaindo(false) }, 220)
+    saida.current = setTimeout(() => {
+      if (atual.current !== alvo) return
+      atual.current = null
+      setAviso(null)
+      setSaindo(false)
+    }, 220)
   }, [])
 
   const armar = useCallback(() => {
     if (timer.current) clearTimeout(timer.current)
     inicio.current = Date.now()
-    timer.current = setTimeout(fechar, restante.current)
+    const id = atual.current ?? undefined
+    timer.current = setTimeout(() => fechar(id), restante.current)
   }, [fechar])
 
   const avisar = useCallback<Ctx['avisar']>((a) => {
     restante.current = 8000
+    pausado.current = false
+    if (saida.current) clearTimeout(saida.current)
+    const id = Date.now() + Math.random()
+    atual.current = id
     setSaindo(false)
     setDesfazendo(false)
-    setAviso({ id: Date.now(), ...a })
+    setAviso({ id, ...a })
   }, [])
 
   useEffect(() => {
@@ -52,6 +68,8 @@ export function AvisoPeProvider({ children }: { children: React.ReactNode }) {
     armar()
     return () => { if (timer.current) clearTimeout(timer.current) }
   }, [aviso, armar])
+
+  useEffect(() => () => { if (saida.current) clearTimeout(saida.current) }, [])
 
   const pausar = () => {
     if (pausado.current || !timer.current) return
@@ -67,10 +85,11 @@ export function AvisoPeProvider({ children }: { children: React.ReactNode }) {
 
   async function onDesfazer() {
     if (!aviso?.desfazer) return
+    const id = aviso.id
     setDesfazendo(true)
     try {
       await aviso.desfazer()
-      fechar()
+      fechar(id)
     } catch {
       avisar({ texto: 'Não foi possível desfazer. Tente de novo ou faça a mudança na própria tela.', erro: true })
     }
@@ -99,7 +118,7 @@ export function AvisoPeProvider({ children }: { children: React.ReactNode }) {
               {desfazendo ? 'Desfazendo…' : 'Desfazer'}
             </button>
           )}
-          <button type="button" className="botao-icone" aria-label="Fechar o aviso" onClick={fechar}>
+          <button type="button" className="botao-icone" aria-label="Fechar o aviso" onClick={() => fechar()}>
             <X className="icone" aria-hidden="true" focusable="false" />
           </button>
         </div>

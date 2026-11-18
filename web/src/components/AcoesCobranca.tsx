@@ -91,7 +91,7 @@ export default function AcoesCobranca({ id, status, mensagem, prazo, podeGerenci
   function desfazerCom(acao: Acao, corpo?: Record<string, unknown>) {
     return async () => {
       try { await enviar(acao, corpo) } catch {
-        setTimeout(() => avisar({ texto: 'Não foi possível desfazer. Atualize a página e faça a mudança pela própria cobrança.' }), 300)
+        setTimeout(() => avisar({ texto: 'Não foi possível desfazer. Atualize a página e faça a mudança pela própria cobrança.', erro: true }), 300)
       }
       router.refresh()
     }

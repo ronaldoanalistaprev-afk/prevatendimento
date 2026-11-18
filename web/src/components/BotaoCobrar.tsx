@@ -107,12 +107,13 @@ export default function BotaoCobrar({ protocoloId, atendente, modelos = [] }: { 
               if (r?.ok) router.refresh()
               // O aviso atual fecha ao terminar o Desfazer; o resultado entra logo depois, num aviso novo.
               const texto = r?.ok ? 'Cobrança desfeita.' : 'Não foi possível desfazer. Cancele a cobrança na tela Cobranças.'
-              setTimeout(() => avisar({ texto }), 300)
+              setTimeout(() => avisar({ texto, erro: !r?.ok }), 300)
             }
           : undefined,
       })
     } catch (err) {
-      setErro(`Não foi possível enviar a cobrança: ${(err as Error).message}. Confira e tente de novo.`)
+      console.error('cobrar atendente', err)
+      setErro('Não foi possível enviar a cobrança. Confira a internet e tente de novo; se continuar, avise o administrador.')
     } finally {
       setSalvando(false)
     }

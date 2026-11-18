@@ -48,7 +48,8 @@ export default function BuscaMonitor() {
     const limpo = valor.trim()
     if (limpo === enviado.current) return
     enviado.current = limpo
-    const p = new URLSearchParams(sp.toString())
+    // Lê os filtros do endereço no momento do disparo (outro filtro pode ter mudado nos 300 ms de espera).
+    const p = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : sp.toString())
     if (limpo) p.set('busca', limpo)
     else p.delete('busca')
     p.delete('pagina') // volta pra página 1

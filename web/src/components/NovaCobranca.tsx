@@ -168,7 +168,7 @@ export default function NovaCobranca({ atendentes = [], modelos = [] }: { atende
         desfazer: novaId ? async () => {
           const d = await fetch(`/api/cobrancas?id=${encodeURIComponent(novaId)}`, { method: 'DELETE' }).catch(() => null)
           router.refresh()
-          if (!d?.ok) setTimeout(() => avisar({ texto: 'Não foi possível desfazer. A cobrança continua na lista; exclua por ela, se quiser.' }), 300)
+          if (!d?.ok) setTimeout(() => avisar({ texto: 'Não foi possível desfazer. A cobrança continua na lista; exclua por ela, se quiser.', erro: true }), 300)
         } : undefined,
       })
     } catch {

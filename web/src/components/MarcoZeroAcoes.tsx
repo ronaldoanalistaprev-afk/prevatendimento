@@ -50,7 +50,7 @@ export function PrepararLote({ padrao = 40 }: { padrao?: number }) {
           desfazer: lote ? async () => {
             const d = await fetch(`/api/marco-zero?lote=${lote}`, { method: 'DELETE' }).catch(() => null)
             router.refresh()
-            if (!d?.ok) setTimeout(() => avisar({ texto: `Não foi possível desfazer. Use “Desfazer” na linha do lote ${lote}.` }), 300)
+            if (!d?.ok) setTimeout(() => avisar({ texto: `Não foi possível desfazer. Use “Desfazer” na linha do lote ${lote}.`, erro: true }), 300)
           } : undefined,
         })
       }
