@@ -874,3 +874,29 @@ legend { padding: 0; }
   .etiqueta-filtro { min-height:44px; padding-top:7px; padding-bottom:7px; }
   .etiqueta-filtro .x { width:26px; height:26px; }
 }
+
+/* ---------- Peças acrescentadas em 18/11/2026 (auditoria de aparência) ---------- */
+/* Chip de escolha (Situação, Período, Ordem, Prazo…) — referência monitor-referencia.html:28-30 */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border-radius: 999px; border: 0;
+  font: inherit; font-size: 14px; font-weight: 600; text-decoration: none; color: var(--tinta-2); cursor: pointer;
+  box-shadow: inset 0 0 0 1px var(--linha-forte); background: var(--superficie); white-space: normal; text-align: left; }
+.chip:hover { background: var(--recuo); }
+.chip[aria-current="true"], .chip[aria-pressed="true"] { background: var(--acao); color: #fff; box-shadow: none; }
+.chip .chip-conta { font-variant-numeric: tabular-nums; opacity: .8; font-weight: 550; }
+@media (max-width: 767px), (pointer: coarse) { .chip { min-height: 44px; font-size: 15px; padding: 0 14px; } }
+
+/* Avatar de iniciais — um só desenho em todas as telas */
+.avatar { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; display: inline-grid; place-items: center;
+  background: var(--acao-suave); color: var(--acao-forte); font-weight: 650; font-size: 15px; letter-spacing: -.01em; }
+.avatar.p { width: 32px; height: 32px; font-size: 13px; }
+.avatar.g { width: 52px; height: 52px; font-size: 19px; }
+
+/* Grade de números (cartões .mon-num) que quebra sozinha */
+.grade-numeros { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin: 0; }
+
+/* Barra de ações do aviso do pé */
+.aviso-pe .aviso-pe-texto { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.aviso-pe .botao-discreto { min-height: 36px; }
+@media (max-width: 767px), (pointer: coarse) { .aviso-pe .botao-discreto, .aviso-pe .botao-icone { min-height: 44px; min-width: 44px; } }
+@media (prefers-reduced-motion: reduce) { .aviso-pe, .aviso-pe.saindo { transition: opacity .2s ease; transform: translateX(-50%); } }

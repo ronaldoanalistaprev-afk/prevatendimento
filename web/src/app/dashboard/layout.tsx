@@ -6,6 +6,7 @@ import { getPermissoesMapa, podeAcessar } from '@/lib/permissoes'
 import { contarConversas } from '@/lib/dados'
 import { contarAcoes } from '@/lib/acoes'
 import { TELAS } from '@/lib/telas'
+import { AvisoPeProvider } from '@/components/AvisoPe'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [papel, mapa, conversas, acoes] = await Promise.all([
@@ -22,7 +23,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const telasPermitidas = TELAS.filter((t) => podeAcessar(mapa, t.chave, papel.role)).map((t) => t.chave)
   const contadores = { acoes, abertas: conversas.abertas, finalizadas: conversas.finalizadas }
   return (
-    <>
+    <AvisoPeProvider>
       <a className="pular" href="#conteudo">Pular para o conteúdo</a>
       <div className="casca">
         <Suspense fallback={<div className="lateral" aria-hidden="true" />}>
@@ -39,6 +40,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </Suspense>
         <div className="principal">{children}</div>
       </div>
-    </>
+    </AvisoPeProvider>
   )
 }
