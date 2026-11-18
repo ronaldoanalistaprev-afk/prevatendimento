@@ -55,6 +55,24 @@ localStorage['ngStorage-token']))` → cola o token aqui → eu troco no `.env`,
 (`cd multi360-reader && npm run start:local`) e ele puxa o atraso. Diagnóstico: `node ultima-sync.js`.
 (A leitura automática do token pelo navegador é **bloqueada** por segurança — por isso depende dele.)
 
+## 2-A. TRAVA: estado vivo vence memória e CLAUDE.md (Ronaldo, 18/11/2026)
+
+Em 18/11/2026 afirmei que a sincronização estava parada desde 06/08 e que o token tinha vencido, quando outra conversa
+já tinha renovado o token ~16-17/11 e o sistema estava no ar. Eu tinha lido o estado numa nota velha e não conferi.
+**Regra:** antes de dizer ao Ronaldo que algo está parado, vencido, quebrado, pendente ou "não existe", conferir ao vivo:
+
+1. **Sincronização:** `select max(executado_em) from at_extracao_log` e `select max(ultima_mensagem_em) from at_protocolos`
+   (Supabase `cgnudnxivpeyzcurdzkt`), e `node multi360-reader/ultima-sync.js`. Processo do leitor: `Get-CimInstance Win32_Process -Filter "Name='node.exe'"`.
+2. **Publicação:** `vercel ls` / `vercel inspect` (o que está no ar), não "o que a memória diz".
+3. **Banco/colunas:** consultar `information_schema`, não supor pelo SQL guardado em `sql/`.
+4. **Outras conversas do projeto:** no começo da sessão, `list_sessions` filtrando `cwd` deste projeto; se houver conversa ativa
+   nos últimos 3 dias, ler o final dela (transcrição) ou `git log -10` antes de afirmar o estado. Outra conversa pode ter mudado
+   token, banco, deploy ou código sem eu saber.
+5. **Datas:** `CLAUDE.md` e memória são fotografia datada. Ao citá-las, dizer a data ("segundo a nota de 16/11…") e conferir
+   antes de agir. Informação sobre token/sincronização vale por horas, não por dias.
+
+Memória e CLAUDE.md dizem onde procurar; **quem diz o estado é o banco e o processo rodando**.
+
 ## 3. Stack e estrutura
 
 **Stack** (`web/package.json`): Next.js **16.2.6** (App Router) · React **19.2.4** · TypeScript 5 ·
