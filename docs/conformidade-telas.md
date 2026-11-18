@@ -1,7 +1,7 @@
 # Conformidade das telas com o Documento Mestre de Padronização (v2)
 
 > Auditoria das telas do PrevAtendimento contra o **Documento Mestre de Padronização – versão 2**
-> (`E:\Projetos\SIAP\Documentos Globais\Documento Mestre de Padronização - versão 2.txt`, 56 regras).
+> (`E:\Projetos\SIAP\Documentos Globais\Documento Mestre de Padronização - versão 2.txt`, 57 regras).
 > Esta ficha é o detalhe do projeto; o resumo por projeto fica em
 > `Documentos Globais\Conformidade do Documento Mestre.txt` (seção PrevAtendimento).
 >
@@ -14,12 +14,9 @@
 
 ## Contexto que limita a auditoria
 
-- **Regra 44 (aparência vem do Laboratório de Design):** 🙋 o PrevAtendimento **não** tem pacote de
-  entrega do Laboratório nem está na exceção da skill Apple Design. Hoje o visual é "na mão" (estilos
-  inline, cores digitadas em cada tela). **Não se inventa aparência.** Falta o Ronaldo decidir (rodada
-  no Laboratório vs. incluir o projeto na exceção Apple Design). Por isso esta auditoria trata de
-  **comportamento, dados e apresentação de informação** (Partes A e B, e a Parte C que não é "cara do
-  sistema": nomes, máscaras, formatos), e **não** mexe em paleta, tipografia ou composição.
+- **Regra 44 (aparência):** ✅ desde 16/11/2026 o PrevAtendimento está na exceção da skill Apple Design (CLAUDE global), com
+  a base das 15 telas do PrevSystem; o front-end inteiro foi convertido em 16/11/2026 (`web/src/app/apple-design.css`). Falta só a
+  foto da Regra 54. (Texto antigo, de antes da decisão, retirado em 18/11/2026.)
 - **Regra 56 (dado lido de documento é conferido):** N/A hoje — o PrevAtendimento **espelha** o
   Multi360 e **não lê PDF do INSS** (capacidade futura). A coerência do dado espelhado é cuidada no
   leitor (`multi360-reader/`), fora das telas.
@@ -126,7 +123,7 @@ rodar). Antes as duas diziam a mesma frase.
    (usa a classe `.esqueleto` da skill) aparece na hora em toda troca de tela do painel, então a tela
    não "trava" na anterior enquanto o servidor responde. (Foi o que explicava a sensação de lentidão:
    as consultas do banco levam ~4 ms — medido —, o problema era a falta desta tela de carregamento.)
-2. **Regra 44 — aparência:** 🙋 decisão do Ronaldo (rodada no Laboratório vs. exceção Apple Design).
+2. **Regra 44 — aparência:** ✅ decidida em 16/11/2026: exceção Apple Design (CLAUDE global); front-end inteiro convertido em 16/11.
    Enquanto não houver pacote, não se mexe em cores/tipografia/composição.
 3. **Regra 54 — foto e conferência no aparelho:** ⏳ depende de o Ronaldo abrir as telas (390/1440/320 px).
 4. **Regra 1 — etiquetas removíveis de filtro ligado** ✅ feito em 18/11/2026: Monitor e Auditoria
@@ -164,7 +161,7 @@ rodar). Antes as duas diziam a mesma frase.
    aparecia no Monitor (selo "Esperando há X" no topo e na faixa de cada protocolo aberto onde o
    cliente falou por último). O **gestor** pode acompanhar sem ser participante (nota no rodapé).
    Só exibição — não mexe em SLA nem cobrança. Depende do token do Multi360 para o leitor preencher
-   (hoje vencido). ⏳ falta a conferência no aparelho.
+   (token renovado ~16-17/11; captura ativa desde 18/11). ⏳ falta a conferência no aparelho.
 
 > Atualizar esta ficha a cada tela entregue (Regra 54) e a cada auditoria (Regra 37), e refletir o
 > resumo em `Documentos Globais\Conformidade do Documento Mestre.txt`.

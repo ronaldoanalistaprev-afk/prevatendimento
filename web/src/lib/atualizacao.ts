@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { bancoConfigurado } from '@/lib/dados'
 
@@ -5,7 +6,7 @@ import { bancoConfigurado } from '@/lib/dados'
  * Quando o leitor do Multi360 sincronizou pela última vez (camada A = lista de conversas).
  * É o mesmo dado que o Monitor já mostrava; virou função própria para as demais telas usarem.
  */
-export async function getUltimaAtualizacao(): Promise<string | null> {
+async function getUltimaAtualizacaoSemCache(): Promise<string | null> {
   if (!bancoConfigurado()) return null
   try {
     const supabase = await createClient()
@@ -21,3 +22,8 @@ export async function getUltimaAtualizacao(): Promise<string | null> {
     return null
   }
 }
+
+export const getUltimaAtualizacao = cache(getUltimaAtualizacaoSemCache)
+
+/** O leitor roda a cada 15 minutos; sem notícia há mais de 45, a sincronização parou (token vencido, computador desligado…). */
+export const ATRASO_MAXIMO_MIN = 45

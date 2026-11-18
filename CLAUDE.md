@@ -163,6 +163,41 @@ A decisão do Ronaldo é trazê-lo para o mesmo padrão. Situação de cada pila
 - **[⚠️ pende "sim" do Ronaldo — custa ~US$ 10/mês] Banco-rascunho:** cópia de teste do banco (branch
   Supabase) como o PrevSystem tem. Não criar sem o OK dele (regra de custo do CLAUDE global).
 
+## 5-A. Método de construção — o mesmo do PrevSystem (Ronaldo, 18/11/2026)
+
+Pedido do Ronaldo: *"pergunte ao PrevSystem quais metodologias de construção estamos usando lá … e aplique aqui a todo o
+projeto, desde o início e de agora em diante"*. O que vale aqui, em ordem de uso:
+
+1. **Maestro e ajudantes.** O Claude da conversa é o único interlocutor do Ronaldo e coordena. Ajudantes só quando rendem:
+   - o **conferente independente** (`conferente-prevatendimento`), antes de dar algo por pronto;
+   - o `conferente-de-dados` global, quando o projeto passar a ler documento;
+   - subagentes para leitura longa ou trabalho paralelo, que devolvem o resultado ao maestro;
+   - **conversas laterais** para tarefa própria e longa, com o ícone ⚫ no nome.
+2. **Memória que não se perde** (o "fio" entre conversas):
+   - **Ao abrir conversa:** ler este arquivo, o índice da memória e a **última seção** de `estado-do-projeto.md` (memória).
+     Ler também `docs/pendencias-do-ronaldo.md` e o `docs/continuar-na-prevatendimento-NN.md` mais recente. Depois, `git log -10`,
+     a lista de conversas deste projeto (`list_sessions`, pasta deste projeto) e a **conferência ao vivo da seção 2-A**. Só então
+     dizer ao Ronaldo, em poucas linhas, onde as coisas estão.
+   - **Durante:** decisão nova vai na hora para `docs/decisoes.md` (DA-xx; o número nunca muda; a substituída fica marcada).
+     Pendência dele vai para `docs/pendencias-do-ronaldo.md` e só sai resolvida. Automação, aviso ou trava vai para
+     `docs/gatilhos-e-automacoes.md`.
+   - **Ao fechar ou trocar de conversa (comando 111 ou 222):** acrescentar uma seção datada ao fim de `estado-do-projeto.md` com
+     onde parou, o que está rodando e o que falta. Escrever `docs/continuar-na-prevatendimento-NN.md` com a primeira mensagem
+     pronta para a conversa nova, e fazer o commit. **Nada fica só na conversa.**
+3. **Regra-mãe: automatizar, avisar ou impedir** (NR-95 do PrevSystem). Toda tela ou etapa nova passa pelas três perguntas e
+   entra em `docs/gatilhos-e-automacoes.md`.
+4. **Banco:**
+   - toda mudança vira arquivo em `sql/`, com data, motivo e como reverter;
+   - só acrescenta, e é compatível com a versão no ar;
+   - consulta lenta se mede antes e depois (`pg_stat_statements`, `explain analyze` como usuário logado);
+   - o banco-rascunho espera o "sim" do Ronaldo (custo).
+5. **Versões:** a versão publicada só muda por ordem do Ronaldo (marca `publicada-NN`). Ver o item 5, "Controle de versões".
+6. **"Sim" e "pronto" só com verificação** completa. Parte não verificada → a resposta é "não", dizendo o que falta. Pronto é
+   o que foi conferido (Regra 54: foto em 390/1440/320 px; teclado).
+7. **Perguntas ao Ronaldo:** uma por vez, completa, com opções numeradas, a sugerida primeiro e "Outra" por último
+   (CLAUDE global).
+8. **Aparência:** skill Apple Design sobre a base das 15 telas do PrevSystem (item "Design" da seção 5). Tela nova já nasce nela.
+
 ## 6. Pendências operacionais
 
 1. **Religar a sincronização** (token do Multi360 — seção 2). É o que destrava o sistema.

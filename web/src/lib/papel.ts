@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { getPapeis, poderesDo } from '@/lib/poderes'
 import { rotuloPapel } from '@/lib/papeis'
@@ -41,7 +42,7 @@ const FALLBACK: PapelAtual = {
 }
 
 /** Papel do usuário logado + o atendente do Multi360 vinculado + os poderes do papel. */
-export async function getPapelAtual(): Promise<PapelAtual> {
+async function getPapelAtualSemCache(): Promise<PapelAtual> {
   try {
     const supabase = await createClient()
     const {
@@ -79,3 +80,6 @@ export async function getPapelAtual(): Promise<PapelAtual> {
     return FALLBACK
   }
 }
+
+/** Uma consulta só por página: layout e tela pedem o mesmo dado no mesmo carregamento. */
+export const getPapelAtual = cache(getPapelAtualSemCache)

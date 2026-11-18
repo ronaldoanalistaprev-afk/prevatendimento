@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { bancoConfigurado } from '@/lib/dados'
 import { PERMISSOES_PADRAO } from '@/lib/telas'
@@ -9,7 +10,7 @@ export type MapaPermissoes = Record<string, Set<string>>
  * Mapa de permissões {tela → papéis que veem}.
  * Se a tabela at_permissoes tiver dados, ela manda; senão, usa o padrão de fábrica.
  */
-export async function getPermissoesMapa(): Promise<MapaPermissoes> {
+async function getPermissoesMapaSemCache(): Promise<MapaPermissoes> {
   const padrao: MapaPermissoes = {}
   for (const [tela, papeis] of Object.entries(PERMISSOES_PADRAO)) padrao[tela] = new Set(papeis)
   if (!bancoConfigurado()) return padrao
@@ -35,3 +36,6 @@ export function podeAcessar(mapa: MapaPermissoes, tela: string, role: UsuarioRol
   if (role === 'ADMIN') return true
   return mapa[tela]?.has(role) ?? false
 }
+
+/** Uma consulta só por página: layout e tela pedem o mesmo dado no mesmo carregamento. */
+export const getPermissoesMapa = cache(getPermissoesMapaSemCache)

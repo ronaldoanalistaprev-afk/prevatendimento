@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { bancoConfigurado } from '@/lib/dados'
 import { PAPEIS_FABRICA, type PapelDef } from '@/lib/papeis'
@@ -7,7 +8,7 @@ import { PAPEIS_FABRICA, type PapelDef } from '@/lib/papeis'
  * Configurações → Papéis). Se a tabela ainda não existir, usa os 4 de fábrica —
  * assim o sistema nunca fica sem papel nenhum.
  */
-export async function getPapeis(incluirInativos = false): Promise<PapelDef[]> {
+async function getPapeisSemCache(incluirInativos = false): Promise<PapelDef[]> {
   if (!bancoConfigurado()) return PAPEIS_FABRICA
   try {
     const supabase = await createClient()
@@ -35,3 +36,6 @@ export function poderesDo(codigo: string, papeis: PapelDef[]): Poderes {
   if (!p || !p.ativo) return { verTudo: false, cobrar: false }
   return { verTudo: p.pode_ver_tudo, cobrar: p.pode_cobrar }
 }
+
+/** Uma consulta só por página: layout e tela pedem o mesmo dado no mesmo carregamento. */
+export const getPapeis = cache(getPapeisSemCache)
