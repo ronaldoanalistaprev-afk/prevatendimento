@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { BellRing, Loader2, X } from 'lucide-react'
+import { tecladoFormulario } from '@/lib/formulario'
 
 const DIAS_PRAZO = [1, 2, 3, 4, 5]
 
@@ -68,7 +69,7 @@ export default function BotaoCobrar({ protocoloId, atendente, modelos = [] }: { 
   }
 
   return (
-    <form onSubmit={enviar} style={{ background: 'var(--atencao-suave)', boxShadow: 'inset 0 0 0 1px var(--atencao-borda)', borderRadius: 14, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <form onSubmit={enviar} onKeyDown={tecladoFormulario} style={{ background: 'var(--atencao-suave)', boxShadow: 'inset 0 0 0 1px var(--atencao-borda)', borderRadius: 14, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{ fontWeight: 650, color: 'var(--atencao)', fontSize: 14 }}>Cobrar {atendente ? atendente : 'o atendente'} sobre esta conversa</div>
 
       {modelos.length > 0 && (

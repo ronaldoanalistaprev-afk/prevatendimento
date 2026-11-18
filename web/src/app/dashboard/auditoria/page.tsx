@@ -58,6 +58,21 @@ export default async function AuditoriaPage({ searchParams }: { searchParams: Pr
   const atendentesComConversa = painel.ranking.filter((r) => r.abertas > 0).map((r) => r.atendente)
   const atendentesSemConversa = painel.ranking.filter((r) => r.abertas === 0).map((r) => r.atendente)
   const temFiltro = Boolean(dep || atendente || marco !== 24)
+  // Etiquetas de filtro ligado (Regra 1): setor e atendente (o tempo "marco" já
+  // aparece selecionado nas abas acima). Cada X remove só aquele filtro.
+  const auditHrefSem = (drop: 'dep' | 'atendente') => {
+    const p = new URLSearchParams()
+    if (marco !== 24) p.set('marco', String(marco))
+    if (dep && drop !== 'dep') p.set('dep', dep)
+    if (atendente && drop !== 'atendente') p.set('atendente', atendente)
+    if (ordem) p.set('ordem', ordem)
+    if (verAntigos) p.set('antigos', '1')
+    const s = p.toString()
+    return `/dashboard/auditoria${s ? '?' + s : ''}`
+  }
+  const etiquetas: { chave: 'dep' | 'atendente'; label: string }[] = []
+  if (dep) etiquetas.push({ chave: 'dep', label: `Setor: ${dep}` })
+  if (atendente) etiquetas.push({ chave: 'atendente', label: `Atendente: ${formatarNome(atendente)}` })
   const marcoHref = (h: number) => {
     const p = new URLSearchParams()
     if (h !== 24) p.set('marco', String(h))
@@ -125,6 +140,18 @@ export default async function AuditoriaPage({ searchParams }: { searchParams: Pr
             </Link>
           )}
         </div>
+        {etiquetas.length > 0 && (
+          <div className="mon-barra">
+            <span className="mon-rot">Filtros</span>
+            <div className="etiquetas-filtro">
+              {etiquetas.map((e) => (
+                <Link key={e.chave} className="etiqueta-filtro" href={auditHrefSem(e.chave)} aria-label={`Tirar filtro ${e.label}`} title={`Tirar filtro ${e.label}`}>
+                  {e.label} <span className="x" aria-hidden="true"><X className="icone" focusable="false" /></span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Cards — clicáveis */}

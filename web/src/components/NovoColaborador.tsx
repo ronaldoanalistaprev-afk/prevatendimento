@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { UserPlus, Loader2, Eye, EyeOff, ChevronDown, Check } from 'lucide-react'
+import { tecladoFormulario } from '@/lib/formulario'
 
 export interface PapelOpcao {
   codigo: string
@@ -64,7 +65,7 @@ export default function NovoColaborador({
   const soAsSuas = papeis.find((p) => p.codigo === role)?.soAsSuas
 
   return (
-    <form onSubmit={salvar} className="cartao" style={{ padding: 20 }}>
+    <form onSubmit={salvar} onKeyDown={tecladoFormulario} className="cartao" style={{ padding: 20 }}>
       <div className="cartao-titulo" style={{ marginBottom: 14 }}>Cadastrar colaborador</div>
       <div className="grade-campos">
         <label className="campo">

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check, X, Loader2, Pencil, Trash2, RotateCcw } from 'lucide-react'
+import { tecladoFormulario } from '@/lib/formulario'
 
 const DIAS_PRAZO = [1, 2, 3, 4, 5]
 
@@ -62,7 +63,7 @@ export default function AcoesCobranca({ id, status, mensagem, prazo, podeGerenci
 
   if (editando) {
     return (
-      <form onSubmit={(e) => { e.preventDefault(); chamar('editar', { mensagem: texto, prazo: inputParaIso(novoPrazo) }) }} style={{ background: 'var(--recuo)', boxShadow: 'inset 0 0 0 1px var(--linha)', borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column', gap: 8, minWidth: 280, flex: 1 }}>
+      <form onSubmit={(e) => { e.preventDefault(); chamar('editar', { mensagem: texto, prazo: inputParaIso(novoPrazo) }) }} onKeyDown={tecladoFormulario} style={{ background: 'var(--recuo)', boxShadow: 'inset 0 0 0 1px var(--linha)', borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column', gap: 8, minWidth: 280, flex: 1 }}>
         <div className="sub-titulo" style={{ fontSize: 14 }}>Editar cobrança</div>
         <textarea className="entrada" style={{ minHeight: 64, resize: 'vertical' }} value={texto} onChange={(e) => setTexto(e.target.value)} required />
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>

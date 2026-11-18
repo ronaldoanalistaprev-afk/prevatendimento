@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Send, Loader2 } from 'lucide-react'
+import { tecladoFormulario } from '@/lib/formulario'
 
 /** Máscara (DD) 9XXXX-XXXX a partir dos dígitos (sem o +55). */
 function mascara(v: string): string {
@@ -47,7 +48,7 @@ export default function NovaConversaPage() {
       <h1 className="titulo" style={{ marginTop: 14 }}>Nova conversa</h1>
       <p className="subtitulo" style={{ marginBottom: 24 }}>Inicie um atendimento enviando a primeira mensagem por WhatsApp. Se a pessoa já existir, a conversa é reaproveitada.</p>
 
-      <form onSubmit={iniciar} className="cartao" style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <form onSubmit={iniciar} onKeyDown={tecladoFormulario} className="cartao" style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div className="campo">
           <span className="rotulo">WhatsApp (DDD + número)</span>
           <div style={{ display: 'flex', gap: 8 }}>

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Check, Loader2, Pencil, Trash2, Power, Lock } from 'lucide-react'
 import { useConfirmacao } from './Confirmacao'
+import { tecladoFormulario } from '@/lib/formulario'
 
 export interface PapelItem {
   codigo: string
@@ -71,7 +72,7 @@ export default function GerenciarPapeis({ papeis }: { papeis: PapelItem[] }) {
   const editandoAdmin = editando === 'ADMIN'
 
   const formulario = (
-    <form onSubmit={salvar} className="cartao" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 14 }}>
+    <form onSubmit={salvar} onKeyDown={tecladoFormulario} className="cartao" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 14 }}>
       <div className="cartao-titulo">{editando ? 'Editar papel' : 'Novo papel'}</div>
       <label className="campo"><span className="rotulo">Nome do papel</span><input className="entrada" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Estagiário" required /></label>
       <label className="campo"><span className="rotulo">Para que serve <span style={{ color: 'var(--tinta-3)', fontWeight: 400 }}>(opcional)</span></span><input className="entrada" value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Uma frase explicando o cargo" /></label>

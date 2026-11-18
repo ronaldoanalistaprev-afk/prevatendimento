@@ -129,20 +129,33 @@ rodar). Antes as duas diziam a mesma frase.
 2. **Regra 44 — aparência:** 🙋 decisão do Ronaldo (rodada no Laboratório vs. exceção Apple Design).
    Enquanto não houver pacote, não se mexe em cores/tipografia/composição.
 3. **Regra 54 — foto e conferência no aparelho:** ⏳ depende de o Ronaldo abrir as telas (390/1440/320 px).
-4. **Regra 1 — etiquetas removíveis de filtro ligado** no Monitor e na Auditoria. 🔄
-5. **Regra 52 — glifos restantes (telas fora desta leva):** `✓` na grade de permissões
-   (`configuracoes/permissoes`), `✓`/`⚠` em `login`, `nova-senha` e `conta`, `🇧🇷` na tela antiga
-   `conversas/nova` (admin legada), e setas `→`/`←` tipográficas de texto (baixo risco). 🔄
+4. **Regra 1 — etiquetas removíveis de filtro ligado** ✅ feito em 18/11/2026: Monitor e Auditoria
+   mostram cada filtro ligado como etiqueta com um X que tira só aquele filtro (classe
+   `.etiqueta-filtro` na folha Apple Design). "Limpar filtros" (ao lado) continua tirando todos.
+5. **Regra 52 — glifos restantes:** ✅ conferido em 18/11/2026 — não há mais emoji/glifo usado como
+   ícone na interface (login, nova-senha, conta, permissões e conversas/nova já tinham sido
+   convertidos na migração Apple Design; o `✓` que restava em `ChatBox.tsx` é só um comentário de
+   código, e os tiques de status já são ícones lucide). Setas `→`/`←` de texto ficam (baixo risco).
 6. **Regra 48 — percentuais:** ✅ conferido — Início mostra proporção como inteiro com `%` colado
    (`pct.toFixed(0)%`); Desempenho não exibe percentual em texto (só largura de barra em CSS). Nuance
    menor: em Início a diferença entre dois meses diz "N pontos"; a Regra 48 pede "pontos percentuais"
    por extenso na primeira vez. 🔄 (ajuste de redação, baixo risco).
 
-7. **Regra 55 — teclado nos formulários:** ⏳ as telas de cadastro/edição com vários campos
-   (`NovoColaborador`, `NovaCobranca`, formulários de modelo/papel) usam `<form onSubmit>` — hoje o
-   **Enter salva o formulário inteiro**. A Regra 55 (item 9) pede que, em cadastro/edição, o **Enter
-   avance de campo** e **não salve** (Ctrl+Enter salva). É mudança de comportamento que merece
-   conferência no aparelho antes de entregar — próxima rodada.
+7. **Regra 55 — teclado nos formulários:** ✅ feito no código em 18/11/2026 (helper
+   `web/src/lib/formulario.ts`, `tecladoFormulario`): em cadastro/edição o **Enter avança de campo e
+   NÃO salva**; no último campo leva ao botão Salvar; **Ctrl+Enter (ou Cmd+Enter) salva** de qualquer
+   campo; textarea quebra linha; campo único executa. Aplicado em `NovoColaborador`, `GerenciarModelos`,
+   `GerenciarPapeis`, `conta`, `BotaoCobrar`, `AcoesCobranca` e `conversas/nova`. **Não** aplicado na
+   tela de entrar nem na busca (lá o Enter executa, de propósito). ⏳ **Falta a conferência no
+   aparelho** (é mudança de comportamento — Regra 54).
+
+8. **Participantes da conversa + tempo de espera** ✅ feito em 18/11/2026 (decisão "Só mostrar" do
+   Ronaldo): a tela da conversa (`monitor/[id]`) passa a mostrar o **responsável** (destacado) e os
+   **participantes** adicionados (faixa no `BlocoProtocolo`), e traz o **tempo de espera** que só
+   aparecia no Monitor (selo "Esperando há X" no topo e na faixa de cada protocolo aberto onde o
+   cliente falou por último). O **gestor** pode acompanhar sem ser participante (nota no rodapé).
+   Só exibição — não mexe em SLA nem cobrança. Depende do token do Multi360 para o leitor preencher
+   (hoje vencido). ⏳ falta a conferência no aparelho.
 
 > Atualizar esta ficha a cada tela entregue (Regra 54) e a cada auditoria (Regra 37), e refletir o
 > resumo em `Documentos Globais\Conformidade do Documento Mestre.txt`.

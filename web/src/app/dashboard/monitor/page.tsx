@@ -4,7 +4,7 @@ import BannerConfig from '@/components/BannerConfig'
 import AutoRefresh from '@/components/AutoRefresh'
 import SeloAtualizacao from '@/components/SeloAtualizacao'
 import { formatarTelefone, formatarDataHora, formatarDuracao, formatarNome } from '@/lib/utils'
-import { Radar, Clock, Inbox, AlarmClock, ChevronRight, Paperclip } from 'lucide-react'
+import { Radar, Clock, Inbox, AlarmClock, ChevronRight, Paperclip, X } from 'lucide-react'
 import FiltroAtendente from '@/components/FiltroAtendente'
 import FiltroCompetencia from '@/components/FiltroCompetencia'
 import FiltroSetor from '@/components/FiltroSetor'
@@ -94,6 +94,33 @@ export default async function MonitorPage({ searchParams }: { searchParams: Prom
 
   const finalizadas = situacao === 'finalizadas'
 
+  // Etiquetas de filtro ligado (Regra 1): cada filtro ativo vira uma etiqueta com X
+  // que remove SÓ aquele filtro. "Limpar filtros" (ao lado) continua limpando tudo.
+  const filtrosAtuais: Record<string, string> = {}
+  if (busca) filtrosAtuais.busca = busca
+  if (dep) filtrosAtuais.dep = dep
+  if (competencia) filtrosAtuais.competencia = competencia
+  else if (periodo !== 'hoje') filtrosAtuais.periodo = periodo
+  if (atendente && !restrito) filtrosAtuais.atendente = atendente
+  if (situacao !== 'abertas') filtrosAtuais.situacao = situacao
+  if (so) filtrosAtuais.so = so
+  if (ordem) filtrosAtuais.ordem = ordem // vai na URL, mas não vira etiqueta (é ordenação, não filtro)
+  const hrefSem = (drop: string) => {
+    const p = new URLSearchParams()
+    for (const [k, v] of Object.entries(filtrosAtuais)) if (k !== drop) p.set(k, v)
+    const s = p.toString()
+    return `/dashboard/monitor${s ? '?' + s : ''}`
+  }
+  const competenciaLabel = (c: string) => { const [a, m] = c.split('-'); return m && a ? `${m}/${a}` : c }
+  const etiquetas: { chave: string; label: string }[] = []
+  if (filtrosAtuais.busca) etiquetas.push({ chave: 'busca', label: `Busca: "${busca}"` })
+  if (filtrosAtuais.dep) etiquetas.push({ chave: 'dep', label: `Setor: ${dep}` })
+  if (filtrosAtuais.competencia) etiquetas.push({ chave: 'competencia', label: `Competência: ${competenciaLabel(competencia!)}` })
+  if (filtrosAtuais.periodo) etiquetas.push({ chave: 'periodo', label: `Período: ${PERIODOS.find((x) => x.chave === periodo)?.label ?? periodo}` })
+  if (filtrosAtuais.atendente) etiquetas.push({ chave: 'atendente', label: `Atendente: ${formatarNome(atendente!)}` })
+  if (filtrosAtuais.situacao) etiquetas.push({ chave: 'situacao', label: `Situação: ${SITUACOES.find((x) => x.chave === situacao)?.label ?? situacao}` })
+  if (filtrosAtuais.so) etiquetas.push({ chave: 'so', label: so === 'esperando' ? 'Só: escritório precisa responder' : 'Só: aguardando o cliente' })
+
   return (
     <main id="conteudo" className="conteudo" tabIndex={-1}>
       <LembrarPeriodo />
@@ -160,6 +187,20 @@ export default async function MonitorPage({ searchParams }: { searchParams: Prom
 
         {restrito && (
           <div className="mon-barra"><span className="aviso aviso-neutro" style={{ padding: '6px 12px' }}>Mostrando apenas as suas conversas{papel.colaboradorNome ? ` (${formatarNome(papel.colaboradorNome)})` : ''}.</span></div>
+        )}
+
+        {/* Etiquetas de filtro ligado (Regra 1) */}
+        {etiquetas.length > 0 && (
+          <div className="mon-barra">
+            <span className="mon-rot">Filtros</span>
+            <div className="etiquetas-filtro">
+              {etiquetas.map((e) => (
+                <Link key={e.chave} className="etiqueta-filtro" href={hrefSem(e.chave)} aria-label={`Tirar filtro ${e.label}`} title={`Tirar filtro ${e.label}`}>
+                  {e.label} <span className="x" aria-hidden="true"><X className="icone" focusable="false" /></span>
+                </Link>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Contagem */}

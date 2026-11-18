@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { tecladoFormulario } from '@/lib/formulario'
 import { Eye, EyeOff, Loader2, KeyRound, CheckCircle2 } from 'lucide-react'
 
 /** Minha conta — a pessoa já logada troca a própria senha, sem depender de e-mail. */
@@ -52,7 +53,7 @@ export default function ContaPage() {
         {email ? <> Você está logado como <b style={{ color: 'var(--tinta)' }}>{email}</b>.</> : null}
       </p>
 
-      <form onSubmit={handleSalvar} className="cartao" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <form onSubmit={handleSalvar} onKeyDown={tecladoFormulario} className="cartao" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
         <label className="campo">
           <span className="rotulo">Nova senha</span>
           <div className="senha-caixa">

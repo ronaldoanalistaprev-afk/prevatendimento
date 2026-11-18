@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Check, Loader2, Pencil, Trash2, Power, X } from 'lucide-react'
 import { useConfirmacao } from './Confirmacao'
+import { tecladoFormulario } from '@/lib/formulario'
 
 export interface ModeloItem {
   id: string
@@ -62,7 +63,7 @@ export default function GerenciarModelos({ modelos, podeEditar }: { modelos: Mod
   }
 
   const formulario = (
-    <form onSubmit={salvar} className="cartao" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 14 }}>
+    <form onSubmit={salvar} onKeyDown={tecladoFormulario} className="cartao" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 14 }}>
       <div className="cartao-titulo">{editandoId ? 'Editar modelo' : 'Novo modelo de cobrança'}</div>
       <label className="campo"><span className="rotulo">Nome do modelo <span style={{ color: 'var(--tinta-3)', fontWeight: 400 }}>(é o que aparece no botão)</span></span>
         <input className="entrada" value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Ex.: Cliente sem resposta" required />
