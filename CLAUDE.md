@@ -38,8 +38,10 @@ isso é a equipe dentro do Multi360. O sistema é o **painel/auditoria** do ante
 **O PrevAtendimento NUNCA foi usado pela equipe em produção** (confirmado pelo Ronaldo em 15/11/2026:
 *"nunca usamos o PrevAtendimento"*). Está publicado e funcional, mas sem uso real.
 
-- **Sincronização com o Multi360 PARADA desde 06/08/2026** (3 meses): o token do Multi360 vence a cada
-  poucos dias e não foi renovado. O banco tem a foto de 06/08 (4.527 conversas, 484.669 mensagens).
+- **Sincronização RELIGADA (token renovado pelo Ronaldo por volta de 16–17/11/2026).** Em 18/11/2026 o
+  sistema está no ar e sincronizando (última extração e mensagem do próprio dia; ~4.757 conversas,
+  ~513 mil mensagens). Ficou parada de 06/08 a ~16/11 (o token vence sozinho em poucos dias). O leitor
+  foi **reiniciado em 18/11 com o código novo** (captura de participantes) — ver seção 5.
 - **Banco vivo** (`ACTIVE_HEALTHY` em 15/11; tinha pausado uma vez em agosto e foi restaurado).
 - **Decisão do Ronaldo (15/11/2026):** religar e alinhar o projeto ao **padrão de construção do
   PrevSystem** (ver seção 5 — é o trabalho em andamento).
