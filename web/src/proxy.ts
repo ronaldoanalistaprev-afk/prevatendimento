@@ -12,6 +12,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/login') ||
     pathname.startsWith('/auth/') || // retorno dos links de e-mail e saída do sistema
     pathname.startsWith('/nova-senha') || // definir senha vinda do link de recuperação
+    pathname.startsWith('/vitrine') || // telas de amostra com dados fictícios, sem login (para aprovar a aparência)
     pathname.startsWith('/api/webhook') || // protegida por INGEST_SECRET
     pathname.startsWith('/api/whatsapp/cloud/webhook') // webhook da Meta (verify_token no GET; a Meta chama sem login)
   ) {
