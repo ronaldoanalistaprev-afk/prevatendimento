@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Send, Loader2, AlertCircle } from 'lucide-react'
 import { tecladoFormulario } from '@/lib/formulario'
+import { useConfirmacao } from '@/components/Confirmacao'
 
 /** Máscara (DD) 9XXXX-XXXX a partir dos dígitos (sem o +55). */
 function mascara(v: string): string {
@@ -26,6 +27,7 @@ function erroTelefone(digitos: string): string | null {
 
 export default function NovaConversaPage() {
   const router = useRouter()
+  const { confirmar, modal } = useConfirmacao()
   const [telefone, setTelefone] = useState('')
   const [nome, setNome] = useState('')
   const [conteudo, setConteudo] = useState('')
@@ -38,6 +40,12 @@ export default function NovaConversaPage() {
   const errMsg = conteudo.trim() ? null : 'Escreva a primeira mensagem.'
   const mostrarTel = tocado.telefone || digitos.length >= 11 ? errTel : null
   const mostrarMsg = tocado.conteudo ? errMsg : null
+  const temAlgo = Boolean(digitos || nome.trim() || conteudo.trim())
+  async function sair(e: React.MouseEvent) {
+    if (!temAlgo) return
+    e.preventDefault()
+    if (await confirmar({ titulo: 'Sair sem iniciar a conversa?', mensagem: 'O que você digitou nesta tela será perdido.', confirmar: 'Sair sem salvar', cancelar: 'Continuar aqui' })) router.push('/dashboard/conversas')
+  }
   const falta = [errTel ? 'o WhatsApp completo' : null, errMsg ? 'a primeira mensagem' : null].filter(Boolean) as string[]
 
   async function iniciar(e: React.FormEvent) {
@@ -58,7 +66,8 @@ export default function NovaConversaPage() {
 
   return (
     <main id="conteudo" className="conteudo" tabIndex={-1} style={{ maxWidth: 560 }}>
-      <Link href="/dashboard/conversas" className="voltar"><ArrowLeft className="icone icone-p" aria-hidden="true" focusable="false" /> Laboratório WhatsApp</Link>
+      {modal}
+      <Link href="/dashboard/conversas" className="voltar" onClick={sair}><ArrowLeft className="icone icone-p" aria-hidden="true" focusable="false" /> Laboratório WhatsApp</Link>
 
       <h1 className="titulo" style={{ marginTop: 14 }}>Nova conversa</h1>
       <p className="subtitulo" style={{ marginBottom: 24 }}>Inicie um atendimento enviando a primeira mensagem por WhatsApp. Se a pessoa já existir, a conversa é reaproveitada.</p>

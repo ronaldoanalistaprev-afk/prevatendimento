@@ -32,7 +32,7 @@ const SELECT =
 export type FiltroStatus = CobrancaStatus | 'TODAS'
 
 export const ROTULO_STATUS: Record<CobrancaStatus, string> = {
-  ABERTA: 'A resolver',
+  ABERTA: 'A Resolver',
   RESOLVIDA: 'Resolvida',
   CANCELADA: 'Cancelada',
 }
