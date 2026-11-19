@@ -212,6 +212,7 @@ export default function SeletorMultiplo({
           ref={painelRef}
           role="dialog"
           aria-label={`Escolher ${rotulo.toLowerCase()}`}
+          className="surge-pop"
           style={{
             position: 'absolute', zIndex: 50, top: 'calc(100% + 6px)',
             ...(alinharDireita ? { right: 0 } : { left: 0 }),

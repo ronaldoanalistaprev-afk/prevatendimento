@@ -425,13 +425,23 @@ textarea.entrada { min-height: 76px; resize: vertical; line-height: 1.45; }
 }
 
 /* ---------- Janelas, folhas e véu ---------- */
-.veu { position: fixed; inset: 0; z-index: 80; background: var(--veu); opacity: var(--veu-opacidade, 1); }
+.veu { position: fixed; inset: 0; z-index: 80; background: var(--veu); opacity: var(--veu-opacidade, 1); animation: surgir-veu .26s ease both; }
 .janela {
   position: fixed; left: 50%; top: 50%; z-index: 81;
   width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px);
   display: flex; flex-direction: column; background: var(--superficie); border-radius: var(--raio-xg); box-shadow: var(--sombra-flutua);
   transform: translate(-50%, -50%) translateY(var(--dy, 0px)) scale(var(--escala, 1));
+  /* Skill Apple Design §4/§12: a janela MATERIALIZA (cresce + aparece), não surge seca. */
+  animation: surgir-janela .34s cubic-bezier(.22, 1, .36, 1) both; will-change: transform, opacity;
 }
+@keyframes surgir-veu { from { opacity: 0; } to { opacity: var(--veu-opacidade, 1); } }
+@keyframes surgir-janela {
+  from { opacity: 0; transform: translate(-50%, -50%) translateY(var(--dy, 0px)) scale(.955); }
+  to   { opacity: 1; transform: translate(-50%, -50%) translateY(var(--dy, 0px)) scale(1); }
+}
+/* Pop-up (filtros) cresce a partir do botão que o abriu — skill §7 (origem ancorada). */
+.surge-pop { animation: surgir-pop .2s cubic-bezier(.22, 1, .36, 1) both; will-change: transform, opacity; }
+@keyframes surgir-pop { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
 .janela[hidden], .veu[hidden] { display: none; }
 .janela-larga { width: min(1060px, calc(100vw - 48px)); }
 .janela-cabeca { display: flex; align-items: flex-start; gap: 12px; padding: 18px 20px 14px; border-bottom: 1px solid var(--linha); }
