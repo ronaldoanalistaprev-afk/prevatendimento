@@ -46,7 +46,36 @@ from public.empresas e
 where e.slug = 'aposentar'
 on conflict (empresa_id) do nothing;
 
--- OBS (aplicado ao vivo, não aqui, porque depende da URL real da função e do segredo no Vault):
---   1) create extension if not exists pg_cron;  create extension if not exists pg_net;
---   2) cron.schedule('sincronizar-multi360', '*/15 * * * *', <net.http_post para a Edge Function>);
---   Reverter o agendamento: select cron.unschedule('sincronizar-multi360');
+-- ── Segredo do agendador (aplicado em 19/11/2026) ────────────────────────────
+-- O pg_cron (dentro do banco) lê este segredo e o manda no cabeçalho x-cron-secret;
+-- a Edge Function compara com ele. Não vem de variável de ambiente (não dá para
+-- defini-la pelo MCP). A view v_at_integracao_status NÃO expõe esta coluna.
+alter table public.at_integracao_multi360 add column if not exists cron_secret text;
+update public.at_integracao_multi360
+set cron_secret = encode(gen_random_bytes(24), 'hex')
+where cron_secret is null;
+
+-- ── Extensões + agendamento (aplicado em 19/11/2026) ─────────────────────────
+-- A função responde em ~1,4s (202) e sincroniza em SEGUNDO PLANO (até 400s, plano
+-- Pro). O pg_net só dispara e não espera o ciclo terminar.
+create extension if not exists pg_cron;
+create extension if not exists pg_net;
+
+-- A cada 15 min: POST na Edge Function com o segredo lido fresco da tabela.
+-- (Idempotente: se um ciclo for cortado aos 400s, o próximo retoma.)
+select cron.schedule('sincronizar-multi360', '*/15 * * * *', $cron$
+  select net.http_post(
+    url := 'https://cgnudnxivpeyzcurdzkt.supabase.co/functions/v1/sincronizar-multi360',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'x-cron-secret', (select cron_secret from public.at_integracao_multi360 where empresa_slug = 'aposentar')
+    ),
+    body := '{}'::jsonb,
+    timeout_milliseconds := 8000
+  );
+$cron$);
+
+-- Reverter o agendamento:  select cron.unschedule('sincronizar-multi360');
+-- Ver o histórico:         select * from cron.job_run_details where jobid =
+--                            (select jobid from cron.job where jobname='sincronizar-multi360')
+--                            order by start_time desc limit 10;

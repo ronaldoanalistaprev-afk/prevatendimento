@@ -16,8 +16,10 @@ O conferente independente (`.claude/agents/conferente-prevatendimento.md`) cobra
 
 | Situação | Automático | Aviso | Trava |
 |---|---|---|---|
-| Conversas, mensagens, anexos e participantes novos | O leitor (`multi360-reader/`) puxa a cada 15 minutos | — | — |
-| Leitor parado (token vencido, computador desligado, conversa que rodava o leitor arquivada) | Não dá: a renovação do token exige o Ronaldo logado no Multi360 | **Desde 18/11/2026:** depois de 45 minutos sem sincronizar, o selo "Atualizado com o Multi360" de todas as telas vira o aviso amarelo "Atualização automática parada há X" | — |
+| Conversas, mensagens, anexos e participantes novos | **Desde 21/11/2026:** a **Edge Function `sincronizar-multi360`** (Supabase) puxa a cada 15 min, disparada pelo **pg_cron** (job `sincronizar-multi360`, `*/15 * * * *`). Roda sozinha, sem depender de conversa aberta nem do computador. Antes: leitor local (`multi360-reader/`), que caía quando o computador desligava — mantido só de reserva (DA-63) | — | A chamada à função só passa com o segredo `x-cron-secret` (coluna `cron_secret`); chamada anônima recebe 401 |
+| Ciclo que passa de 150s (medido: 338s) | A função responde na hora (202) e termina o ciclo em **segundo plano** (`EdgeRuntime.waitUntil`, até 400s do plano Pro). Se um ciclo for cortado, o próximo retoma (idempotente) | — | — |
+| **Token do Multi360 vencido** (a leitura para) | Não dá: renovar exige o Ronaldo logado no Multi360 (dança do F12) | **Desde 21/11/2026:** tela **Configurações → Integração Multi360** mostra "Vencido/Em dia/Sem token" e a última sincronização; a tela de Situação aponta para ela. Antes (18/11): depois de 45 min sem sincronizar, o selo das telas vira aviso amarelo "Atualização automática parada há X" | — |
+| Renovar o token | — | Só o **Administrador** cola o token novo na tela de Integração; ao salvar, a função confere na hora se o token funciona (modo "validar") e a sincronização volta sozinha em até 15 min | A tela e a rota de API exigem Administrador **ativo**; o token nunca é mostrado de volta nem exposto na view |
 | Participantes de conversa antiga | Recuperação de 80 por ciclo até completar | — | — |
 
 ## Atendimento

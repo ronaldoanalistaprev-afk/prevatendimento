@@ -51,7 +51,10 @@ export default async function SituacaoPage() {
       </div></section>
       {!leitorRecente && (
         <div className="aviso aviso-atencao" role="status" style={{ marginTop: 10 }}>
-          <div><b>O leitor de conversas está parado.</b> Enquanto ele não voltar, as conversas do WhatsApp não são atualizadas aqui — o que você vê é a última leitura. Avise o responsável técnico para religá-lo.</div>
+          <div>
+            <b>O leitor de conversas está parado.</b> Em geral é o token do Multi360 que venceu. Você mesmo renova em{' '}
+            <Link href="/dashboard/configuracoes/integracao" style={{ textDecoration: 'underline' }}>Configurações → Integração Multi360</Link>; enquanto isso, o que você vê é a última leitura.
+          </div>
         </div>
       )}
     </main>

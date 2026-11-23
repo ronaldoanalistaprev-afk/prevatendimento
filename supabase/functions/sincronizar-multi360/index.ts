@@ -18,13 +18,34 @@
 // `empresas` (igual ao resolverEmpresa() de hoje). Ao terminar, grava o estado
 // de volta nessa mesma linha (ultima_sync / token_status / ultimo_erro).
 //
-// SEGREDOS/VARIÁVEIS esperadas (todas de ambiente da função):
-//   - CRON_SECRET                (nosso; a trava do cabeçalho x-cron-secret)
-//   - SUPABASE_URL               (injetada automaticamente pelo Supabase)
-//   - SUPABASE_SERVICE_ROLE_KEY  (injetada automaticamente pelo Supabase)
+// TRAVA (x-cron-secret): o segredo do agendador NÃO vem de variável de ambiente
+// (não há como defini-la por aqui). Ele é a coluna cron_secret da MESMA linha de
+// at_integracao_multi360, lida com a chave de serviço; o pg_cron, que roda dentro
+// do banco, lê o mesmo segredo e o manda no cabeçalho. A view v_at_integracao_status
+// não expõe nem o token nem o cron_secret.
+//
+// COMO RESPONDE: o ciclo pode passar de 150s (limite da RESPOSTA de uma Edge
+// Function). Então a função responde já (202) e roda o ciclo em SEGUNDO PLANO via
+// EdgeRuntime.waitUntil, até o limite de parede do plano Pro (400s).
+//
+// VARIÁVEIS de ambiente usadas (as duas injetadas automaticamente pelo Supabase):
+//   - SUPABASE_URL
+//   - SUPABASE_SERVICE_ROLE_KEY
 // ============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+// EdgeRuntime é global no runtime do Supabase (Deno). Declaração só para o editor/tsc.
+declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void }
+
+// Diagnóstico: avisa no log se a função for encerrada (ex.: bateu os 400s de parede).
+addEventListener('beforeunload', (ev: any) => {
+  console.log('função sendo encerrada:', ev?.detail?.reason ?? '(sem motivo)')
+})
+addEventListener('unhandledrejection', (ev: any) => {
+  console.error('promessa sem tratamento:', ev?.reason)
+  ev?.preventDefault?.()
+})
 
 // ── Estado da requisição (preenchido no início de cada chamada) ──────────────
 // Mantidos no escopo do módulo, como no script original (que usava variáveis de
@@ -688,7 +709,7 @@ async function resolverEmpresa(slug: string): Promise<string | null> {
 async function lerConfig(): Promise<any> {
   const { data, error } = await db
     .from('at_integracao_multi360')
-    .select('empresa_id, token, base_url, dominio, empresa_slug')
+    .select('empresa_id, token, base_url, dominio, empresa_slug, cron_secret')
     .eq('empresa_slug', 'aposentar')
     .maybeSingle()
   if (error) throw new Error(`erro ao ler at_integracao_multi360: ${error.message}`)
@@ -696,7 +717,7 @@ async function lerConfig(): Promise<any> {
   // fallback: primeira linha qualquer
   const { data: qualquer, error: e2 } = await db
     .from('at_integracao_multi360')
-    .select('empresa_id, token, base_url, dominio, empresa_slug')
+    .select('empresa_id, token, base_url, dominio, empresa_slug, cron_secret')
     .limit(1)
     .maybeSingle()
   if (e2) throw new Error(`erro ao ler at_integracao_multi360: ${e2.message}`)
@@ -714,13 +735,6 @@ async function gravarEstado(patch: Record<string, any>): Promise<void> {
 
 // ── Entrada HTTP ─────────────────────────────────────────────────────────────
 Deno.serve(async (req: Request) => {
-  // Trava: só o nosso agendador (que manda o cabeçalho x-cron-secret) dispara.
-  const secret = req.headers.get('x-cron-secret')
-  const esperado = Deno.env.get('CRON_SECRET')
-  if (!esperado || !secret || secret !== esperado) {
-    return new Response('nao autorizado', { status: 401 })
-  }
-
   // Cliente de serviço (passa por cima da RLS; URL e chave injetadas pelo Supabase).
   db = createClient(
     Deno.env.get('SUPABASE_URL')!,
@@ -746,13 +760,22 @@ Deno.serve(async (req: Request) => {
       .trim()
     BASE = String(config.base_url || 'https://painel.multi360.com.br/api').replace(/\/$/, '')
     DOMAIN = config.dominio || ''
-    const slug = config.empresa_slug || 'aposentar'
-    empresaId = await resolverEmpresa(slug)
+    empresaId = config.empresa_id ?? await resolverEmpresa(config.empresa_slug || 'aposentar')
     if (!empresaId) {
-      return new Response(`empresa não encontrada (slug: ${slug})`, { status: 500 })
+      return new Response(`empresa não encontrada (slug: ${config.empresa_slug})`, { status: 500 })
     }
   } catch (e: any) {
     return new Response(`erro de configuração: ${e?.message ?? e}`, { status: 500 })
+  }
+
+  // Trava: só o nosso agendador dispara. O segredo mora na própria linha de
+  // configuração (coluna cron_secret), lida aqui com a chave de serviço; o
+  // pg_cron, que roda dentro do banco, lê o mesmo segredo e o manda no cabeçalho
+  // x-cron-secret. (Não vem de variável de ambiente porque não há como defini-la
+  // por aqui; a view v_at_integracao_status não expõe este segredo.)
+  const secret = req.headers.get('x-cron-secret')
+  if (!config.cron_secret || !secret || secret !== config.cron_secret) {
+    return new Response('nao autorizado', { status: 401 })
   }
 
   // Sem token: não é "erro", é configuração pendente — marca vencido e sai 200.
@@ -761,18 +784,51 @@ Deno.serve(async (req: Request) => {
     return Response.json({ ok: false, motivo: 'token_vencido' }, { status: 200 })
   }
 
-  // 2) UMA volta de sincronização.
-  try {
-    const contagens = await sync()
-    await gravarEstado({ ultima_sync: new Date().toISOString(), token_status: 'ok', ultimo_erro: null })
-    return Response.json({ ok: true, ...contagens })
-  } catch (e: any) {
-    const msg = e?.message ?? String(e)
-    if (msg === 'TOKEN_EXPIRADO') {
-      await gravarEstado({ token_status: 'vencido', ultimo_erro: 'TOKEN_EXPIRADO' })
-      return Response.json({ ok: false, motivo: 'token_vencido' }, { status: 200 })
+  // Modo "validar": só confere se o token responde (UMA chamada barata) e devolve
+  // na hora. A tela de administrador usa isto logo após colar um token novo, para
+  // dizer na mesma hora se funcionou — e, de quebra, se o Multi360 aceita a chamada
+  // vinda da nuvem (não só do computador do Ronaldo).
+  if (req.headers.get('x-modo') === 'validar') {
+    try {
+      await api('/atendimentos/chat/ativos?offset=0&apenasNovasMensagens=false&orderByAsc=false&apenasTotal=true&filtro=')
+      await gravarEstado({ token_status: 'ok', ultimo_erro: null })
+      return Response.json({ ok: true, token: 'ok' }, { status: 200 })
+    } catch (e: any) {
+      const msg = e?.message ?? String(e)
+      if (msg === 'TOKEN_EXPIRADO') {
+        // Token recusado pelo Multi360: venceu ou é de outra conta.
+        await gravarEstado({ token_status: 'vencido', ultimo_erro: 'TOKEN_EXPIRADO' })
+        return Response.json({ ok: false, token: 'vencido', detalhe: msg }, { status: 200 })
+      }
+      // Outro erro (ex.: Multi360 fora do ar): NÃO dá para afirmar que o token está ok
+      // nem que venceu. Deixa "a conferir" e devolve indefinido (a tela não mente).
+      await gravarEstado({ token_status: 'desconhecido', ultimo_erro: msg })
+      return Response.json({ ok: false, token: 'indefinido', detalhe: msg }, { status: 200 })
     }
-    await gravarEstado({ ultimo_erro: msg })
-    return new Response(`erro na sincronização: ${msg}`, { status: 500 })
   }
+
+  // 2) UMA volta de sincronização — em SEGUNDO PLANO.
+  //    Um ciclo pode passar de 150s (o limite da RESPOSTA de uma Edge Function),
+  //    então respondemos já (202) e deixamos o Supabase manter a função viva até
+  //    o ciclo terminar (limite de parede do plano Pro: 400s). Como há um único
+  //    escritório, duas rodadas que por acaso se cruzem usam os MESMOS valores
+  //    (token/base/empresa) e não se atrapalham; e o agendador dispara a cada
+  //    15 min, muito mais que 400s, então na prática não há cruzamento.
+  EdgeRuntime.waitUntil((async () => {
+    try {
+      const contagens = await sync()
+      await gravarEstado({ ultima_sync: new Date().toISOString(), token_status: 'ok', ultimo_erro: null })
+      console.log('✅ rodada concluída', JSON.stringify(contagens))
+    } catch (e: any) {
+      const msg = e?.message ?? String(e)
+      if (msg === 'TOKEN_EXPIRADO') {
+        await gravarEstado({ token_status: 'vencido', ultimo_erro: 'TOKEN_EXPIRADO' })
+      } else {
+        await gravarEstado({ ultimo_erro: msg })
+        console.error('erro na sincronização:', msg)
+      }
+    }
+  })())
+
+  return Response.json({ ok: true, iniciado: true }, { status: 202 })
 })

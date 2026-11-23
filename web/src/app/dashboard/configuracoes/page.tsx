@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Server, ShieldCheck, BookMarked, Users, MessageSquareText, ChevronRight } from 'lucide-react'
+import { Server, ShieldCheck, BookMarked, Users, MessageSquareText, ChevronRight, Plug } from 'lucide-react'
 import { getPapelAtual } from '@/lib/papel'
 import { getPermissoesMapa, podeAcessar } from '@/lib/permissoes'
 import SemPermissao from '@/components/SemPermissao'
@@ -17,6 +17,7 @@ interface Card {
 
 const CARDS: Card[] = [
   { href: '/dashboard/configuracoes/situacao', titulo: 'Situação do sistema', descricao: 'Banco de dados, cadastro de logins e leitor do Multi360.', icone: Server },
+  { href: '/dashboard/configuracoes/integracao', titulo: 'Integração Multi360', descricao: 'O token de acesso que lê as conversas. Renove aqui quando a leitura parar.', icone: Plug, exige: 'admin' },
   { href: '/dashboard/configuracoes/permissoes', titulo: 'Permissões', descricao: 'Quem vê cada tela. Marque por papel e salve.', icone: ShieldCheck },
   { href: '/dashboard/configuracoes/papeis', titulo: 'Papéis', descricao: 'Os cargos do sistema e o que cada um pode fazer. Crie, edite ou exclua.', icone: Users, exige: 'admin' },
   { href: '/dashboard/configuracoes/modelos', titulo: 'Modelos de cobrança', descricao: 'Textos prontos para as cobranças que se repetem.', icone: MessageSquareText, exige: 'modelos' },
