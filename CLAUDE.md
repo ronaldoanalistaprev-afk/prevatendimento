@@ -19,6 +19,10 @@
   `ronaldo.analista@hotmail.com`)
 - Publicado na Vercel: **https://web-siap.vercel.app** (projeto `siap/web`, conta APOSENTAR)
 - GitHub (único SaaS com remoto): `https://github.com/ronaldoanalistaprev-afk/prevatendimento.git`
+- **Caderno de Regras** (página fixa do Ronaldo, regra global de 21/11; fixada na barra lateral):
+  **https://claude.ai/artifact/BMacjdfSJBQ2gwxdVr3PCR** · fonte `docs/caderno-de-regras/caderno-de-regras.html`.
+  Toda regra nova/mudada/retificada e toda tela que mudar de funcionamento → corrigir e republicar **no
+  mesmo endereço, na mesma sessão** (republicar = `Artifact` com a mesma `url` e o mesmo arquivo). Não trava publicação.
 - Responsável: **Ronaldo**, advogado previdenciário. Não é programador; ele testa as telas.
 
 ### O que este projeto É e o que NÃO é

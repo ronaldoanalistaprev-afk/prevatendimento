@@ -1,0 +1,557 @@
+<title>Caderno de Regras do PrevAtendimento</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700&display=swap">
+<style>
+:root{
+  --bg:#f5f6f7; --surface:#ffffff; --surface-2:#eceef1; --line:#dcdfe4;
+  --fg:#1b2026; --muted:#5a636e; --accent:#334155; --accent-soft:#e2e8f0;
+  --quote-bg:#f1f3f6; --warn:#8a5a00; --warn-bg:#fdf1d6; --danger:#a3261b; --danger-bg:#fbe6e3; --ok:#226b3e; --ok-bg:#e1f1e6;
+  --font-body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-head:"Inter Tight","Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#13161a; --surface:#1b1f25; --surface-2:#232832; --line:#323945;
+  --fg:#e6e9ee; --muted:#a3adba; --accent:#9db2cc; --accent-soft:#232d3b;
+  --quote-bg:#1a2029; --warn:#f0c46b; --warn-bg:#3a2e12; --danger:#ff9d92; --danger-bg:#3d1d1a; --ok:#86d3a2; --ok-bg:#183323; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#13161a; --surface:#1b1f25; --surface-2:#232832; --line:#323945;
+  --fg:#e6e9ee; --muted:#a3adba; --accent:#9db2cc; --accent-soft:#232d3b;
+  --quote-bg:#1a2029; --warn:#f0c46b; --warn-bg:#3a2e12; --danger:#ff9d92; --danger-bg:#3d1d1a; --ok:#86d3a2; --ok-bg:#183323; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:16px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 64px}
+h1,h2,h3{font-family:var(--font-head);text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:clamp(1.8rem,4vw,2.5rem);letter-spacing:-.01em}
+h2{font-size:1.5rem}
+h3{font-size:1.1rem}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:240px minmax(0,1fr);gap:40px}
+@media (max-width:900px){.wrap{grid-template-columns:minmax(0,1fr);gap:24px}}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);align-self:start;max-height:calc(100vh - 32px);overflow:auto;font-size:.9rem}
+@media (max-width:900px){nav.toc{position:static;max-height:none;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px}}
+.toc p{margin:0 0 6px;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.toc ol{list-style:none;margin:0 0 16px;padding:0;display:grid;gap:2px}
+.toc a{display:block;padding:5px 8px;border-radius:6px;text-decoration:none;color:var(--fg)}
+.toc a:hover{background:var(--surface-2)}
+.toc .sub a{padding-left:20px;color:var(--muted)}
+main{min-width:0}
+header.top{display:grid;gap:14px;margin-bottom:28px}
+.eyebrow{font-size:.78rem;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);font-weight:600}
+.lead{font-size:1.06rem;max-width:68ch;margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px 16px;color:var(--muted);font-size:.9rem}
+.meta strong{color:var(--fg)}
+.howto{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;max-width:78ch}
+.howto ul{margin:6px 0 0;padding-left:20px}
+.howto li{margin:3px 0}
+.tools{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:12px 0;display:grid;gap:10px;border-bottom:1px solid var(--line);margin-bottom:24px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.search{display:flex;gap:8px;align-items:center}
+.search label{font-weight:600;font-size:.9rem;white-space:nowrap}
+.search input{flex:1;min-width:0;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);min-height:44px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:.85rem;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.count{font-size:.85rem;color:var(--muted)}
+section.part{margin-bottom:48px;scroll-margin-top:150px}
+.part > h2{margin-bottom:6px}
+.part > .intro{color:var(--muted);margin:0 0 18px;max-width:72ch}
+.tema{margin:28px 0 12px;scroll-margin-top:150px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.tema span{color:var(--muted);font-size:.9rem;font-family:var(--font-body);font-weight:400}
+.rules{display:grid;gap:14px}
+article.rule{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;display:grid;gap:12px;scroll-margin-top:150px}
+article.rule.old{opacity:.85}
+.rhead{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:baseline;justify-content:space-between}
+.rhead h3{flex:1 1 300px}
+.nr{font-variant-numeric:tabular-nums;font-weight:700;color:var(--accent);font-size:.9rem;white-space:nowrap}
+.date{color:var(--muted);font-size:.85rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.field{display:grid;gap:3px}
+.lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;font-weight:600;color:var(--muted)}
+.field p{margin:0;max-width:75ch}
+.ex p{background:var(--surface-2);border-radius:8px;padding:10px 12px;max-width:none}
+blockquote{margin:0;background:var(--quote-bg);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:10px 14px;font-style:normal}
+blockquote p{margin:0}
+blockquote p + p{margin-top:6px}
+.qnone{color:var(--muted);font-style:italic}
+.qrec{color:var(--muted);font-size:.85rem}
+.rels{display:flex;flex-wrap:wrap;gap:6px}
+.rel{font-size:.8rem;padding:3px 10px;border-radius:999px;background:var(--warn-bg);color:var(--warn);font-weight:600}
+.rel.done{background:var(--ok-bg);color:var(--ok)}
+.rel.gone{background:var(--danger-bg);color:var(--danger)}
+.rfoot{display:flex;justify-content:flex-end}
+.btn-c{font:inherit;font-size:.85rem;padding:6px 14px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--accent);cursor:pointer;min-height:40px}
+.btn-c:hover{background:var(--accent-soft)}
+.empty{padding:24px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);text-align:center}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 20px}
+.cards{display:grid;gap:12px}
+.pend .st{display:inline-block;font-size:.78rem;font-weight:600;padding:2px 10px;border-radius:999px;background:var(--warn-bg);color:var(--warn);margin-left:6px}
+.pend h3{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px}
+.pend p{margin:8px 0 0;max-width:75ch}
+.tech{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:20px}
+.tech .badge{display:inline-block;font-size:.8rem;font-weight:600;background:var(--accent-soft);color:var(--accent);padding:4px 12px;border-radius:999px;margin-bottom:10px}
+.tech h3{margin:18px 0 6px}
+.tech ul{margin:0;padding-left:20px;max-width:78ch}
+.tech li{margin:4px 0}
+.screen{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 20px;display:grid;gap:8px}
+.screen .where{font-size:.85rem;color:var(--muted)}
+.screen dl{margin:4px 0 0;display:grid;grid-template-columns:minmax(120px,max-content) minmax(0,1fr);gap:6px 14px}
+.screen dt{font-weight:600}
+.screen dd{margin:0}
+@media (max-width:520px){.screen dl{grid-template-columns:minmax(0,1fr)}.screen dd{margin-bottom:6px}}
+.tag{display:inline-block;font-size:.75rem;font-weight:600;padding:2px 9px;border-radius:999px;margin-left:6px;vertical-align:middle}
+.tag.on{background:var(--ok-bg);color:var(--ok)}
+.tag.wait{background:var(--warn-bg);color:var(--warn)}
+mark{background:var(--warn-bg);color:inherit;border-radius:3px;padding:0 1px}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style>
+
+<div class="wrap">
+  <nav class="toc" aria-label="Índice">
+    <p>Índice</p>
+    <ol>
+      <li><a href="#topo">Para que serve</a></li>
+      <li><a href="#regras">1. Caderno de regras</a></li>
+    </ol>
+    <ol class="sub" id="toc-temas"></ol>
+    <ol>
+      <li><a href="#pendencias">2. Pendências abertas</a></li>
+      <li><a href="#tecnicas">3. Regras técnicas do Claude</a></li>
+      <li><a href="#roteiro">4. Roteiro tela por tela</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="top" id="topo">
+      <div class="eyebrow">PrevAtendimento · decisões do dono do sistema</div>
+      <h1>Caderno de Regras do PrevAtendimento</h1>
+      <p class="lead">Aqui estão, em um só lugar, as regras que você decidiu para o PrevAtendimento — a central que acompanha as conversas de WhatsApp do escritório para ninguém ficar sem resposta. Cada regra traz o que o sistema faz, um exemplo inventado e, quando ficou guardada, a sua resposta com as suas palavras. Use a página para <strong>conferir</strong> se o sistema faz o que você quis, <strong>ratificar</strong> o que está certo e <strong>retificar</strong> o que não está.</p>
+      <div class="meta">
+        <span>Última atualização: <strong>24/11/2026</strong></span>
+        <span id="stat-nr"></span>
+        <span id="stat-pend"></span>
+      </div>
+      <div class="howto">
+        <strong>Como usar</strong>
+        <ul>
+          <li>Para comentar uma regra, clique em <em>Comentar esta regra</em> no fim dela (ou use o modo de comentário da página). O Claude lê os comentários.</li>
+          <li>O que você retificar vira uma <strong>decisão nova</strong> (DA nova), com a data. A decisão antiga não é apagada: fica aqui marcada como "Substituída pela DA-…".</li>
+          <li>Os exemplos usam pessoas <strong>inventadas</strong> (como Joana Exemplo de Souza). Nenhum cliente de verdade aparece nesta página.</li>
+          <li>"DA" quer dizer "Decisão do PrevAtendimento", numerada na ordem em que foi tomada. O número nunca muda.</li>
+          <li>Onde a sua frase exata não ficou gravada, está escrito "palavras não gravadas" e um resumo fiel — nunca uma citação inventada.</li>
+        </ul>
+      </div>
+      <div class="howto">
+        <strong>O que é bom saber antes de ler</strong>
+        <ul>
+          <li>O PrevAtendimento <strong>não envia nem finaliza</strong> mensagem de WhatsApp. Ele é o painel: lê o que acontece no <strong>Multi360</strong> (a plataforma que a equipe usa) e mostra quem está esperando resposta, quem falou por último, as cobranças e o desempenho. Quem conversa com o cliente é a equipe, dentro do Multi360.</li>
+          <li>O "cliente" aqui é só <strong>nome e telefone</strong> vindos do Multi360 — não tem CPF nem dados previdenciários (isso é PrevSystem/PrevControl).</li>
+          <li><strong>Este caderno não trava a publicação.</strong> Serve para você revisar e, se precisar, retificar — inclusive depois de já estar no ar.</li>
+        </ul>
+      </div>
+      <div class="howto">
+        <strong>O que mudou nesta versão (24/11/2026)</strong>
+        <ul>
+          <li>Primeira versão do caderno, com as 39 decisões suas (DA-1 a DA-63) organizadas por assunto, as 15 pendências abertas, as regras técnicas e o roteiro das telas.</li>
+          <li>Decisão nova da semana: <a href="#DA-63">DA-63</a> — o leitor do Multi360 passou a rodar sozinho na nuvem (não cai mais quando o computador desliga). Está <mark>bloqueado até você renovar o token</mark> (pendência <a href="#pendencias">P-36</a>).</li>
+        </ul>
+      </div>
+    </header>
+
+    <div class="tools" role="search">
+      <div class="search">
+        <label for="q">Buscar</label>
+        <input id="q" type="search" placeholder="Palavra, DA ou data (ex.: cobrança, DA-43, Marco Zero)" autocomplete="off">
+      </div>
+      <div class="chips" id="chips" aria-label="Filtrar por tema"></div>
+      <div class="count" id="count" aria-live="polite"></div>
+    </div>
+
+    <section class="part" id="regras">
+      <h2>1. Caderno de regras</h2>
+      <p class="intro">Cada regra traz o que o sistema faz, um exemplo inventado, a pergunta que foi feita a você (quando houve), a sua resposta, a DA de origem e a data. Quando uma decisão mudou outra, isso aparece nas etiquetas.</p>
+      <div id="lista-regras"></div>
+    </section>
+
+    <section class="part" id="pendencias">
+      <h2>2. Pendências ainda abertas</h2>
+      <p class="intro">O que ainda espera uma resposta ou uma ação sua. Quando você responder, a resposta vira uma DA nova e a pendência sai desta lista.</p>
+      <div class="cards" id="lista-pend"></div>
+    </section>
+
+    <section class="part" id="tecnicas">
+      <h2>3. Regras técnicas decididas pelo Claude</h2>
+      <div class="tech">
+        <span class="badge">Estas o Claude decidiu sozinho, por serem técnicas; você pode mudar qualquer uma</span>
+        <p style="margin:0;max-width:75ch">São escolhas de funcionamento que não mexem na regra previdenciária nem no significado do atendimento, mas mudam como o sistema se comporta. Se alguma não fizer sentido no dia a dia do escritório, comente aqui.</p>
+        <div id="lista-tec"></div>
+      </div>
+    </section>
+
+    <section class="part" id="roteiro">
+      <h2>4. Roteiro do sistema, tela por tela</h2>
+      <p class="intro">O que cada tela mostra e o que cada botão faz. Para ver a aparência sem precisar entrar no sistema, use a <strong>vitrine</strong>: são telas de amostra com dados inventados, em <a href="https://web-phi-lovat-27.vercel.app/vitrine" target="_blank" rel="noopener">web-phi-lovat-27.vercel.app/vitrine</a>. A etiqueta de cada tela diz se ela já está no ar.</p>
+      <div class="cards" id="lista-tela"></div>
+    </section>
+  </main>
+</div>
+
+<script>
+const TEMAS = [
+  ["produto","O produto e o jeito de construir"],
+  ["canal","O canal: Multi360 e WhatsApp"],
+  ["atendimento","O atendimento: quem está esperando"],
+  ["cobrancas","Cobranças"],
+  ["marcozero","Marco Zero (reengajamento)"],
+  ["equipe","Papéis, equipe e acessos"],
+  ["desempenho","Medir o atendimento"],
+  ["aparencia","Aparência e padrão"],
+  ["publicacao","Publicação, nuvem e domínio"]
+];
+const SEM = "Decisão dada por você, sem pergunta registrada.";
+const REC = "Pergunta reconstruída pelo que ficou registrado; o texto exato não foi gravado.";
+
+/* nr; d data; t tema; ti título; f o que o sistema faz; e exemplo; q pergunta; qt "reg"|"rec"|"sem"; r suas palavras; rt "cit"|"res"; rel ligações; note observação; old */
+const R = [
+// ---- produto ----
+{nr:"DA-6",d:"08/07/2026",t:"produto",ti:"A visão maior: o sistema gira em torno da pessoa, não do canal",
+ f:"A ideia de fundo é uma Central de Relacionamento: organizar tudo pela pessoa (sua jornada e seus objetivos), não pelo canal de contato. Hoje isso existe só como visão futura — a estrutura está no banco, vazia, sem uso.",
+ e:"No futuro, Joana Exemplo de Souza teria uma só ficha reunindo tudo o que já falou com o escritório, por qualquer canal.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas): você aprovou a visão e disse que o plano ainda podia mudar."]},
+{nr:"DA-7",d:"08/07/2026",t:"produto",ti:"É um produto para vários escritórios; a Aposentar é o primeiro",
+ f:"O sistema é pensado para ser vendido a vários escritórios do ramo previdenciário. O escritório Aposentar é o primeiro, de teste.",
+ e:"Quando outro escritório adotar o sistema, verá só as conversas dele; as da Aposentar ficam separadas.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas)."]},
+{nr:"DA-8",d:"08/07/2026",t:"produto",ti:"Vocabulário: \"Pretenso Cliente\", nunca \"Lead\"",
+ f:"Quem ainda não fechou é \"Pretenso Cliente\". Pretenso Cliente e Cliente são etapas da mesma pessoa, não dois cadastros.",
+ e:"Joana chega pelo WhatsApp perguntando sobre aposentadoria: ela é Pretensa Cliente. Se fechar contrato, a mesma ficha vira Cliente.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas): você fixou o termo \"Pretenso Cliente\" e proibiu \"Lead\"."]},
+{nr:"DA-21",d:"14/07/2026",t:"produto",ti:"Catálogo previdenciário é só para consulta",
+ f:"A lista de benefícios, serviços e fases fica em Configurações, fora do menu principal, e é só para olhar. Ela é a referência global do SIAP; mudar aqui afetaria todos os sistemas.",
+ e:"O atendente abre o catálogo para conferir o nome certo de um benefício, mas não edita nada por ali.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas)."]},
+{nr:"DA-49",d:"16/08/2026",t:"produto",ti:"Ler PDF do INSS fica para depois",
+ f:"Ler requerimento, dados cadastrais e acórdão do INSS não é para agora: é a última camada, depois que o cliente tiver cadastro com dados previdenciários. As especificações já existem na pasta global.",
+ e:"Um dia o sistema poderá ler o requerimento de Joana e preencher a ficha dela; por ora, não.",
+ qt:"sem",rt:"cit",r:["não agora; são a última camada"]},
+{nr:"DA-51",d:"15/11/2026",t:"produto",ti:"Religar o projeto e seguir o método do PrevSystem",
+ f:"Depois de meses parado, o projeto foi religado e passou a ser construído como o PrevSystem: decisões numeradas, lista de pendências, conferente independente e memória que não se perde.",
+ e:"Toda mudança nova passa a ter um número de decisão e um conferente que lê antes de dar por pronta.",
+ qt:"sem",rt:"cit",r:["nunca usamos o PrevAtendimento"]},
+{nr:"DA-52",d:"16/11/2026",t:"produto",ti:"Versão publicada muda só quando você manda",
+ f:"Há uma versão no ar (a que a equipe usaria) e uma em construção. A do ar só muda quando você manda publicar. (Complementada pela DA-61, que autoriza o Claude a publicar sozinho o que o conferente aprovar.)",
+ e:"Uma tela nova fica pronta na versão em construção; só vai ao ar quando você diz \"pode publicar\" — ou, pela DA-61, quando o conferente aprova.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas): padrão trazido do PrevSystem, com o seu aval."],
+ rel:[["","Complementada pela DA-61"]]},
+{nr:"DA-59",d:"18/11/2026",t:"produto",ti:"O estado de agora vence qualquer anotação",
+ f:"Antes de dizer que algo está parado, vencido ou pendente, o Claude confere ao vivo: no banco, no processo rodando e na publicação. Anotação antiga pode estar velha.",
+ e:"Antes de avisar \"a sincronização parou\", o Claude olha o banco e vê a hora da última leitura de verdade.",
+ qt:"sem",rt:"cit",r:["evitar que esse problema ocorra novamente"]},
+{nr:"DA-60",d:"18/11/2026",t:"produto",ti:"O método do PrevSystem vale para o projeto inteiro",
+ f:"Maestro único que fala com você, conferente independente, memória guardada em arquivos (decisões, pendências, estado, caderno), e a regra \"automatizar, avisar ou impedir\" em toda tela nova.",
+ e:"Cada pergunta que te faço vem completa e uma por vez; cada decisão sua é registrada na hora.",
+ qt:"sem",rt:"cit",r:["aplique aqui a todo o projeto, desde o início e de agora em diante"]},
+// ---- canal ----
+{nr:"DA-1",d:"08/07/2026",t:"canal",old:true,ti:"Começo: WhatsApp próprio, sem plataforma externa (não vale mais)",
+ f:"Não vale mais. A ideia inicial era o escritório ter o próprio WhatsApp, sem Multi360 nem similares.",
+ e:"Não se aplica: trocada pela DA-12, que decidiu aproveitar o Multi360.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas)."],rel:[["gone","Substituída pela DA-12"]]},
+{nr:"DA-9",d:"08/07/2026",t:"canal",ti:"Tem que aparecer o telefone de quem fala",
+ f:"O sistema mostra o número de telefone de quem entra em contato. Foi condição sua para o projeto seguir. O Multi360 entrega o telefone real.",
+ e:"Quando Joana manda mensagem, o atendente vê o telefone dela, não só um nome solto.",
+ qt:"sem",rt:"cit",r:["se não aparecer o número eu abandono o projeto"]},
+{nr:"DA-12",d:"12/07/2026",t:"canal",ti:"Aproveitar o Multi360 e ler dele",
+ f:"Em vez de trocar a ferramenta da equipe, o sistema lê o que acontece no Multi360. Isso resolve o telefone escondido do WhatsApp e evita o risco de bloqueio. O WhatsApp próprio vira reserva.",
+ e:"A equipe continua atendendo no Multi360 como sempre; o PrevAtendimento lê e mostra quem está esperando.",
+ q:"Manter o Multi360 ou seguir com WhatsApp próprio?",qt:"rec",rt:"cit",r:["Aproveitar o Multi360"],
+ rel:[["","Substituiu a DA-1"]]},
+{nr:"DA-23",d:"14/07/2026",t:"canal",ti:"O plano para um dia trocar o Multi360 (em três fases)",
+ f:"Fase 1: Multi360 mais a inteligência do nosso sistema. Fase 2: WhatsApp oficial num número de teste, em paralelo, sem misturar. Fase 3: migrar a linha principal só depois de provado. Você ainda não escolheu o caminho definitivo.",
+ e:"O número de teste rodaria ao lado, sem atrapalhar o atendimento real, até dar segurança para trocar.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas): plano combinado entre você e o Claude."]},
+{nr:"DA-47",d:"28/07/2026",t:"canal",ti:"WhatsApp próprio: ir para a API oficial da Meta",
+ f:"O caminho não oficial (Baileys) foi engavetado porque o número de teste foi derrubado pelo WhatsApp. O rumo passou a ser a API oficial da Meta, com o número reserva do escritório. O envio e o recebimento já estão construídos, isolados do espelho do Multi360, num \"Laboratório WhatsApp\" só do Administrador.",
+ e:"No Laboratório, dá para testar o WhatsApp oficial sem tocar nas conversas reais do Multi360.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas). Está travado no passo da confirmação por SMS da Meta (pendências P-04 a P-06)."]},
+{nr:"DA-63",d:"21/11/2026",t:"canal",ti:"O leitor do Multi360 passou a rodar na nuvem",
+ f:"Antes o leitor só funcionava com esta conversa aberta e o computador ligado — caía a cada queda de energia. Agora ele roda sozinho dentro do Supabase, de 15 em 15 minutos, sem depender do computador. O token de acesso ao Multi360 passou a ficar guardado no sistema (não mais num arquivo do computador), e você mesmo o renova por uma tela nova.",
+ e:"Mesmo com o seu computador desligado, o sistema continua lendo as conversas do Multi360 a cada 15 minutos, pela nuvem.",
+ q:"Posso pôr o leitor do Multi360 para rodar sozinho no Supabase?",qt:"reg",rt:"cit",r:["sem restrição"],
+ rel:[["","Bloqueado até você renovar o token (ver P-36)"]],
+ note:"A parte de engenharia (como a nuvem roda o leitor) foi decisão técnica do Claude; a decisão sua foi autorizar a mudança."},
+// ---- atendimento ----
+{nr:"DA-22",d:"14/07/2026",t:"atendimento",ti:"Para o sistema, a conversa só está Aberta ou Finalizada",
+ f:"O sistema simplifica as muitas situações do Multi360 em duas: Aberta ou Finalizada. (Detalhada pela DA-41, que diz que \"Potenciais\" também contam como aberta.)",
+ e:"Uma conversa marcada no Multi360 como \"ativa\", \"aguardando\" ou \"potencial\" conta toda como Aberta aqui.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas)."],rel:[["","Detalhada pela DA-41"]]},
+{nr:"DA-41",d:"27/07/2026",t:"atendimento",ti:"\"Potenciais\" contam como conversa aberta, mas ficam fora do Marco Zero",
+ f:"Contato novo, ou cliente encerrado que voltou a falar, entra na contagem de conversas abertas em todas as telas — mas não recebe a mensagem em massa do Marco Zero.",
+ e:"Joana, que nunca falou antes, aparece como conversa aberta no Monitor, mas não entra no disparo de reengajamento.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas): combinado entre você e o Claude."]},
+{nr:"DA-44",d:"27/07/2026",t:"atendimento",ti:"O cliente só é \"Finalizado\" quando todas as conversas dele acabam",
+ f:"As três abas do Multi360 (Ativos, Pendentes, Potenciais) contam como conversa ativa. O cliente só fica Finalizado quando todas as conversas dele estão finalizadas.",
+ e:"Se Joana tem duas conversas abertas e uma é fechada, ela continua \"ativa\" até a outra também fechar.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas). Ainda não construída no painel."]},
+{nr:"DA-45",d:"27/07/2026",t:"atendimento",ti:"Quatro setores, e o filtro se monta sozinho",
+ f:"Os departamentos foram reduzidos para quatro no próprio Multi360. O filtro de setor no sistema se monta sozinho a partir das conversas que chegam.",
+ e:"Se aparecer um setor novo nas conversas, ele vira opção de filtro automaticamente, sem ninguém cadastrar.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas): a redução para quatro foi sua; a montagem automática do filtro é técnica."]},
+{nr:"DA-48",d:"06/08/2026",t:"atendimento",ti:"O sinal é \"quem falou por último\", não a situação do Multi360",
+ f:"Os cartões do Monitor e do Início se baseiam em quem falou por último — \"Escritório precisa responder\" ou \"Aguardando o cliente\" — e não na situação \"Aguardando\" do Multi360, que a equipe deixa parada por hábito e não é confiável.",
+ e:"Se Joana mandou a última mensagem, a conversa conta como \"Escritório precisa responder\", mesmo que no Multi360 ainda esteja marcada como \"em atendimento\".",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas): você apontou que a marca do Multi360 não é confiável."]},
+// ---- cobrancas ----
+{nr:"DA-25",d:"15/07/2026",t:"cobrancas",ti:"Como funcionam as cobranças ao atendente",
+ f:"O supervisor cobra um atendente que deixou um cliente esperando, com texto pronto (modelos) e prazo rápido de 1 a 5 dias. Dá para editar, cancelar e reabrir a cobrança, com placar e histórico. Os papéis têm dois poderes além das telas: \"ver tudo\" e \"cobrar\".",
+ e:"O supervisor cobra do atendente Carlos a conversa de Joana, com o modelo \"Cliente aguardando há mais de um dia\" e prazo de 2 dias.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas)."]},
+{nr:"DA-46",d:"27/07/2026",t:"cobrancas",ti:"Página \"Ações necessárias\" e nova cobrança pela própria página",
+ f:"A tela de Ações necessárias é um painel de cartões (cada cartão um tipo de problema, com contagem; some em verde quando zera). Dá para abrir uma nova cobrança ali mesmo, com vínculo a cliente opcional e várias cobranças por atendente e por cliente.",
+ e:"No cartão \"Clientes esperando há mais de 24h\" o supervisor clica e já cobra o atendente responsável.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas)."]},
+// ---- marcozero ----
+{nr:"DA-40",d:"27/07/2026",t:"marcozero",ti:"Marco Zero: reengajar em lotes, sem mutirão — e o sistema só mede",
+ f:"Em vez de um mutirão, mandar mensagem de retomada em lotes pequenos, da fila mais antiga para a mais nova. Quem responde é atendido; quem não responde em cerca de 5 a 7 dias entra numa lista de \"encerrado sem retorno após contato\". Regra de ouro: o PrevAtendimento não envia nem finaliza mensagem — só mede; quem age é a equipe no Multi360.",
+ e:"O sistema aponta as 40 conversas paradas há mais tempo; a equipe manda a mensagem de retomada no Multi360 e o sistema acompanha quem respondeu.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas): ideia sua; o detalhe foi desenhado com o agente de estratégia e aprovado por você."]},
+{nr:"DA-42",d:"27/07/2026",t:"marcozero",old:true,ti:"Finalizar todas as conversas após a mensagem (não vale mais)",
+ f:"Não vale mais. Previa finalizar todas as conversas abertas depois de mandar a mensagem de retomada.",
+ e:"Não se aplica: trocada pela DA-43 no mesmo dia.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas)."],rel:[["gone","Substituída pela DA-43"]]},
+{nr:"DA-43",d:"27/07/2026",t:"marcozero",ti:"Seguir o parecer do agente de estratégia",
+ f:"Mensagem única (versão aprovada por você), sem telefones no texto, pedido simples (\"responda, nem que seja um sim\"). O disparo é só para quem está esperando o escritório, não para as conversas em que o escritório falou por último. Quem responde cai para um supervisor, ponto único de entrada. (Resta decidir o horário do disparo — ver pendência P-11.)",
+ e:"As 40 conversas mais antigas em que o cliente ficou esperando recebem a mesma mensagem; as respostas vão todas para o supervisor.",
+ q:"Seguir o parecer do agente de estratégia para o Marco Zero?",qt:"reg",rt:"cit",r:["vou seguir o que o agente sugerir"],
+ rel:[["","Substituiu a DA-42"]]},
+// ---- equipe ----
+{nr:"DA-16",d:"13/07/2026",t:"equipe",ti:"Três figuras na operação, e por onde começar",
+ f:"Gestor (vê tudo, auditoria, acessos), Supervisor (garante que todo cliente seja respondido e cobra o atendente) e Colaborador/Atendente (vê só as suas conversas). Os atendentes entram no sistema para ver \"Minhas cobranças\". Começar pela importação das conversas finalizadas.",
+ e:"Carlos (atendente) vê só as conversas dele e as cobranças que recebeu; a supervisora vê todas e cobra quem está devendo.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas). O rótulo \"Colaborador\" virou \"Atendente\" na tela (DA-36)."]},
+{nr:"DA-18",d:"13/07/2026",t:"equipe",ti:"O Supervisor vê o Desempenho; só o Administrador cria logins",
+ f:"O Supervisor tem acesso à tela de Desempenho. As telas antigas (do WhatsApp próprio) ficam só para o Administrador. Só o Administrador cria logins.",
+ e:"A supervisora abre o Desempenho da equipe, mas não consegue criar um novo login — isso é com o Administrador.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas)."]},
+{nr:"DA-20",d:"14/07/2026",t:"equipe",ti:"Quem cadastra e-mail e senha é você",
+ f:"O Claude constrói o cadastro de acessos, mas quem cadastra e-mail e senha é você. Nenhuma credencial é inventada pelo Claude nem passada pelo chat.",
+ e:"Para criar o acesso de Carlos, você digita o e-mail e a senha; o Claude não escolhe nem vê a senha.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas)."]},
+{nr:"DA-37",d:"24/07/2026",t:"equipe",ti:"Logins da equipe com e-mails fictícios",
+ f:"Os logins da equipe usam e-mails fictícios no padrão nome@domínio do escritório — o e-mail é só o \"usuário\" para entrar. A troca de senha é pela própria tela.",
+ e:"Carlos entra como carlos@aposentar, sem precisar de um e-mail de verdade.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas)."]},
+// ---- desempenho ----
+{nr:"DA-28",d:"15/07/2026",t:"desempenho",ti:"Trazer o histórico completo das mensagens",
+ f:"O sistema traz todo o histórico de mensagens, sem o corte de 100 por conversa que havia antes.",
+ e:"Ao abrir a conversa de Joana, aparecem todas as mensagens antigas, não só as últimas.",
+ qt:"sem",rt:"cit",r:["temos que trazer tudo"]},
+// ---- aparencia ----
+{nr:"DA-24",d:"15/07/2026",t:"aparencia",ti:"Mensagens da mais recente para a mais antiga",
+ f:"Da avaliação de aparência, aplicou-se o pacote escolhido e, por decisão sua, as mensagens aparecem da mais recente para a mais antiga (ao contrário do WhatsApp).",
+ e:"No topo da conversa de Joana fica a última mensagem; descendo, as mais antigas.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas): escolha sua, ao contrário do WhatsApp."]},
+{nr:"DA-55",d:"16/11/2026",t:"aparencia",ti:"A aparência vem da skill Apple Design",
+ f:"A cara do sistema segue a skill Apple Design, partindo das telas do PrevSystem (mesmo escritório). O sistema inteiro foi convertido para esse visual. Você aprova pela foto.",
+ e:"Botões que afundam ao toque, janelas que surgem com leveza, menu lateral com física de arrasto — tudo no padrão Apple Design.",
+ q:"Usar a rodada do Laboratório de Design ou a exceção Apple Design neste projeto?",qt:"reg",rt:"cit",r:["vamos usar nesse e no PrevControl o Apple Design"]},
+{nr:"DA-57",d:"18/11/2026",t:"aparencia",ti:"Participantes da conversa: só mostrar",
+ f:"A tela da conversa mostra o responsável em destaque, os participantes e o tempo de espera. O gestor acompanha sem precisar ser participante. Isso não muda o cálculo de espera nem as cobranças.",
+ e:"Na conversa de Joana aparece \"Responsável: Carlos\" e, ao lado, quem mais entrou na conversa — só para ver, sem mudar nada.",
+ q:"Participantes da conversa: só mostrar, ou também mudar o cálculo de espera e as cobranças?",qt:"reg",rt:"cit",r:["Só mostrar"]},
+// ---- publicacao ----
+{nr:"DA-30",d:"15/07/2026",t:"publicacao",ti:"Arquivo de conexão próprio ao banco",
+ f:"Você autorizou o projeto a ter o próprio arquivo de conexão ao banco, para o Claude acessar o banco certo (antes caía no banco de outro projeto).",
+ e:"As telas do PrevAtendimento passaram a ler e gravar no banco do PrevAtendimento, não no do PrevFinanças.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas)."]},
+{nr:"DA-32",d:"16/07/2026",t:"publicacao",ti:"Publicar na Vercel; banco no Supabase",
+ f:"As telas são publicadas na Vercel; o banco fica no Supabase. (O leitor, que na época iria para a Railway, hoje roda na nuvem do Supabase — ver DA-63.)",
+ e:"Quando você manda publicar, as telas sobem para a Vercel em poucos minutos.",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas). A escolha do plano Pro foi adiada pela DA-50."],
+ rel:[["","Completada pela DA-50 e pela DA-63"]]},
+{nr:"DA-50",d:"24/08/2026",t:"publicacao",ti:"Vercel para todos os SaaS; plano grátis até a primeira venda",
+ f:"Todos os sistemas do escritório ficam na Vercel. A conta fica no plano grátis até a primeira venda; antes de vender, passa para o plano pago (o grátis não permite uso comercial).",
+ e:"Enquanto nada é vendido, o PrevAtendimento roda no plano grátis, dentro das regras.",
+ qt:"sem",rt:"cit",r:["decisão é que todos os saas serão na vercel"]},
+{nr:"DA-56",d:"16/11/2026",t:"publicacao",ti:"Domínio próprio: depois, não agora",
+ f:"Apontar o endereço aposentarconsultoria.com.br para o sistema fica para mais tarde. Hoje o endereço é o da Vercel.",
+ e:"Um dia o sistema abrirá em aposentarconsultoria.com.br; por ora, no endereço web-phi-lovat-27.vercel.app.",
+ q:"Quando apontar o domínio próprio para o sistema?",qt:"reg",rt:"cit",r:["depois, não agora"]},
+{nr:"DA-61",d:"18/11/2026",t:"publicacao",ti:"O Claude pode publicar sozinho o que o conferente aprovar",
+ f:"Autorização permanente: o Claude publica na Vercel a entrega que o conferente independente aprovar, avisando você depois. Continuam pedindo a sua autorização a cada vez: mexer no banco de produção, criar banco de teste (custo) e apagar arquivos ou contas.",
+ e:"Uma correção de tela aprovada pelo conferente vai ao ar e você é avisado; já mexer no banco de verdade espera o seu \"sim\".",
+ qt:"sem",rt:"res",r:["Resumo (palavras não gravadas): autorização sua, com as três exceções acima."],
+ rel:[["","Complementa a DA-52"]]}
+];
+
+const PEND = [
+ {n:"1",st:"Depende de você ver",ti:"Conferir as telas na foto (Regra 54)",tx:"Abrir o sistema no celular (390 px), no computador (1440 px) e numa tela estreita (320 px) sem rolagem lateral, e usar só o teclado nos formulários. Tudo está pronto no código; falta você ver. A vitrine com dados fictícios serve para isso: web-phi-lovat-27.vercel.app/vitrine."},
+ {n:"2",st:"Aguarda sua ordem",ti:"Mandar publicar a versão em construção",tx:"O trabalho de 16 a 24/11 (Apple Design, regras do Documento Mestre, participantes, leitor na nuvem, tela do token) está no ar como publicada-05. Pela DA-61, o Claude publica o que o conferente aprova; o que pede a sua ordem específica, pede na hora."},
+ {n:"3",st:"Aguarda seu \"sim\"",ti:"Banco de testes (custa ~US$ 10/mês)",tx:"Uma cópia de teste do banco, como o PrevSystem tem, para experimentar sem risco. Custa cerca de US$ 10 por mês na conta do Supabase. Não crio sem o seu \"sim\"."},
+ {n:"4",st:"Parado desde 28/07",ti:"WhatsApp oficial: confirmar o número real",tx:"O número reserva foi posto na conta oficial do escritório na Meta, mas está \"não verificado\": falta confirmar com o código que chega por SMS."},
+ {n:"5",st:"Parado desde 28/07",ti:"WhatsApp oficial: gerar o token permanente",tx:"Ao gerar o token, a Meta pediu confirmação por SMS num número de segurança antigo que você não tem mais. Retomar com esse número ou trocá-lo, e passar o token ao Claude."},
+ {n:"6",st:"Depende de P-04 e P-05",ti:"WhatsApp oficial: publicar o aplicativo na Meta",tx:"Enquanto o aplicativo está \"não publicado\", só chegam mensagens de teste do painel, não as reais. Depois vem a verificação da empresa (limites de envio)."},
+ {n:"7",st:"Você disse \"depois\"",ti:"Domínio próprio apontado para o sistema",tx:"Decidir quando apontar aposentarconsultoria.com.br e se será o endereço principal ou um subendereço (ex.: atendimento.), caso o principal vire um site."},
+ {n:"8",st:"Pergunta em aberto",ti:"Tirar a proteção da Vercel no endereço web-siap",tx:"No endereço web-siap.vercel.app a Vercel pede o login dela antes do login do sistema; só o outro endereço abre direto. Quer que o Claude retire essa proteção? O sistema já tem login próprio."},
+ {n:"9",st:"Aguarda o gatilho",ti:"Plano Pro da Vercel antes da primeira venda",tx:"O plano grátis não permite uso comercial. O gatilho para migrar é a primeira venda (cobrança ligada, página de compra ou primeiro cliente pagante), não uma data."},
+ {n:"10",st:"Lembrar uma vez",ti:"Teste dos 5 casos reais na Auditoria",tx:"Combinação sua de abrir a Auditoria e tentar resolver 5 clientes que esperam, para validar o uso. Adiada duas vezes; sem notícia desde 15/07."},
+ {n:"11",st:"Parado desde 06/08",ti:"Marco Zero: dar o sinal e o horário do disparo",tx:"O plano e a página estão prontos; o piloto com as 40 conversas mais antigas nunca foi disparado. Falta decidir se retoma e o horário (as anotações divergem: \"cedo, no início do expediente\" × \"à noite, sem atendente\")."},
+ {n:"12",st:"Aguarda sua explicação",ti:"Marco Zero: como reconhecer os clientes em risco",tx:"Como identificar os clientes vivos e recentes que estão para desfazer o contrato por falta de resposta. O banco do PrevAtendimento não sabe quem são (isso vive no PrevSystem/PrevControl)."},
+ {n:"13",st:"A confirmar",ti:"Trocar a sua própria senha",tx:"Durante os testes de 24/07 a senha de acesso foi trocada; você precisava entrar e criar uma nova em \"Minha conta\". As fontes não registram se foi feito."},
+ {n:"35",st:"Depende de você abrir",ti:"Railway: serviço antigo do leitor, pode estar cobrando à toa",tx:"Em 22/07 o leitor ficou num serviço da Railway por 24h; desde 06/08 quem sincronizava era o computador, e agora é a nuvem do Supabase. Se o serviço da Railway ainda existir, pode estar cobrando à toa. A ferramenta nesta máquina está deslogada."},
+ {n:"36",st:"É o que destrava tudo",ti:"Renovar o token do Multi360 (sincronização parada há dias)",tx:"Conferido ao vivo: a última leitura foi em 19/11; o token venceu. A leitura das conversas está parada (local e nuvem). Agora você renova sozinho em Configurações → Integração Multi360 (F12 → Console → copiar o token → colar). Risco a confirmar quando você colar um token válido: se o Multi360 amarrar o token ao seu computador, a nuvem não consegue usar e o leitor volta para a máquina."}
+];
+
+const TEC = [
+ ["Como o sistema lê o Multi360",[
+  "A leitura é pela API interna do Multi360 (não raspando a tela), uma volta a cada 15 minutos, com o token de quem está logado.",
+  "O que é lido fica em tabelas próprias com prefixo at_ (clientes, conversas, mensagens, anexos só como link, atendentes, registro de leituras). É um espelho: o sistema não escreve de volta no Multi360.",
+  "Na nuvem (DA-63), como um ciclo de leitura pode passar de 2 minutos e meio, a função responde na hora e termina o trabalho em segundo plano; um agendador a chama de 15 em 15 minutos. Se um ciclo for cortado, o próximo retoma, sem perder nada.",
+  "A chamada da leitura só passa com um segredo interno; chamada de fora é recusada. O token nunca aparece para quem não é administrador, e a tela de administrador nunca mostra o token guardado — só troca por um novo."
+ ]],
+ ["Quem vê o quê (no próprio banco)",[
+  "A trava de acesso vale no banco, não só na tela: o atendente só lê as conversas das quais é responsável; quem vê tudo (gestor, supervisor) lê tudo.",
+  "O atendente abre o histórico completo do cliente que ele atende, inclusive conversas antigas com outros atendentes; cliente que não é dele continua fechado.",
+  "Cada escritório só enxerga o que é dele (a separação é por escritório, já pensando na venda para outros)."
+ ]],
+ ["Como o sistema mede o atendimento",[
+  "O sinal principal é \"quem falou por último\": se foi o cliente, o relógio corre contra o escritório.",
+  "O atendimento é medido por rodadas (o cliente escreve → a próxima resposta humana), com mediana e % respondido em até 24 horas — nunca média, que engana. A janela de comparação não é escolhida a dedo; a linha de base foi congelada em 15/07/2026, antes de a equipe usar o sistema.",
+  "Mensagem do robô não conta como resposta da equipe (antes escondia clientes esperando).",
+  "A tela Início (\"Precisa de você agora\", gráfico de 24 horas, se o sistema está sendo usado) é só para quem vê tudo; o atendente vai direto ao Monitor."
+ ]],
+ ["Cobrança e ações",[
+  "A cobrança se resolve sozinha quando o atendente responde o cliente depois de ter sido cobrado.",
+  "A situação da cobrança usa termos claros (\"A Resolver\", botão \"Resolver\") e o placar mostra as canceladas."
+ ]],
+ ["Automatizar, avisar ou impedir",[
+  "Toda tela nova passa por três perguntas, nesta ordem: o sistema consegue descobrir sozinho? Então faz. Só uma pessoa sabe? Então avisa até ser registrado. Seguir sem isso causa erro? Então impede.",
+  "Exemplos no PrevAtendimento: quem falou por último é calculado sozinho (automático); depois de 45 minutos sem sincronizar, o selo de todas as telas vira aviso amarelo \"atualização parada há X\" (aviso); a renovação do token, que só você pode fazer, fica avisada na tela até ser feita (aviso)."
+ ]],
+ ["Base, segurança e padrão das telas",[
+  "A base é a mesma dos outros SaaS do escritório (Next.js + React + Supabase), com o aplicativo na pasta web/. A entrada é por e-mail e senha.",
+  "O código fica num repositório privado no GitHub; os segredos (token, chaves) ficam fora do git.",
+  "Recuperação de senha e tela \"Minha conta\": quem esqueceu recebe um link gerado pelo Administrador; a senha quem digita é a própria pessoa.",
+  "As telas servidas pela Vercel rodam em São Paulo, junto do banco, para não ficarem lentas.",
+  "Toda tela segue o Documento Mestre de Padronização (nomes por extenso, formatos de dinheiro e data, teclado, estados de carregando/vazio/erro, celular até 320 px sem rolagem lateral). Os filtros de setor e atendente aceitam marcar várias opções (Regra 57)."
+ ]]
+];
+
+const TELAS = [
+ {n:"Entrar",w:"Tela inicial, sem login",on:1,m:"E-mail e senha. Quem esqueceu a senha pede um link ao Administrador.",b:[["Entrar","Abre o sistema no papel do seu login."]]},
+ {n:"Início",w:"Menu → Início (só para quem vê tudo)",on:1,m:"O painel do gestor: \"Precisa de você agora\", o gráfico de respostas em 24 horas e se o sistema está sendo usado. O atendente comum não vê esta tela; vai direto ao Monitor.",b:[["Ver no Monitor","Leva ao Monitor Diário."]]},
+ {n:"Monitor Diário",w:"Menu → Monitor (tela mais usada)",on:1,m:"As conversas abertas, com os números do topo (abertas, esperando a equipe, a equipe respondeu, paradas há mais de 24h), o selo de quem falou por último, o tempo de espera (\"Esperando há X\") e os filtros de situação, setor e atendente. É a tela que a vitrine mostra.",b:[["Chips de situação","Alternam entre Esperando a equipe, Todas as abertas e Tudo."],["Setor / Atendente","Seletor com busca; dá para marcar várias opções."],["Abrir a conversa","Mostra as mensagens, o responsável em destaque e os participantes."]]},
+ {n:"Conversa aberta",w:"Monitor → clique na conversa",on:1,m:"As mensagens da mais recente para a mais antiga, o responsável destacado, os participantes e o tempo de espera. Só para ver — o sistema não envia mensagem (quem responde é a equipe no Multi360).",b:[["Voltar","Retorna ao Monitor."]]},
+ {n:"Ações necessárias",w:"Menu → Ações necessárias (com contador)",on:1,m:"Um painel de cartões: cada tipo de problema que depende da equipe, com contagem. Some em verde quando zera. Dá para abrir uma nova cobrança por aqui.",b:[["Cartão","Leva ao que precisa ser resolvido."],["Nova cobrança","Cobra um atendente, com cliente opcional."]]},
+ {n:"Cobranças",w:"Menu → Cobranças",on:1,m:"As cobranças ao atendente, com placar (abertas, resolvidas, canceladas) e histórico. A cobrança se resolve sozinha quando o atendente responde o cliente.",b:[["Nova cobrança","Abre o formulário com modelos de texto e prazo de 1 a 5 dias."],["Cobrar atendente","Manda a cobrança."],["Resolver / Cancelar / Reabrir","Mudam a situação da cobrança."]]},
+ {n:"Auditoria",w:"Menu → Auditoria",on:1,m:"As conversas paradas e há quanto tempo, para o supervisor conferir quem está sem resposta. Tem busca e filtros removíveis.",b:[["Filtros","Etiquetas que se tiram com um clique."]]},
+ {n:"Desempenho",w:"Menu → Desempenho (Gestor e Supervisor)",on:1,m:"Os números do atendimento por rodadas: mediana do tempo de resposta e % respondido em até 24 horas, com a linha de base congelada. Nunca média.",b:[["Período","Escolhe a janela de comparação (sem escolher a dedo)."]]},
+ {n:"Colaboradores",w:"Menu → Colaboradores (Administrador)",on:1,m:"A equipe e os acessos. Só o Administrador cria logins (e-mails fictícios no padrão do escritório).",b:[["Novo colaborador","Cadastra o acesso; você digita e-mail e senha."],["Acessos","Liga o login ao atendente do Multi360."],["Inativar","Tira o acesso na hora, sem apagar."]]},
+ {n:"Configurações",w:"Menu → Configurações",on:1,m:"As áreas de ajuste: Situação do sistema, Integração Multi360, Permissões, Papéis, Modelos de cobrança e o Catálogo previdenciário (só consulta).",b:[["Cada cartão","Abre a área correspondente."]]},
+ {n:"Configurações → Integração Multi360",w:"Configurações → Integração Multi360 (Administrador)",on:1,m:"NOVA (24/11). Mostra se o token está Em dia, Vencido ou Sem token, e a última sincronização. É aqui que você cola um token novo quando a leitura parar, com o passo a passo do F12.",b:[["Salvar e conferir o token","Grava o token novo e confere na hora se funciona."],["Sincronizar agora","Pede uma leitura imediata do Multi360."],["Copiar comando","Copia o comando do F12 para a área de transferência."]]},
+ {n:"Configurações → Situação do sistema",w:"Configurações → Situação do sistema",on:1,m:"Um retrato rápido: banco de dados, cadastro de logins e leitor do Multi360 (funcionando ou parado). Quando o leitor está parado, aponta para a tela de Integração Multi360.",b:[["Integração Multi360","Leva à tela para renovar o token."]]},
+ {n:"Marco Zero",w:"Menu → Marco Zero",on:1,m:"A página do reengajamento em lotes (DA-40, DA-43): as conversas mais antigas esperando o escritório, o texto aprovado e o acompanhamento de quem respondeu. O piloto ainda não foi disparado (pendência P-11).",b:[["Ver a fila","Mostra as conversas mais antigas, da mais velha para a mais nova."]]},
+ {n:"Minha conta",w:"Menu → Minha conta",on:1,m:"Onde cada pessoa troca a própria senha.",b:[["Trocar senha","Define uma senha nova."]]},
+ {n:"Laboratório WhatsApp",w:"Menu → Laboratório WhatsApp (só Administrador)",on:1,m:"O ambiente isolado do WhatsApp oficial da Meta (DA-47), separado do espelho do Multi360, para testar envio e recebimento sem tocar nas conversas reais. Travado no passo do SMS da Meta (pendências P-04 a P-06).",b:[["Enviar teste","Manda uma mensagem de teste pelo número oficial."]]},
+ {n:"Vitrine",w:"web-phi-lovat-27.vercel.app/vitrine (sem login)",on:1,m:"Telas de amostra com dados inventados, para você ver e aprovar a aparência sem entrar no sistema. Mostra o Monitor Diário na aparência Apple Design.",b:[["Mexer à vontade","Nada daqui chega aos clientes de verdade."]]}
+];
+
+/* ---------- render ---------- */
+const $ = (s,el=document)=>el.querySelector(s);
+const esc = s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const sorted = [...R];
+
+function ruleHTML(x){
+  const quoteParas = x.r.map(p=>`<p>${x.rt==="cit"?"“"+esc(p)+"”":esc(p)}</p>`).join("");
+  let qHTML;
+  if(x.qt==="sem") qHTML = `<p class="qnone">${SEM}</p>`;
+  else qHTML = `<p>${esc(x.q)}</p>` + (x.qt==="rec" ? `<p class="qrec">${REC}</p>` : "");
+  const rels = (x.rel||[]).map(([k,txt])=>`<span class="rel ${k}">${esc(txt)}</span>`).join("");
+  return `<article class="rule${x.old?" old":""}" id="${x.nr.replace(/[^A-Za-z0-9]/g,"-")}" data-tema="${x.t}">
+    <div class="rhead"><span class="nr">${esc(x.nr)}</span><h3>${esc(x.ti)}</h3><span class="date">${x.d}</span></div>
+    ${rels?`<div class="rels">${rels}</div>`:""}
+    <div class="field"><span class="lbl">O que o sistema faz</span><p>${esc(x.f)}</p></div>
+    <div class="field ex"><span class="lbl">Exemplo inventado</span><p>${esc(x.e)}</p></div>
+    <div class="field"><span class="lbl">Pergunta feita a você</span>${qHTML}</div>
+    <div class="field"><span class="lbl">${x.rt==="cit"?"Sua resposta, nas suas palavras":"Sua resposta"}</span><blockquote>${quoteParas}</blockquote></div>
+    ${x.note?`<div class="field"><span class="lbl">Observação</span><p>${esc(x.note)}</p></div>`:""}
+    <div class="rfoot"><button class="btn-c" type="button" data-comment hidden>Comentar esta regra</button></div>
+  </article>`;
+}
+
+function renderRules(){
+  const box = $("#lista-regras");
+  box.innerHTML = TEMAS.map(([k,nome])=>{
+    const items = R.filter(x=>x.t===k);
+    if(!items.length) return "";
+    return `<div class="grupo" data-grupo="${k}"><h3 class="tema" id="tema-${k}">${esc(nome)} <span>${items.length} ${items.length===1?"regra":"regras"}</span></h3><div class="rules">${items.map(ruleHTML).join("")}</div></div>`;
+  }).join("") + `<div class="empty" id="sem-res" hidden>Nenhuma regra com essa palavra. Tente outra palavra ou escolha “Todos os temas”.</div>`;
+  $("#toc-temas").innerHTML = TEMAS.map(([k,n])=>`<li><a href="#tema-${k}">${esc(n)}</a></li>`).join("");
+}
+function renderChips(){
+  const c = $("#chips");
+  c.innerHTML = `<button class="chip" type="button" data-t="" aria-pressed="true">Todos os temas</button>` + TEMAS.map(([k,n])=>`<button class="chip" type="button" data-t="${k}" aria-pressed="false">${esc(n)}</button>`).join("");
+}
+function renderPend(){
+  $("#lista-pend").innerHTML = PEND.map(p=>`<div class="card pend"><h3>Pendência ${esc(p.n)} · ${esc(p.ti)} <span class="st">${esc(p.st)}</span></h3><p>${esc(p.tx)}</p><div class="rfoot"><button class="btn-c" type="button" data-comment hidden>Comentar</button></div></div>`).join("");
+}
+function renderTec(){
+  $("#lista-tec").innerHTML = TEC.map(([t,items])=>`<h3>${esc(t)}</h3><ul>${items.map(i=>`<li>${esc(i)}</li>`).join("")}</ul>`).join("");
+}
+function renderTelas(){
+  $("#lista-tela").innerHTML = TELAS.map(s=>`<div class="screen"><h3>${esc(s.n)} <span class="tag ${s.on?"on":"wait"}">${s.on?"No ar":"Pronta, esperando publicação"}</span></h3><div class="where">${esc(s.w)}</div><p style="margin:0;max-width:75ch">${esc(s.m)}</p><dl>${s.b.map(([a,b])=>`<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join("")}</dl><div class="rfoot"><button class="btn-c" type="button" data-comment hidden>Comentar esta tela</button></div></div>`).join("");
+}
+
+/* ---------- busca e filtro ---------- */
+const norm = s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+let temaAtivo = "";
+function aplicar(){
+  const q = norm($("#q").value.trim());
+  let vis = 0;
+  document.querySelectorAll("article.rule").forEach(a=>{
+    const okT = !temaAtivo || a.dataset.tema===temaAtivo;
+    const okQ = !q || norm(a.textContent).includes(q);
+    a.hidden = !(okT && okQ);
+    if(!a.hidden) vis++;
+  });
+  document.querySelectorAll(".grupo").forEach(g=>{ g.hidden = !g.querySelector("article.rule:not([hidden])"); });
+  $("#sem-res").hidden = vis>0;
+  $("#count").textContent = (q||temaAtivo) ? `${vis} de ${R.length} regras` : `${R.length} regras`;
+  try{ localStorage.setItem("caderno-pa-filtro", JSON.stringify({q:$("#q").value,t:temaAtivo})); }catch(e){}
+}
+function initFiltro(){
+  $("#q").addEventListener("input", aplicar);
+  $("#chips").addEventListener("click", e=>{
+    const b = e.target.closest(".chip"); if(!b) return;
+    temaAtivo = b.dataset.t;
+    document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed", String(c===b)));
+    aplicar();
+  });
+  try{
+    const s = JSON.parse(localStorage.getItem("caderno-pa-filtro")||"null");
+    if(s){ $("#q").value = s.q||""; temaAtivo = s.t||""; document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed", String(c.dataset.t===temaAtivo))); }
+  }catch(e){}
+  aplicar();
+}
+
+function stats(){
+  $("#stat-nr").innerHTML = `<strong>${R.length}</strong> decisões suas`;
+  $("#stat-pend").innerHTML = `<strong>${PEND.length}</strong> pendências abertas`;
+}
+
+renderRules(); renderChips(); renderPend(); renderTec(); renderTelas(); stats(); initFiltro();
+
+/* ---------- comentários ---------- */
+(async()=>{
+  try{
+    const c = await window.claude?.use?.("comments");
+    if(!c) return;
+    document.querySelectorAll("[data-comment]").forEach(b=>{
+      b.hidden = false;
+      b.addEventListener("click", async ()=>{
+        const alvo = b.closest("article.rule, .card, .screen");
+        try{ await c.openComposer({element: alvo}); }catch(e){}
+      });
+    });
+  }catch(e){}
+})();
+</script>
