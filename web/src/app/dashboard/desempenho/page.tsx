@@ -88,7 +88,11 @@ export default async function DesempenhoPage() {
                   const grave = r.esperando24 > 0
                   return (
                     <tr key={r.atendente}>
-                      <td className="nome" data-rotulo="Atendente" style={{ color: 'var(--tinta)' }}>{formatarNome(r.atendente)}</td>
+                      <td className="nome" data-rotulo="Atendente" style={{ color: 'var(--tinta)' }}>
+                        {r.atendente.trim().toLowerCase() === 'sem atendente'
+                          ? <>Sem atendente responsável <span className="texto-apoio" style={{ fontWeight: 400 }}>(o Multi360 não registrou quem atendeu)</span></>
+                          : formatarNome(r.atendente)}
+                      </td>
                       <td data-rotulo="Conversas abertas" style={{ textAlign: 'center', color: 'var(--tinta-2)', fontVariantNumeric: 'tabular-nums' }}>{r.abertas.toLocaleString('pt-BR')}</td>
                       <td data-rotulo="Sem resposta">
                         <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 140 }}>
