@@ -61,7 +61,24 @@ PrevSystem. Há também `integracao_sem_revisao` e `integracao_com_erro`.
 Mesmos campos do objeto acima, com as regras do Documento Mestre (CPF com dígito, máscaras, ViaCEP no
 CEP). Referência da tela do PrevSystem: `app/src/pages/ColaboradorForm.tsx` (lista em `ColaboradoresList.tsx`).
 
-## Estado (26/11/2026)
-- Ponte **pronta no rascunho** do PrevSystem. Falta: construir o **nosso reader** (servidor) + o **modelo
-  de dados** daqui; gerar a chave e mandar o hash; o Ronaldo ligar pela tela do PrevSystem; e a virada
-  para produção quando o PrevSystem publicar.
+## Nosso lado — como está construído (26/11/2026)
+- **Modelo de dados:** `sql/pessoal-colaboradores-2026-11-26.sql` (aplicado na produção). `at_colaboradores`
+  ganhou `fonte/externo_id/versao/ausente_desde`; tabelas novas `at_colaborador_detalhe` (sensível, só
+  quem vê tudo lê), `at_setores`, `at_colaborador_setores`, `at_ausencias`.
+- **Config + chave:** tabela `at_integracao_prevsystem` (empresa_slug='aposentar'): endpoint, apikey do
+  PrevSystem (anon do rascunho), a NOSSA chave secreta (`chave`), `cron_secret`, `ultima_versao`. Lida só
+  pela Edge Function com a chave de serviço. A chave NÃO está no git.
+- **Leitor:** Edge Function `supabase/functions/sincronizar-prevsystem/index.ts` (publicada, `verify_jwt=false`,
+  travada por `x-cron-secret`). Lê `universo` (ids + departamentos) e `colaborador` (incremental por versão),
+  casa por `externo_id` → por nome exato (funde com o atendente do Multi360) → cria (só ativo); quem some do
+  universo vira `ausente_desde`.
+- **Hash enviado** ao PrevSystem em 26/11: `82f530bd22cc6bc38027a69335511ac71bc8bb294e51f08bb566a4c70346b106`.
+
+## O que falta
+1. PrevSystem gravar o hash e **o Ronaldo ligar** a leitura (Configurações → Outros Sistemas → Integração
+   com o PrevAtendimento) — **P-38**.
+2. **Testar** a leitura (disparar a Edge Function com o `x-cron-secret`) e conferir as contagens (11 ativos,
+   76 inativos, 5 departamentos). Só então **agendar** (pg_cron diário, depois das 10h).
+3. **Telas:** a lista de pessoal (roster), o detalhe da pessoa e o cadastro local (parte D).
+4. **Virada para produção** quando o PrevSystem publicar: trocar `endpoint_url`/`apikey` para o banco de
+   produção deles e mandar o hash da chave de produção.
