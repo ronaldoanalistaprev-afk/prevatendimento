@@ -111,7 +111,7 @@ export default async function ColaboradoresPage() {
 
       {ehAdmin ? (
         <GerenciarAcessos
-          usuarios={usuarios.map((u) => ({ id: u.id, nome: u.nome, email: u.email, role: u.role, ativo: u.ativo, at_colaborador_id: u.at_colaborador_id, vinculoNome: nomeVinculo(u) }))}
+          usuarios={usuarios.map((u) => ({ id: u.id, nome: u.nome, email: u.email, role: u.role, ativo: u.ativo, at_colaborador_id: u.at_colaborador_id, vinculoNome: nomeVinculo(u), senhaProvisoriaDesde: (u as { senha_provisoria_desde?: string | null }).senha_provisoria_desde ?? null }))}
           atendentes={atendentes}
           meuId={meuId}
           papeis={opcoesPapel.map((p) => ({ codigo: p.codigo, nome: p.nome }))}

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Pencil, Trash2, Power, Loader2, KeyRound, Copy, ChevronDown, Check, X, AlertCircle, type LucideIcon } from 'lucide-react'
+import { Pencil, Trash2, Power, Loader2, KeyRound, Link2, Copy, ChevronDown, Check, X, AlertCircle, type LucideIcon } from 'lucide-react'
 import { useConfirmacao } from './Confirmacao'
 import { useAvisoPe } from './AvisoPe'
 import { tecladoFormulario } from '@/lib/formulario'
@@ -16,6 +16,8 @@ interface UsuarioLinha {
   ativo: boolean
   at_colaborador_id: string | null
   vinculoNome: string | null
+  /** Data em que ficou com senha provisória; null = a pessoa já criou a própria. */
+  senhaProvisoriaDesde: string | null
 }
 
 /** Selo por papel: a cor sempre vem com o nome do papel (Regra 46). */
@@ -46,8 +48,57 @@ export default function GerenciarAcessos({
   const [gerandoId, setGerandoId] = useState<string | null>(null)
   const [linkReset, setLinkReset] = useState<{ nome: string; link: string } | null>(null)
   const [copiado, setCopiado] = useState(false)
+  // Senha provisória: definir para um acesso que já existe (a pessoa troca no 1º acesso).
+  const [provAlvo, setProvAlvo] = useState<{ id: string; nome: string } | null>(null)
+  const [provSenha, setProvSenha] = useState('')
+  const [provSalvando, setProvSalvando] = useState(false)
+  const [provErro, setProvErro] = useState<string | null>(null)
+  const [provFeita, setProvFeita] = useState<{ nome: string; senha: string } | null>(null)
 
   const nomePapel = (codigo: string) => papeis.find((p) => p.codigo === codigo)?.nome ?? codigo
+
+  /** Gera uma senha de 10 caracteres sem letras/números que se confundem (0/O, 1/l/I). */
+  function gerarSenha(): string {
+    const abc = 'abcdefghijkmnpqrstuvwxyz', ABC = 'ABCDEFGHJKLMNPQRSTUVWXYZ', num = '23456789'
+    const todos = abc + ABC + num
+    const r = (s: string) => s[Math.floor(Math.random() * s.length)]
+    let s = r(ABC) + r(abc) + r(num)
+    for (let i = 0; i < 7; i++) s += r(todos)
+    return s.split('').sort(() => Math.random() - 0.5).join('')
+  }
+
+  function abrirProvisoria(u: UsuarioLinha) {
+    setErro(null); setLinkReset(null); setProvFeita(null); setProvErro(null)
+    setProvSenha(gerarSenha())
+    setProvAlvo({ id: u.id, nome: formatarNome(u.nome) })
+  }
+
+  async function salvarProvisoria() {
+    if (!provAlvo) return
+    setProvSalvando(true); setProvErro(null)
+    try {
+      const res = await fetch('/api/usuarios/senha-provisoria', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: provAlvo.id, senha: provSenha }) })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data?.erro ?? 'Não foi possível definir a senha provisória. Tente de novo.')
+      setProvFeita({ nome: provAlvo.nome, senha: provSenha })
+      setProvAlvo(null); setProvSenha('')
+      router.refresh()
+    } catch (e) {
+      setProvErro((e as Error).message)
+    } finally {
+      setProvSalvando(false)
+    }
+  }
+
+  async function copiarSenha() {
+    if (!provFeita) return
+    try {
+      await navigator.clipboard.writeText(provFeita.senha)
+      setCopiado(true); setTimeout(() => setCopiado(false), 2500)
+    } catch {
+      setProvErro('Não consegui copiar automaticamente. Selecione a senha e copie com Ctrl+C.')
+    }
+  }
 
   async function gerarLinkSenha(u: UsuarioLinha) {
     setGerandoId(u.id); setErro(null); setLinkReset(null); setCopiado(false)
@@ -146,6 +197,33 @@ export default function GerenciarAcessos({
           </div>
         </div>
       )}
+      {provAlvo && (
+        <div className="aviso aviso-info" role="group" aria-label={`Definir senha provisória para ${provAlvo.nome}`} style={{ margin: '12px 16px 0', flexDirection: 'column', alignItems: 'stretch', gap: 8 }}>
+          <div style={{ fontWeight: 650 }}>Senha provisória para {provAlvo.nome}: a pessoa troca no primeiro acesso.</div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <input className="entrada" value={provSenha} onChange={(e) => setProvSenha(e.target.value)} aria-label="Senha provisória" autoComplete="off" spellCheck={false} style={{ flex: '1 1 200px', minWidth: 0, fontFamily: 'ui-monospace, monospace' }} />
+            <button type="button" className="botao botao-secundario" onClick={() => setProvSenha(gerarSenha())}>Gerar outra</button>
+          </div>
+          <span className="ajuda">Pelo menos 8 caracteres. Entregue à pessoa (nenhum e-mail é enviado). No primeiro acesso, ela cria a própria senha.</span>
+          {provErro && <div className="aviso aviso-perigo" role="alert" style={{ margin: 0 }}><AlertCircle className="icone" aria-hidden="true" focusable="false" /><div>{provErro}</div></div>}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button type="button" className="botao botao-principal" onClick={salvarProvisoria} disabled={provSalvando || provSenha.length < 8}>
+              {provSalvando ? <Loader2 className="icone icone-p animate-spin" aria-hidden="true" focusable="false" /> : <KeyRound className="icone icone-p" aria-hidden="true" focusable="false" />} {provSalvando ? 'Definindo…' : 'Definir senha provisória'}
+            </button>
+            <button type="button" className="botao botao-secundario" onClick={() => { setProvAlvo(null); setProvErro(null) }} disabled={provSalvando}>Cancelar</button>
+          </div>
+        </div>
+      )}
+      {provFeita && (
+        <div className="aviso aviso-info" role="status" style={{ margin: '12px 16px 0', flexDirection: 'column', alignItems: 'stretch', gap: 8 }}>
+          <div style={{ fontWeight: 650 }}>Senha provisória de {provFeita.nome} definida. Entregue a ela — no primeiro acesso ela cria a própria senha.</div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <input className="entrada" readOnly value={provFeita.senha} aria-label={`Senha provisória de ${provFeita.nome}`} onFocus={(e) => e.currentTarget.select()} style={{ flex: '1 1 200px', minWidth: 0, fontFamily: 'ui-monospace, monospace' }} />
+            <button type="button" className="botao botao-principal" onClick={copiarSenha}><Copy className="icone icone-p" aria-hidden="true" focusable="false" /> {copiado ? 'Senha copiada' : 'Copiar senha'}</button>
+            <button type="button" className="botao botao-secundario" onClick={() => setProvFeita(null)}>Fechar</button>
+          </div>
+        </div>
+      )}
       {usuarios.length === 0 ? (
         <div className="vazio">
           <div className="vazio-titulo">Nenhum acesso cadastrado ainda</div>
@@ -180,10 +258,12 @@ export default function GerenciarAcessos({
                     </td>
                     <td className="situacao" data-rotulo="Situação">
                       <span className={`selo ${u.ativo ? 'selo-sucesso' : 'selo-neutro'}`}>{u.ativo ? 'Ativo' : 'Inativo'}</span>
+                      {u.senhaProvisoriaDesde && <span className="selo selo-atencao" style={{ marginLeft: 6 }}>Senha Provisória</span>}
                     </td>
                     <td className="acoes" data-rotulo="Ações">
                       <IconBtn icon={Pencil} dica="Editar papel e vínculo" rotulo={`Editar o acesso de ${nome}`} curto="Editar" disabled={ocupado} onClick={() => { setErro(null); setEditando(u) }} />
-                      <IconBtn icon={KeyRound} dica="Gerar link para nova senha" rotulo={`Gerar link de nova senha para ${nome}`} curto="Nova senha" loading={gerandoId === u.id} disabled={ocupado || gerandoId === u.id} onClick={() => gerarLinkSenha(u)} />
+                      <IconBtn icon={KeyRound} dica="Definir senha provisória (troca no 1º acesso)" rotulo={`Definir senha provisória para ${nome}`} curto="Senha provisória" disabled={ocupado} onClick={() => abrirProvisoria(u)} />
+                      <IconBtn icon={Link2} dica="Gerar link para nova senha" rotulo={`Gerar link de nova senha para ${nome}`} curto="Link de senha" loading={gerandoId === u.id} disabled={ocupado || gerandoId === u.id} onClick={() => gerarLinkSenha(u)} />
                       <IconBtn icon={Power} dica={u.ativo ? 'Desativar acesso' : 'Ativar acesso'} rotulo={`${u.ativo ? 'Desativar' : 'Ativar'} o acesso de ${nome}`} curto={u.ativo ? 'Desativar' : 'Ativar'} classe={u.ativo ? 'inativar' : 'ativar'} loading={ocupado} disabled={ocupado} onClick={() => alternarAtivo(u)} />
                       {!souEu && (
                         <IconBtn icon={Trash2} dica="Excluir acesso" rotulo={`Excluir o acesso de ${nome}`} curto="Excluir" classe="inativar" disabled={ocupado} onClick={() => excluir(u)} />

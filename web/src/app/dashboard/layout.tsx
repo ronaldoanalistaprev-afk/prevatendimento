@@ -20,6 +20,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // a sessão que já estava aberta tem que cair.
   if (papel.id && !papel.ativo) redirect('/auth/sair?motivo=inativo')
 
+  // Senha provisória: no primeiro acesso a pessoa cria a própria senha antes de ver qualquer tela
+  // (mesmo molde do PrevSystem). A marca some quando ela cria a senha em /nova-senha.
+  if (papel.id && papel.senhaProvisoria) redirect('/nova-senha?provisoria=1')
+
   const telasPermitidas = TELAS.filter((t) => podeAcessar(mapa, t.chave, papel.role)).map((t) => t.chave)
   const contadores = { acoes, abertas: conversas.abertas, finalizadas: conversas.finalizadas }
   return (

@@ -53,6 +53,19 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
+  // Senha provisória: enquanto a pessoa não cria a sua senha, as ROTAS DE DADOS ficam bloqueadas
+  // (as telas já são barradas pela casca do /dashboard). Só a troca da própria senha é liberada.
+  if (pathname.startsWith('/api/') && !pathname.startsWith('/api/conta/definir-minha-senha')) {
+    const { data: u } = await supabase
+      .from('usuarios')
+      .select('senha_provisoria_desde')
+      .eq('id', user.id)
+      .maybeSingle()
+    if ((u as { senha_provisoria_desde?: string | null } | null)?.senha_provisoria_desde) {
+      return NextResponse.json({ erro: 'Crie a sua senha para continuar.' }, { status: 403 })
+    }
+  }
+
   return response
 }
 

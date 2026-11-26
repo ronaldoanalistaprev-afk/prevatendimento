@@ -51,6 +51,7 @@ export default function NovoColaborador({
   const [mostrarSenha, setMostrarSenha] = useState(false)
   const [role, setRole] = useState('COLABORADOR')
   const [atColaboradorId, setAtColaboradorId] = useState('')
+  const [provisoria, setProvisoria] = useState(false)
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [tocado, setTocado] = useState<Record<Campo, boolean>>({ nome: false, email: false, senha: false })
@@ -59,10 +60,10 @@ export default function NovoColaborador({
   const valores: Record<Campo, string> = { nome, email, senha }
   const erros: Record<Campo, string | null> = { nome: validar('nome', nome), email: validar('email', email), senha: validar('senha', senha) }
   const mostrar = (c: Campo) => (tocado[c] ? erros[c] : null)
-  const preenchido = Boolean(nome.trim() || email.trim() || senha || atColaboradorId || role !== 'COLABORADOR')
+  const preenchido = Boolean(nome.trim() || email.trim() || senha || atColaboradorId || role !== 'COLABORADOR' || provisoria)
 
   function limpar() {
-    setNome(''); setEmail(''); setSenha(''); setRole('COLABORADOR'); setAtColaboradorId('')
+    setNome(''); setEmail(''); setSenha(''); setRole('COLABORADOR'); setAtColaboradorId(''); setProvisoria(false)
     setTocado({ nome: false, email: false, senha: false }); setErro(null)
   }
 
@@ -82,11 +83,13 @@ export default function NovoColaborador({
       const res = await fetch('/api/usuarios', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome: nome.trim(), email: email.trim(), senha, role, at_colaborador_id: atColaboradorId || null }),
+        body: JSON.stringify({ nome: nome.trim(), email: email.trim(), senha, role, at_colaborador_id: atColaboradorId || null, senha_provisoria: provisoria }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data?.erro ?? 'Não foi possível cadastrar. Tente de novo.')
-      avisar({ texto: `${formatarNome(nome)} cadastrado. Já pode entrar com o e-mail e a senha criados.` })
+      avisar({ texto: provisoria
+        ? `${formatarNome(nome)} cadastrado. Entra com o e-mail e a senha provisória — e cria a própria senha no primeiro acesso. Nenhum e-mail é enviado: avise a pessoa.`
+        : `${formatarNome(nome)} cadastrado. Já pode entrar com o e-mail e a senha criados.` })
       limpar()
       setAberto(false)
       router.refresh()
@@ -189,6 +192,16 @@ export default function NovoColaborador({
             </select>
             <ChevronDown className="icone" aria-hidden="true" focusable="false" />
           </div>
+        </div>
+
+        <div className="campo inteiro">
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
+            <input type="checkbox" checked={provisoria} onChange={(e) => setProvisoria(e.target.checked)} style={{ width: 18, height: 18, marginTop: 2, flexShrink: 0 }} />
+            <span>
+              <span className="rotulo" style={{ marginBottom: 2 }}>Senha provisória: a pessoa troca no primeiro acesso</span>
+              <span className="ajuda">Ao entrar, ela só vê a tela &quot;Crie a sua senha&quot; até criar uma senha própria. Nenhum e-mail é enviado — avise a pessoa.</span>
+            </span>
+          </label>
         </div>
 
         {erro && (

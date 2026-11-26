@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ erro: 'apenas administradores podem cadastrar colaboradores' }, { status: 403 })
   }
 
-  let body: { nome?: string; email?: string; senha?: string; role?: string; telefone?: string; at_colaborador_id?: string }
+  let body: { nome?: string; email?: string; senha?: string; role?: string; telefone?: string; at_colaborador_id?: string; senha_provisoria?: boolean }
   try {
     body = await req.json()
   } catch {
@@ -105,6 +105,8 @@ export async function POST(req: Request) {
     telefone,
     role,
     at_colaborador_id: atColaboradorId,
+    // Senha provisória: no primeiro acesso o sistema força criar uma senha nova.
+    senha_provisoria_desde: body.senha_provisoria === true ? new Date().toISOString() : null,
   })
   if (errIns) {
     // desfaz o usuário do Auth para não deixar órfão

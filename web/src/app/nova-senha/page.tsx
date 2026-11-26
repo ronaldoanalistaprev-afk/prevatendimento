@@ -20,11 +20,14 @@ export default function NovaSenhaPage() {
   const [erro, setErro] = useState<string | null>(null)
   const [pronto, setPronto] = useState(false)
   const [expirado, setExpirado] = useState(false)
+  const [provisoria, setProvisoria] = useState(false)
   const [tocado, setTocado] = useState<{ senha?: boolean; confirmacao?: boolean }>({})
 
   useEffect(() => {
     const supabase = createClient()
     async function preparar() {
+      // Primeiro acesso com senha provisória: a casca do painel manda para cá com ?provisoria=1.
+      setProvisoria(new URLSearchParams(window.location.search).get('provisoria') === '1')
       const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''))
       if (hash.get('error')) { setExpirado(true); setPronto(true); return }
       const accessToken = hash.get('access_token')
@@ -56,9 +59,21 @@ export default function NovaSenhaPage() {
       return
     }
     setCarregando(true)
-    const supabase = createClient()
-    const { error } = await supabase.auth.updateUser({ password: senha })
-    if (error) { setErro('Não foi possível salvar a senha. O link pode ter expirado — peça um novo na tela de entrar.'); setCarregando(false); return }
+    if (provisoria) {
+      // Primeiro acesso: o servidor troca a senha E apaga a marca de provisória, numa coisa só
+      // (não dá para liberar o acesso sem trocar a senha de verdade).
+      try {
+        const res = await fetch('/api/conta/definir-minha-senha', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ senha }) })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) { setErro(data?.erro ?? 'Não foi possível salvar a senha. Tente de novo.'); setCarregando(false); return }
+      } catch {
+        setErro('Não foi possível salvar a senha. Verifique a conexão e tente de novo.'); setCarregando(false); return
+      }
+    } else {
+      const supabase = createClient()
+      const { error } = await supabase.auth.updateUser({ password: senha })
+      if (error) { setErro('Não foi possível salvar a senha. O link pode ter expirado — peça um novo na tela de entrar.'); setCarregando(false); return }
+    }
     // O aviso do pé é mostrado pelo painel, logo que ele abrir (a tela de nova senha fica fora dele).
     try { sessionStorage.setItem('avisoPePendente', 'Nova senha salva. Use-a no próximo acesso.') } catch { /* segue sem o aviso */ }
     router.push('/dashboard'); router.refresh()
@@ -86,8 +101,12 @@ export default function NovaSenhaPage() {
           </div>
         ) : (
           <div className="entrar-cartao">
-            <h1 className="titulo">Criar nova senha</h1>
-            <p className="texto-apoio" style={{ marginTop: 4 }}>Escolha uma senha com pelo menos {MINIMO} caracteres.</p>
+            <h1 className="titulo">{provisoria ? 'Crie a sua senha' : 'Criar nova senha'}</h1>
+            <p className="texto-apoio" style={{ marginTop: 4 }}>
+              {provisoria
+                ? `Primeiro acesso: por segurança, defina a sua própria senha (pelo menos ${MINIMO} caracteres) para continuar.`
+                : `Escolha uma senha com pelo menos ${MINIMO} caracteres.`}
+            </p>
 
             <form onSubmit={handleSalvar} onKeyDown={tecladoFormulario} noValidate>
               <div className="campo">

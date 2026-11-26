@@ -25,6 +25,8 @@ export interface PapelAtual {
   verTudo: boolean
   /** Pode criar/editar/cancelar cobranças? */
   cobrar: boolean
+  /** Está com senha provisória? Enquanto sim, o painel força "Criar nova senha" antes de tudo. */
+  senhaProvisoria: boolean
 }
 
 const FALLBACK: PapelAtual = {
@@ -39,6 +41,7 @@ const FALLBACK: PapelAtual = {
   entrouEm: null,
   verTudo: false,
   cobrar: false,
+  senhaProvisoria: false,
 }
 
 /** Papel do usuário logado + o atendente do Multi360 vinculado + os poderes do papel. */
@@ -52,7 +55,7 @@ async function getPapelAtualSemCache(): Promise<PapelAtual> {
     const [{ data }, papeis] = await Promise.all([
       supabase
         .from('usuarios')
-        .select('nome, role, ativo, at_colaborador_id, at_colaboradores(nome)')
+        .select('nome, role, ativo, at_colaborador_id, senha_provisoria_desde, at_colaboradores(nome)')
         .eq('id', user.id)
         .maybeSingle(),
       getPapeis(true),
@@ -75,6 +78,7 @@ async function getPapelAtualSemCache(): Promise<PapelAtual> {
       entrouEm,
       verTudo: poderes.verTudo,
       cobrar: poderes.cobrar,
+      senhaProvisoria: Boolean((data as { senha_provisoria_desde?: string | null }).senha_provisoria_desde),
     }
   } catch {
     return FALLBACK
